@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             TemplateSeeder::class,
+            NewTemplateSeeder::class, // New templates
             TemplateAssetSeeder::class,
             PackageSeeder::class,
             InfoSeeder::class,
