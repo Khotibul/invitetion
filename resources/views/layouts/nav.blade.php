@@ -13,7 +13,7 @@
     ];
 @endphp
 <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white shadow p-4">
-    <a class="navbar-brand" href="#">Creasik Digital</a>
+    <a class="navbar-brand" href="#">Risa Digital Invitation</a>
     <button class="navbar-toggler p-0 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>

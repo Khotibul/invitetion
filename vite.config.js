@@ -15,8 +15,6 @@ export default defineConfig({
                 'resources/js/landing-script.js',
                 'resources/css/template/default.css',
                 'resources/js/template/default.js',
-                'resources/css/template/beast-forest.css',
-                'resources/js/template/beast-forest.js',
             ],
             refresh: true,
         }),

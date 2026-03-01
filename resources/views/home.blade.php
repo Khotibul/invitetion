@@ -4,7 +4,7 @@
 <main class="home">
     <section class="home__intro d-flex align-items-center min-vh-100">
         <div class="container">
-            <h1>Creasik Digital</h1>
+            <h1>Risa Digital Invitation</h1>
             <h3>Solusi undangan digital di era modern.</h3>
             <div class="home__intro--button">
                 <a href="#" class="bg-dark text-white rounded py-2 px-4">Let`s Go</a>

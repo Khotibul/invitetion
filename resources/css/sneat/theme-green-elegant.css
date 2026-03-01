@@ -1,0 +1,235 @@
+/* Risa Digital Invitation - Green Elegant Theme */
+
+/* Primary Green Color Palette */
+:root {
+    --primary-green: #2d7a4f;
+    --primary-green-light: #3d9a6f;
+    --primary-green-dark: #1d5a3f;
+    --primary-green-lighter: #e8f5ee;
+    --primary-green-hover: #25664a;
+    --accent-gold: #d4af37;
+    --accent-gold-light: #f5e6b3;
+}
+
+/* Background Theme */
+.layout-wrapper {
+    background: linear-gradient(135deg, #e8f5ee 0%, #f0f9f4 100%);
+}
+
+.layout-page {
+    background: linear-gradient(135deg, #e8f5ee 0%, #f0f9f4 100%);
+}
+
+/* Card Styling */
+.card {
+    background: #ffffff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.08);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(45, 122, 79, 0.15);
+    transform: translateY(-2px);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Primary Color Updates */
+.text-primary {
+    color: #2d7a4f !important;
+}
+
+.bg-primary {
+    background-color: #2d7a4f !important;
+}
+
+.btn-primary {
+    background-color: #2d7a4f;
+    border-color: #2d7a4f;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: #25664a;
+    border-color: #25664a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(45, 122, 79, 0.4);
+}
+
+/* Menu Theme */
+.bg-menu-theme {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fcfa 100%) !important;
+    box-shadow: 2px 0 12px rgba(45, 122, 79, 0.08);
+}
+
+.bg-menu-theme .menu-inner > .menu-item.active > .menu-link {
+    background: linear-gradient(90deg, #e8f5ee 0%, #f0f9f4 100%) !important;
+    color: #2d7a4f !important;
+    border-left: 4px solid #2d7a4f;
+}
+
+.bg-menu-theme .menu-inner > .menu-item.active:before {
+    background: #2d7a4f;
+}
+
+.bg-menu-theme .menu-link:hover {
+    background-color: rgba(45, 122, 79, 0.05);
+    color: #2d7a4f;
+}
+
+/* Navbar Theme */
+.bg-navbar-theme {
+    background: linear-gradient(90deg, #ffffff 0%, #f8fcfa 100%) !important;
+    box-shadow: 0 2px 12px rgba(45, 122, 79, 0.08);
+}
+
+.layout-navbar {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 252, 250, 0.98) 100%) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Dashboard Cards with Icons */
+.card .fs-2 {
+    color: #2d7a4f;
+}
+
+.card-title {
+    color: #1d5a3f;
+    font-weight: 600;
+}
+
+/* Links and Anchors */
+a {
+    color: #2d7a4f;
+}
+
+a:hover {
+    color: #25664a;
+}
+
+/* Badges */
+.badge-primary {
+    background-color: #2d7a4f;
+}
+
+/* Progress Bars */
+.progress-bar {
+    background-color: #2d7a4f;
+}
+
+/* Form Controls */
+.form-control:focus,
+.form-select:focus {
+    border-color: #2d7a4f;
+    box-shadow: 0 0 0 0.2rem rgba(45, 122, 79, 0.15);
+}
+
+/* Elegant Accents */
+.app-brand {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fcfa 0%, #ffffff 100%);
+}
+
+.app-brand .layout-menu-toggle {
+    background-color: #2d7a4f;
+    border-color: #e8f5ee;
+}
+
+/* Footer */
+.bg-footer-theme {
+    background: linear-gradient(90deg, #f8fcfa 0%, #ffffff 100%) !important;
+}
+
+/* Alert Primary */
+.alert-primary {
+    background-color: #e8f5ee;
+    border-color: #d4e8dd;
+    color: #2d7a4f;
+}
+
+/* Dropdown */
+.dropdown-item:not(.disabled).active,
+.dropdown-item:not(.disabled):active {
+    background-color: rgba(45, 122, 79, 0.1);
+    color: #2d7a4f !important;
+}
+
+/* Nav Pills */
+.nav-pills .nav-link.active {
+    background-color: #2d7a4f;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.3);
+}
+
+/* Checkbox and Radio */
+.form-check-input:checked {
+    background-color: #2d7a4f;
+    border-color: #2d7a4f;
+}
+
+/* Table */
+.table-primary {
+    --bs-table-bg: #e8f5ee;
+    --bs-table-hover-bg: #d4e8dd;
+}
+
+/* Elegant Typography */
+h1, h2, h3, h4, h5, h6 {
+    color: #1d5a3f;
+}
+
+/* Smooth Transitions */
+* {
+    transition: all 0.2s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f0f9f4;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2d7a4f;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #25664a;
+}
+
+/* Gold Accent for Special Elements */
+.accent-gold {
+    color: #d4af37;
+}
+
+.bg-accent-gold {
+    background-color: #d4af37;
+}
+
+/* Elegant Shadows */
+.shadow-elegant {
+    box-shadow: 0 8px 24px rgba(45, 122, 79, 0.12);
+}
+
+/* Gradient Backgrounds */
+.bg-gradient-green {
+    background: linear-gradient(135deg, #2d7a4f 0%, #3d9a6f 100%);
+}
+
+/* Border Accents */
+.border-primary {
+    border-color: #2d7a4f !important;
+}
+
+.border-top-primary {
+    border-top: 3px solid #2d7a4f !important;
+}

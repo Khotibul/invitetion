@@ -2,7 +2,7 @@
     use Carbon\Carbon;
     setlocale(LC_ALL, 'IND');
     $set = [
-        'title' => "Wedding of ".$invitation->title." | Creasik Digital",
+        'title' => "Wedding of ".$invitation->title." | Risa Digital Invitation",
         'file' => url('storage/'.$invitation->file),
         'content' => Carbon::parse($data->detail->calendar->date)->formatLocalized('%A, %d %B %Y')
     ];
@@ -392,7 +392,7 @@
     </section>
     <footer>
         <small>Made with</small>
-        <b>Creasik Digital</b>
+        <b>Risa Digital Invitation</b>
     </footer>
     @if ($data->gift->show===true)
     <div id="gift-field" class="modal">

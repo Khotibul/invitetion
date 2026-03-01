@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>@yield('title'){{ " - Wedding of ".implode(' & ', json_decode(Auth::user()->inv->title, true))." | Creasik Digital" }}</title>
+    <title>@yield('title'){{ " - Wedding of ".implode(' & ', json_decode(Auth::user()->inv->title, true))." | Risa Digital Invitation" }}</title>
     <meta name="theme-color" content="">
     <meta name="keywords" content="">
     <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
