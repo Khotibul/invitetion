@@ -86,10 +86,10 @@
 											<label for="photo_male" class="d-block form-label mb-1">Foto pria</label>
 											<select class="form-select preview-image-option" id="photo_male" name="photo_male">
 												@foreach ($data['avatar-male'] as $item)
-												<option value="{{ $item->content }}" data-url="{{ url('storage/avatar/'.$item->content) }}" @selected(isitsame($item->content, $template->preset->profile->photo->male->image))>{{ $item->title }}</option>
+												<option value="{{ $item->content }}" data-url="{{ url('storage/avatar/'.$item->content) }}" @selected(isitsame($item->content, get_preset_value($template->preset, 'profile.photo.male.image', '9d348c30-9331-11ec-b089-ad70ef6b2563.png')))>{{ $item->title }}</option>
 												@endforeach
 											</select>
-											<img src="{{ url('storage/avatar/'.$template->preset->profile->photo->male->image) }}" class="img-fluid" alt="male">
+											<img src="{{ url('storage/avatar/'.get_preset_value($template->preset, 'profile.photo.male.image', '9d348c30-9331-11ec-b089-ad70ef6b2563.png')) }}" class="img-fluid" alt="male">
 										</div>
 									</div>
 									<div class="col-12 col-lg-6">
@@ -97,10 +97,10 @@
 											<label for="photo_female" class="d-block form-label mb-1">Foto wanita</label>
 											<select class="form-select preview-image-option" id="photo_female" name="photo_female">
 												@foreach ($data['avatar-female'] as $item)
-												<option value="{{ $item->content }}" data-url="{{ url('storage/avatar/'.$item->content) }}" @selected(isitsame($item->content, $template->preset->profile->photo->female->image))>{{ $item->title }}</option>
+												<option value="{{ $item->content }}" data-url="{{ url('storage/avatar/'.$item->content) }}" @selected(isitsame($item->content, get_preset_value($template->preset, 'profile.photo.female.image', '4a1f7960-9331-11ec-8fa8-a3a23f6da840.png')))>{{ $item->title }}</option>
 												@endforeach
 											</select>
-											<img src="{{ url('storage/avatar/'.$template->preset->profile->photo->female->image) }}" class="img-fluid" alt="male">
+											<img src="{{ url('storage/avatar/'.get_preset_value($template->preset, 'profile.photo.female.image', '4a1f7960-9331-11ec-8fa8-a3a23f6da840.png')) }}" class="img-fluid" alt="male">
 										</div>
 									</div>
 								</div>

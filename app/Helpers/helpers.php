@@ -154,3 +154,73 @@ function input_check(string $name = null, string $value = null, array $class = [
 	$mode = ($mode=='single') ? 'radio' : 'checkbox';
 	return "<input type=\"{$mode}\" name=\"{$name}\" id=\"{$idfor}\" class=\"{$class}\" value=\"{$value}\"/><label class=\"form-check-label\" for=\"{$idfor}\">{$label}</label>";
 }
+
+
+function get_preset_value($preset, $path, $default = null)
+{
+    // Helper to safely get nested preset values with fallback
+    // Usage: get_preset_value($preset, 'profile.photo.male.image', 'default.png')
+    
+    $keys = explode('.', $path);
+    $value = $preset;
+    
+    foreach ($keys as $key) {
+        if (is_object($value) && isset($value->$key)) {
+            $value = $value->$key;
+        } elseif (is_array($value) && isset($value[$key])) {
+            $value = $value[$key];
+        } else {
+            return $default;
+        }
+    }
+    
+    return $value ?? $default;
+}
+
+function ensure_preset_structure($preset)
+{
+    // Ensure preset has both profile and couple structures
+    $presetArray = json_decode(json_encode($preset), true);
+    
+    // If couple exists but profile doesn't, create profile from couple
+    if (isset($presetArray['couple']) && !isset($presetArray['profile'])) {
+        $presetArray['profile'] = [
+            'name' => [
+                'male' => $presetArray['couple']['groom']['full_name'] ?? $presetArray['couple']['groom']['nickname'] ?? '',
+                'female' => $presetArray['couple']['bride']['full_name'] ?? $presetArray['couple']['bride']['nickname'] ?? ''
+            ],
+            'instagram' => [
+                'male' => $presetArray['couple']['groom']['instagram'] ?? '',
+                'female' => $presetArray['couple']['bride']['instagram'] ?? '',
+                'show' => true
+            ],
+            'parent' => [
+                'male' => [
+                    'father' => $presetArray['couple']['groom']['father_name'] ?? '',
+                    'mother' => $presetArray['couple']['groom']['mother_name'] ?? '',
+                    'childhood' => '1'
+                ],
+                'female' => [
+                    'father' => $presetArray['couple']['bride']['father_name'] ?? '',
+                    'mother' => $presetArray['couple']['bride']['mother_name'] ?? '',
+                    'childhood' => '1'
+                ],
+                'show' => true
+            ],
+            'photo' => [
+                'male' => [
+                    'method' => 'avatar',
+                    'frame' => null,
+                    'image' => $presetArray['couple']['groom']['photo'] ?? '9d348c30-9331-11ec-b089-ad70ef6b2563.png'
+                ],
+                'female' => [
+                    'method' => 'avatar',
+                    'frame' => null,
+                    'image' => $presetArray['couple']['bride']['photo'] ?? '4a1f7960-9331-11ec-8fa8-a3a23f6da840.png'
+                ]
+            ]
+        ];
+    }
+    
+    return json_decode(json_encode($presetArray));
+}
