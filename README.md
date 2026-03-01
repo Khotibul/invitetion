@@ -6,7 +6,6 @@
 - [Jquery v3.6.1](https://jquery.com/)
 
 ## How to install
-
 <blockquote>
     <ol>
         <li>Clone this repo with <code>
