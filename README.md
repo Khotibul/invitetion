@@ -6,10 +6,9 @@
 - [Jquery v3.6.1](https://jquery.com/)
 
 ## How to install
-
 <blockquote>
     <ol>
-        <li>Clone this repo with <code>git clone https://github.com/asepnurjaman-en/undangan-digital.git</code></li>
+        <li>Clone this repo with <code>
         <li>Run <code>cd undangan-digital</code></li>
         <li>Run <code>composer install</code></li>
         <li>Run <code>cp .env.example .env</code></li>
