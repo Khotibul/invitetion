@@ -28,11 +28,11 @@
 					</div>
 					<div class="d-flex justify-content-between">
 						<div class="d-block py-2 px-3">
-							<h5 class="mb-0">{{ $invoice->pack->title }}</h5>
-							<span>{{ $invoice->pack->title }}</span>
+							<h5 class="mb-0">{{ $invoice->pack ? $invoice->pack->title : 'Paket Tidak Diketahui' }}</h5>
+							<span>{{ $invoice->pack ? $invoice->pack->title : '-' }}</span>
 						</div>
 						<div class="d-block py-2 px-3">
-							{!! idr($invoice->pack->price) !!}
+							{!! idr($invoice->pack ? $invoice->pack->price : 0) !!}
 						</div>
 					</div>
 					<div class="text-center p-3">
@@ -40,7 +40,7 @@
 						<span class="d-block fs-3">{!! idr($invoice->amount) !!}</span>
 					</div>
 					@if ($invoice->status=='PENDING')
-					@if ($invoice->payment_link=='#manual')
+					@if ($invoice->payment_link=='#manual' && $bank_pay)
 					<div class="d-flex align-items-center flex-column flex-lg-row border rounded p-3 mb-2 mx-3">
 						<div class="bank-item {{ $bank_pay->file }}">
 							<code>{{ $bank_pay->file }}</code>

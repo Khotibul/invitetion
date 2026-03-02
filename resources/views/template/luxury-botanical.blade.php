@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        use Carbon\Carbon;
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $invitation->title }} | Risa Digital Invitation</title>
@@ -417,14 +420,14 @@
     <!-- Opening -->
     <section class="opening">
         <div class="opening-content">
-            <h1>WEDDING</h1>
+            <h1>{{ $data->cover->description->top }}</h1>
             <div class="divider"></div>
             <div class="names">
-                <span>Bride</span>
+                <span>{{ $data->cover->name->female }}</span>
                 <span class="and">&</span>
-                <span>Groom</span>
+                <span>{{ $data->cover->name->male }}</span>
             </div>
-            <p style="font-size: 1.2rem; color: var(--gold);">15 Juni 2024</p>
+            <p style="font-size: 1.2rem; color: var(--gold);">{{ Carbon::parse($data->detail->calendar->date)->format('d F Y') }}</p>
         </div>
     </section>
 
@@ -432,21 +435,10 @@
     <section class="countdown">
         <h2>Counting Down to Our Big Day</h2>
         <div class="countdown-timer">
+            <!-- Countdown Logic to be implemented with JS -->
             <div class="countdown-item">
-                <div class="number">30</div>
+                <div class="number">{{ Carbon::parse($data->detail->calendar->date)->diffInDays(now()) }}</div>
                 <div class="label">Days</div>
-            </div>
-            <div class="countdown-item">
-                <div class="number">12</div>
-                <div class="label">Hours</div>
-            </div>
-            <div class="countdown-item">
-                <div class="number">45</div>
-                <div class="label">Minutes</div>
-            </div>
-            <div class="countdown-item">
-                <div class="number">20</div>
-                <div class="label">Seconds</div>
             </div>
         </div>
     </section>
@@ -456,19 +448,17 @@
         <div class="couple-container">
             <div class="couple-card">
                 <div class="couple-photo">
-                    <img src="https://via.placeholder.com/250" alt="Bride">
+                    <img src="{{ $data->profile->photo->female->image ? url('storage/avatar/'.$data->profile->photo->female->image) : 'https://via.placeholder.com/250' }}" alt="Bride">
                 </div>
-                <h3>Bride Name</h3>
-                <p class="subtitle">Putri dari Bapak & Ibu</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <h3>{{ $data->profile->name->female }}</h3>
+                <p class="subtitle">Putri dari Bapak {{ $data->profile->parent->female->father }} & Ibu {{ $data->profile->parent->female->mother }}</p>
             </div>
             <div class="couple-card">
                 <div class="couple-photo">
-                    <img src="https://via.placeholder.com/250" alt="Groom">
+                    <img src="{{ $data->profile->photo->male->image ? url('storage/avatar/'.$data->profile->photo->male->image) : 'https://via.placeholder.com/250' }}" alt="Groom">
                 </div>
-                <h3>Groom Name</h3>
-                <p class="subtitle">Putra dari Bapak & Ibu</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <h3>{{ $data->profile->name->male }}</h3>
+                <p class="subtitle">Putra dari Bapak {{ $data->profile->parent->male->father }} & Ibu {{ $data->profile->parent->male->mother }}</p>
             </div>
         </div>
     </section>
@@ -477,84 +467,95 @@
     <section class="events">
         <h2>Event Details</h2>
         <div class="events-grid">
+            @foreach ($other['event'] as $item)
+            @php $item->prop = json_decode($item->content); @endphp
             <div class="event-card">
-                <h3>Akad Nikah</h3>
-                <p class="date-time">Sabtu, 15 Juni 2024 | 08:00 - 10:00 WIB</p>
+                <h3>{{ $item->title }}</h3>
+                <p class="date-time">{{ Carbon::parse($data->detail->calendar->date)->format('l, d F Y') }} | {{ date('H:i', strtotime($item->prop->time->start)) }} - {{ ($item->prop->time->done===true) ? 'Selesai' : date('H:i', strtotime($item->prop->time->end)) }} WIB</p>
                 <div class="location">
-                    <p><strong>Masjid Al-Ikhlas</strong></p>
-                    <p>Jl. Contoh No. 123, Jakarta Selatan</p>
+                    <p><strong>{{ $item->prop->location->address }}</strong></p>
                 </div>
-                <a href="#" class="map-btn">Lihat Lokasi</a>
+                <a href="{{ $item->prop->location->map }}" class="map-btn" target="_blank">Lihat Lokasi</a>
             </div>
-            <div class="event-card">
-                <h3>Resepsi Pernikahan</h3>
-                <p class="date-time">Sabtu, 15 Juni 2024 | 11:00 - 14:00 WIB</p>
-                <div class="location">
-                    <p><strong>Gedung Serbaguna</strong></p>
-                    <p>Jl. Contoh No. 456, Jakarta Selatan</p>
-                </div>
-                <a href="#" class="map-btn">Lihat Lokasi</a>
-            </div>
+            @endforeach
         </div>
     </section>
 
     <!-- Gallery -->
+    @if ($other['photo'])
     <section class="gallery">
-        <h2>Our Gallery</h2>
+        <h2>{{ $other['photo']->title }}</h2>
         <div class="gallery-masonry">
+            @foreach ($other['photo']->prop->file as $key => $file)
             <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x300" alt="Gallery 1">
+                <img src="{{ url('storage/'.$file) }}" alt="Gallery {{ $key }}">
             </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x500" alt="Gallery 2">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x400" alt="Gallery 3">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x350" alt="Gallery 4">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x450" alt="Gallery 5">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400x300" alt="Gallery 6">
-            </div>
+            @endforeach
         </div>
     </section>
+    @endif
 
     <!-- RSVP -->
     <section class="rsvp">
-        <h2>Konfirmasi Kehadiran</h2>
-        <form class="rsvp-form">
-            <div class="form-group">
-                <label>Nama Lengkap</label>
-                <input type="text" required>
-            </div>
-            <div class="form-group">
-                <label>Kehadiran</label>
-                <select required>
-                    <option value="">Pilih</option>
-                    <option value="hadir">Hadir</option>
-                    <option value="tidak">Tidak Hadir</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Jumlah Tamu</label>
-                <input type="number" min="1" max="5" value="1">
-            </div>
-            <div class="form-group">
-                <label>Ucapan & Doa</label>
-                <textarea rows="4"></textarea>
-            </div>
-            <button type="submit" class="submit-btn">Kirim Konfirmasi</button>
-        </form>
+        <h2>{{ $data->rsvp->title }}</h2>
+        <div class="rsvp-form">
+            <p>{{ $data->rsvp->content }}</p>
+            <form action="{{ route('invitation.present', request()->slug) }}" class="sender" method="post">
+                @csrf
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Kehadiran</label>
+                    <select name="option" required>
+                        <option value="">Pilih</option>
+                        <option value="yes">{{ $data->rsvp->yes->option }}</option>
+                        <option value="no">{{ $data->rsvp->no->option }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Tamu</label>
+                    <input type="number" name="amount" min="1" max="5" value="1">
+                </div>
+                <button type="submit" class="submit-btn">Kirim Konfirmasi</button>
+            </form>
+        </div>
     </section>
 
     <!-- Footer -->
     <footer>
         <p>Made with ❤️ by <span class="gold">Risa Digital Invitation</span></p>
-        <p>&copy; 2024 All Rights Reserved</p>
+        <p>&copy; {{ date('Y') }} All Rights Reserved</p>
     </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <script>
+        $(".sender").on('submit', function(e) {
+            e.preventDefault();
+            let action = $(this).attr('action'),
+                submit = $(this).find('button[type=submit]');
+            $.ajax({
+                type: 'post',
+                url : action,
+                dataType: 'json',
+                data: $(this).serialize(),
+                error: function(q,w,e) {
+                    submit.text('Coba Lagi');
+                    submit.prop('disabled', false);
+                },
+                beforeSend: function() {
+                    submit.prop('disabled', true);
+                    submit.text('Memeriksa data...');
+                },
+                success: function(response) {
+                    submit.prop('disabled', false);
+                    submit.text('Terkirim');
+                    $(".sender")[0].reset();
+                    alert(response.message);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

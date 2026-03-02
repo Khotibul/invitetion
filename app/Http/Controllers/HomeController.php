@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Template;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -16,9 +17,10 @@ class HomeController extends Controller
     {
         $data = [
             'title' => 'dashboard',
+            'templates' => Template::select('title', 'slug', 'file', 'grade')->publish()->get()
         ];
 
-        return response()->view('home', compact('data'));
+        return response()->view('welcome-green', compact('data'));
     }
 
     public function info(string $slug): Response

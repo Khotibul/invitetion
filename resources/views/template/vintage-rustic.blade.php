@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        use Carbon\Carbon;
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $invitation->title }} | Risa Digital Invitation</title>
@@ -357,18 +360,16 @@
     <section class="hero">
         <div class="hero-content">
             <div class="ornament-top">❦</div>
-            <h1>The Wedding</h1>
-            <div class="names">Bride & Groom</div>
-            <div class="date">15 JUNI 2024</div>
+            <h1>{{ $data->cover->description->top }}</h1>
+            <div class="names">{{ $data->cover->name->female }} & {{ $data->cover->name->male }}</div>
+            <div class="date">{{ Carbon::parse($data->detail->calendar->date)->format('d F Y') }}</div>
         </div>
     </section>
 
     <!-- Quote -->
     <section class="quote-section">
         <div class="container">
-            <p class="quote-text">"Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu 
-            pasangan-pasangan dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram kepadanya."</p>
-            <p class="quote-author">- QS. Ar-Rum: 21</p>
+            <p class="quote-text">"{{ $data->quote->content }}"</p>
         </div>
     </section>
 
@@ -379,19 +380,17 @@
             <div class="couple-grid">
                 <div class="couple-card">
                     <div class="couple-photo">
-                        <img src="https://via.placeholder.com/220" alt="Bride">
+                        <img src="{{ $data->profile->photo->female->image ? url('storage/avatar/'.$data->profile->photo->female->image) : 'https://via.placeholder.com/220' }}" alt="Bride">
                     </div>
-                    <h3>Bride Name</h3>
-                    <p class="parents">Putri dari<br>Bapak & Ibu</p>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <h3>{{ $data->profile->name->female }}</h3>
+                    <p class="parents">Putri dari<br>Bapak {{ $data->profile->parent->female->father }} & Ibu {{ $data->profile->parent->female->mother }}</p>
                 </div>
                 <div class="couple-card">
                     <div class="couple-photo">
-                        <img src="https://via.placeholder.com/220" alt="Groom">
+                        <img src="{{ $data->profile->photo->male->image ? url('storage/avatar/'.$data->profile->photo->male->image) : 'https://via.placeholder.com/220' }}" alt="Groom">
                     </div>
-                    <h3>Groom Name</h3>
-                    <p class="parents">Putra dari<br>Bapak & Ibu</p>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <h3>{{ $data->profile->name->male }}</h3>
+                    <p class="parents">Putra dari<br>Bapak {{ $data->profile->parent->male->father }} & Ibu {{ $data->profile->parent->male->mother }}</p>
                 </div>
             </div>
         </div>
@@ -402,67 +401,61 @@
         <div class="container">
             <h2 class="section-title">Event Details</h2>
             <div class="event-grid">
+                @foreach ($other['event'] as $item)
+                @php $item->prop = json_decode($item->content); @endphp
+                @if($item->prop)
                 <div class="event-card">
-                    <h3>Akad Nikah</h3>
-                    <div class="event-time">Sabtu, 15 Juni 2024<br>08:00 - 10:00 WIB</div>
+                    <h3>{{ $item->title }}</h3>
+                    <div class="event-time">{{ Carbon::parse($data->detail->calendar->date)->format('l, d F Y') }}<br>{{ date('H:i', strtotime($item->prop->time->start)) }} - {{ ($item->prop->time->done===true) ? 'Selesai' : date('H:i', strtotime($item->prop->time->end)) }} WIB</div>
                     <div class="event-location">
-                        <strong>Masjid Al-Ikhlas</strong><br>
-                        Jl. Contoh No. 123<br>
-                        Jakarta Selatan
+                        <strong>{{ $item->prop->location->address }}</strong>
                     </div>
+                    <a href="{{ $item->prop->location->map }}" target="_blank" class="btn-submit" style="display:inline-block; width:auto; margin-top:1rem; text-decoration:none;">Lihat Lokasi</a>
                 </div>
-                <div class="event-card">
-                    <h3>Resepsi</h3>
-                    <div class="event-time">Sabtu, 15 Juni 2024<br>11:00 - 14:00 WIB</div>
-                    <div class="event-location">
-                        <strong>Gedung Serbaguna</strong><br>
-                        Jl. Contoh No. 456<br>
-                        Jakarta Selatan
-                    </div>
-                </div>
+                @endif
+                @endforeach
             </div>
         </div>
     </section>
 
     <!-- Gallery -->
+    @if ($other['photo'])
     <section class="gallery-section">
         <div class="container">
-            <h2 class="section-title">Our Gallery</h2>
+            <h2 class="section-title">{{ $other['photo']->title }}</h2>
             <div class="gallery-grid">
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="1"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="2"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="3"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="4"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="5"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="6"></div>
+                @foreach ($other['photo']->prop->file as $key => $file)
+                <div class="gallery-item">
+                    <img src="{{ url('storage/'.$file) }}" alt="Gallery {{ $key }}">
+                </div>
+                @endforeach
             </div>
         </div>
     </section>
+    @endif
 
     <!-- RSVP -->
     <section class="rsvp-section">
         <div class="container">
-            <h2 class="section-title">Konfirmasi Kehadiran</h2>
-            <form class="rsvp-form">
+            <h2 class="section-title">{{ $data->rsvp->title }}</h2>
+            <form action="{{ route('invitation.present', request()->slug) }}" class="rsvp-form sender" method="post">
+                @csrf
+                <p style="text-align:center; margin-bottom:2rem;">{{ $data->rsvp->content }}</p>
                 <div class="form-group">
                     <label>Nama Lengkap</label>
-                    <input type="text" required>
+                    <input type="text" name="name" required>
                 </div>
                 <div class="form-group">
                     <label>Kehadiran</label>
-                    <select required>
+                    <select name="option" required>
                         <option value="">Pilih</option>
-                        <option value="hadir">Hadir</option>
-                        <option value="tidak">Tidak Hadir</option>
+                        <option value="yes">{{ $data->rsvp->yes->option }}</option>
+                        <option value="no">{{ $data->rsvp->no->option }}</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Jumlah Tamu</label>
-                    <input type="number" min="1" max="5" value="1">
-                </div>
-                <div class="form-group">
-                    <label>Ucapan & Doa</label>
-                    <textarea rows="4"></textarea>
+                    <input type="number" name="amount" min="1" max="5" value="1">
                 </div>
                 <button type="submit" class="btn-submit">Kirim Konfirmasi</button>
             </form>
@@ -473,7 +466,35 @@
     <footer>
         <div class="ornament">❦</div>
         <p>Made with ♥ by Risa Digital Invitation</p>
-        <p>&copy; 2024 All Rights Reserved</p>
+        <p>&copy; {{ date('Y') }} All Rights Reserved</p>
     </footer>
-</body>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <script>
+        $(".sender").on('submit', function(e) {
+            e.preventDefault();
+            let action = $(this).attr('action'),
+                submit = $(this).find('button[type=submit]');
+            $.ajax({
+                type: 'post',
+                url : action,
+                dataType: 'json',
+                data: $(this).serialize(),
+                error: function(q,w,e) {
+                    submit.text('Coba Lagi');
+                    submit.prop('disabled', false);
+                },
+                beforeSend: function() {
+                    submit.prop('disabled', true);
+                    submit.text('Memeriksa data...');
+                },
+                success: function(response) {
+                    submit.prop('disabled', false);
+                    submit.text('Terkirim');
+                    $(".sender")[0].reset();
+                    alert(response.message);
+                }
+            });
+        });
+    </script>
 </html>

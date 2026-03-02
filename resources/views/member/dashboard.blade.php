@@ -2,9 +2,19 @@
 @section('title', Str::title('dashboard'))
 @php
 	use Carbon\Carbon;
-    $activation = Auth::user()->invoice[0]->date;
-    $active = json_decode(Auth::user()->invoice[0]->pack->content)->active;
-    $template = json_decode(Auth::user()->invoice[0]->pack->content)->template;
+    $invoice = Auth::user()->invoice->first();
+    if ($invoice) {
+        $activation = $invoice->date;
+        $packContent = ($invoice->pack && $invoice->pack->content) ? json_decode($invoice->pack->content) : null;
+        $active = $packContent->active ?? 0;
+        $template = $packContent->template ?? [];
+        $packTitle = $invoice->pack ? $invoice->pack->title : 'Paket Tidak Diketahui';
+    } else {
+        $activation = now();
+        $active = 0;
+        $template = [];
+        $packTitle = 'Belum Langganan';
+    }
 @endphp
 @section('content')
 <section class="py-3">
@@ -12,7 +22,7 @@
         <div class="col-12 col-lg-3">
             <div class="package-book bg-white shadow-sm rounded text-center p-2 mb-3">
                 <span>Paket</span>
-                <b class="text-creasik-primary">{{ Auth::user()->invoice[0]->pack->title }}</b>
+                <b class="text-creasik-primary">{{ $packTitle }}</b>
                 @if (isexpired($activation, $active)===false)
                 <span class="text-muted">
                     Aktif
@@ -31,7 +41,7 @@
                     <span>upgrade</span>
                 </a>
             </div>
-            <div class="guest-book rounded p-2 {{ (Auth::user()->acc->guestbook==0) ? 'lock' : null }}">
+            <div class="guest-book rounded p-2 {{ (Auth::user()->acc && Auth::user()->acc->guestbook==0) ? 'lock' : null }}">
                 <a href="{{ route('guestbook') }}">
                     <img src="{{ url('images/icons/open-book_2702134.png') }}" alt="guestbook">
                     <span>Buku tamu</span>
@@ -43,8 +53,18 @@
                 <div class="col-lg-7">
                     <div class="dashboard-summary bg-white shadow-sm rounded">
                         <h4>{{ $data->name }}</h4>
+                        @if($data->subdomain)
                         <h6><a href="{{ route('invitation.index', $data->subdomain) }}" target="_BLANK">{{ route('invitation.index', $data->subdomain) }}</a></h6>
+                        @else
+                        <h6 class="text-muted">Belum ada link undangan</h6>
+                        @endif
+                        @if(Auth::user()->inv && Auth::user()->inv->file)
                         <img src="{{ url('storage/'.Auth::user()->inv->file) }}" alt="">
+                        @else
+                        <div class="bg-light p-5 text-center text-muted mb-3">Belum ada foto</div>
+                        @endif
+                        
+                        @if($data->date)
                         <div id="countdown" class="countdown" data-time="{{ date('Y-m-d', strtotime($data->date->date)) }}">
                             <ul class="list-unstyled mb-0">
                                 <li><b id="days">0</b><span>Hari</span></li>
@@ -53,6 +73,8 @@
                                 <li><b id="seconds">0</b><span>Detik</span></li>
                             </ul>
                         </div>
+                        @endif
+                        @if($data->subdomain)
                         <div class="text-center py-2">
                             <a href="{{ route('invitation.index', $data->subdomain) }}" class="btn btn-sm btn-creasik-primary me-1" target="_BLANK">
                                 <i class="bx bx-link-external"></i>
@@ -63,6 +85,7 @@
                                 <span>Ubah tanggal</span>
                             </a>
                         </div>
+                        @endif
                     </div>
                     @if (!in_array($data->template, $template))
                     <div class="bg-warning rounded shadow p-3 mt-1">
@@ -72,7 +95,7 @@
                     @endif
                 </div>
                 <div class="col-lg-5">
-                    <div class="bg-white shadow-sm rounded p-3 {{ (Auth::user()->acc->guestbook==0) ? 'lock' : null }}">
+                    <div class="bg-white shadow-sm rounded p-3 {{ (Auth::user()->acc && Auth::user()->acc->guestbook==0) ? 'lock' : null }}">
                         <h4>Statistik</h4>
                         <div class="d-flex justify-content-between">
                             <div class="progress" data-max="3" data-value="1"></div>
@@ -98,10 +121,14 @@
         $lock = [];
         // lock by guestbook
         if (in_array($item['id'], ['reservation', 'table-management', 'souvenir'])) :
-            if (Auth::user()->acc->guestbook==1) :
+            if (Auth::user()->acc && Auth::user()->acc->guestbook==1) :
                 $lock[$item['id']] = false;
                 $item['url'] = $item['url'];
-            elseif (Auth::user()->acc->guestbook==0) :
+            elseif (Auth::user()->acc && Auth::user()->acc->guestbook==0) :
+                $lock[$item['id']] = true;
+                $item['url'] = 'packages';
+            else:
+                 // Default if acc is missing or guestbook status unknown
                 $lock[$item['id']] = true;
                 $item['url'] = 'packages';
             endif;
@@ -122,6 +149,66 @@
             <span>{{ Str::upper($item['title']) }}</span>
         </a>
         @endforeach
+    </div>
+
+    <div class="mt-4">
+        <h4 class="mb-3">Template Undangan</h4>
+        <div class="bg-white shadow-sm rounded p-3">
+            <div class="row g-3">
+                @foreach (['basic', 'premium', 'exclusive'] as $grade)
+                    @if (isset($data->templates->$grade))
+                        <div class="col-12">
+                            <h5 class="text-muted text-capitalize">{{ $grade }}</h5>
+                            <div class="d-flex flex-nowrap overflow-auto pb-2" style="gap: 15px;">
+                                @foreach ($data->templates->$grade as $item)
+                                    <div class="card shadow-sm border-0" style="min-width: 200px; max-width: 200px;">
+                                        <div class="position-relative">
+                                            <img src="{{ url('storage/'.$item->file) }}" class="card-img-top rounded" alt="{{ $item->title }}" style="height: 150px; object-fit: cover;">
+                                            @if (Auth::user()->inv && Auth::user()->inv->temp && $item->id == Auth::user()->inv->temp->id)
+                                                <span class="badge bg-warning position-absolute top-0 end-0 m-2">Aktif</span>
+                                            @endif
+                                        </div>
+                                        <div class="card-body p-2 text-center">
+                                            <h6 class="card-title mb-2 text-truncate" title="{{ $item->title }}">{{ $item->title }}</h6>
+                                            <div class="d-grid gap-1">
+                                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="bx bx-show"></i> Tinjau
+                                                </a>
+                                                @if (Auth::user()->inv && Auth::user()->inv->temp && $item->id != Auth::user()->inv->temp->id)
+                                                    <form action="{{ route('save.setting', 'design') }}" class="save-menu d-grid" method="post">
+                                                        @csrf
+                                                        @method('put')
+                                                        <input type="hidden" name="design_template" value="{{ $item->id }}">
+                                                        {{-- Fields required by controller validation --}}
+                                                        @php
+                                                            $preset = Auth::user()->inv->preset ? json_decode(Auth::user()->inv->preset) : null;
+                                                            $design = $preset ? $preset->design : null;
+                                                        @endphp
+                                                        @if($design)
+                                                        <input type="hidden" name="design_title_color" value="{{ $design->title->color ?? '#000000' }}">
+                                                        <input type="hidden" name="design_content_color" value="{{ $design->content->color ?? '#000000' }}">
+                                                        <input type="hidden" name="design_background" value="{{ $design->background ?? '#ffffff' }}">
+                                                        <input type="hidden" name="design_button_background" value="{{ $design->button->background ?? '#ffffff' }}">
+                                                        <input type="hidden" name="design_button_color" value="{{ $design->button->color ?? '#000000' }}">
+                                                        <input type="hidden" name="design_title_font" value="{{ $design->title->font ?? 'Arial' }}">
+                                                        <input type="hidden" name="design_content_font" value="{{ $design->content->font ?? 'Arial' }}">
+                                                        
+                                                        <button type="submit" class="btn btn-sm btn-creasik-primary">
+                                                            <i class="bx bx-check"></i> Gunakan
+                                                        </button>
+                                                        @endif
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
     </div>
 </section>
 @endsection

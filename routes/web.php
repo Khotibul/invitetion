@@ -31,9 +31,7 @@ use App\Http\Controllers\HomeController as HomePublic;
 
 //** Landing */
 
-Route::get('/', function () {
-    return view('welcome-green');
-})->name('landing.home');
+Route::get('/', [HomePublic::class, 'index'])->name('landing.home');
 Route::get('info/{slug}', [HomePublic::class, 'info'])->name('info');
 
 //** End of Landing */

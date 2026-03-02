@@ -26,13 +26,19 @@ class PublicController extends Controller
 		});
 		$invitation->title = implode(' & ', json_decode($invitation->title, true));
 		$invitation_activation = AccountInvoice::select('date', 'package_id')->where('status', 'confirmed')->where('user_id', $invitation->user_id)->latest()->first();
-		if (!empty($invitation_activation->pack)) :
-			$invitation_activation->date = $invitation_activation->date;
-			$invitation_active = json_decode($invitation_activation->pack->content)->active;
-		else :
-			$invitation_active = 0;
-		endif;
-		if (isexpired($invitation_activation->date ?? date('Y-m-d'), $invitation_active)===false) :
+		
+        $invitation_active = 0;
+        $activation_date = date('Y-m-d');
+
+        if ($invitation_activation) {
+            $activation_date = $invitation_activation->date;
+            if ($invitation_activation->pack) {
+                 $content = json_decode($invitation_activation->pack->content);
+                 $invitation_active = $content->active ?? 0;
+            }
+        }
+
+		if (isexpired($activation_date, $invitation_active)===false) :
 			$data = json_decode($invitation->preset);
 			$other = [
 				'video' => InvitationGallery::where('type', 'video')->where('invitation_id', $invitation->id)->first(),

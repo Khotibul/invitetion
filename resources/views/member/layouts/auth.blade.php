@@ -13,7 +13,12 @@
     {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-46c277b6.css') }}"> --}}
     {{-- <script src="{{ asset('build/assets/member-script-72440df0.js') }}" type="module"></script> --}}
 </head>
-<body class="auth">
+<body class="auth d-flex flex-column min-vh-100 justify-content-center py-5 bg-light">
+    <div class="position-fixed top-0 start-0 p-4">
+        <a href="{{ url('/') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class="bx bx-arrow-back me-1"></i> Kembali
+        </a>
+    </div>
     <div class="container">
         @yield('content')
     </div>

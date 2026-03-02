@@ -116,14 +116,19 @@ class ProfileController extends Controller
 		if (!empty($datatable)) :
 			$badge = ['PENDING'=>'bg-warning'];
 			foreach ($datatable as $key => $item) :
+                $content = json_decode($item->content);
+                $status = ['color'=>'bg-secondary', 'text'=>'unknown']; // Default status
+
 				if ($item->status=='CONFIRMED') :
                     $status = ['color'=>'bg-creasik-primary', 'text'=>'done'];
-                elseif ($item->status=='PENDING' AND empty(json_decode($item->content)->payment)) :
+                elseif ($item->status=='PENDING' && $content && empty($content->payment)) :
                     $status = ['color'=>'bg-info', 'text'=>'pending'];
-                elseif ($item->status=='PENDING' AND !empty(json_decode($item->content)->payment)) :
+                elseif ($item->status=='PENDING' && $content && !empty($content->payment)) :
                     $status = ['color'=>'bg-warning', 'text'=>'waiting confirmation'];
                 endif;
-				$data_val[$key]['image'] = anchor(text:"<b>#:".$item->payment_code."</b>", href:route('invoice', encrypt($item->id)))."<br/> Pembelian paket <u>".$item->pack->title."</u>";
+				
+                $pack_title = ($item->pack) ? $item->pack->title : 'Paket Tidak Diketahui';
+				$data_val[$key]['image'] = anchor(text:"<b>#:".$item->payment_code."</b>", href:route('invoice', encrypt($item->id)))."<br/> Pembelian paket <u>".$pack_title."</u>";
 				$data_val[$key]['title'] = $item->date;
 				$data_val[$key]['info'] = "<span class=\"badge {$status['color']} w-100\">".Str::upper($status['text'])."</span>";
 			endforeach;
@@ -142,7 +147,11 @@ class ProfileController extends Controller
 			'feature' => Info::where('type', 'package')->first(),
 			'package' => Package::select('id', 'title', 'content', 'price')->where('id', '!=', 1)->publish()->get()
 		];
-		$bagpack['feature']['content'] = json_decode($bagpack['feature']->content, true);
+		if ($bagpack['feature']) {
+			$bagpack['feature']['content'] = json_decode($bagpack['feature']->content, true);
+		} else {
+			$bagpack['feature'] = ['content' => []];
+		}
 		$data = json_decode(json_encode($bagpack));
 
 		return response()->view('member.packages', compact('data'));
@@ -173,9 +182,16 @@ class ProfileController extends Controller
 				$status = ['color'=>'bg-warning', 'text'=>'waiting confirmation'];
 			endif;
 			if ($invoice->payment_link=='#manual') :
-				$bank_pay = Bank::select('name', 'content', 'file')->whereId(base64_decode($invoice->content->bank))->publish()->first();
-				$bank_pay->content = json_decode($bank_pay->content);
-				$bank_pay->bank = $this->bank[$bank_pay->file];
+                // Decode bank ID if it was base64 encoded, otherwise use as is
+                $bank_id = isset($invoice->content->bank) ? $invoice->content->bank : 0;
+                if (base64_decode($bank_id, true) !== false) {
+                    $bank_id = base64_decode($bank_id);
+                }
+				$bank_pay = Bank::select('id', 'name', 'content', 'file')->whereId($bank_id)->publish()->first();
+				if ($bank_pay) :
+					$bank_pay->content = json_decode($bank_pay->content);
+					$bank_pay->bank = $this->bank[$bank_pay->file] ?? 'Bank';
+				endif;
 			else :
 				$bank_pay = null;
 			endif;

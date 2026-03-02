@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        use Carbon\Carbon;
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $invitation->title }} | Risa Digital Invitation</title>
@@ -158,18 +161,16 @@
 <body>
     <section class="cover">
         <div>
-            <h1>Bride & Groom</h1>
-            <div class="date">15 . 06 . 2024</div>
+            <h1>{{ $data->cover->name->male }} & {{ $data->cover->name->female }}</h1>
+            <div class="date">{{ Carbon::parse($data->detail->calendar->date)->format('d . m . Y') }}</div>
         </div>
     </section>
 
     <section class="story">
         <div class="container">
-            <h2>Our Story</h2>
+            <h2>{{ $data->quote->show ? 'Our Quote' : 'Our Story' }}</h2>
             <div class="story-content">
-                <p>Perjalanan cinta kami dimulai dari pertemuan yang tak terduga, 
-                berkembang menjadi persahabatan yang indah, dan kini kami siap untuk 
-                memulai babak baru dalam hidup kami bersama.</p>
+                <p>{{ $data->quote->show ? $data->quote->content : $data->cover->description->bottom }}</p>
             </div>
         </div>
     </section>
@@ -178,42 +179,40 @@
         <div class="container">
             <h2>Event Timeline</h2>
             <div class="timeline-items">
+                @foreach ($other['event'] as $item)
+                @php $item->prop = json_decode($item->content); @endphp
+                @if($item->prop)
                 <div class="timeline-item">
-                    <div class="timeline-time">08:00</div>
+                    <div class="timeline-time">{{ date('H:i', strtotime($item->prop->time->start)) }}</div>
                     <div class="timeline-content">
-                        <h3>Akad Nikah</h3>
-                        <p>Masjid Al-Ikhlas, Jakarta</p>
+                        <h3>{{ $item->title }}</h3>
+                        <p>{{ $item->prop->location->address }}</p>
                     </div>
                 </div>
-                <div class="timeline-item">
-                    <div class="timeline-time">11:00</div>
-                    <div class="timeline-content">
-                        <h3>Resepsi</h3>
-                        <p>Gedung Serbaguna, Jakarta</p>
-                    </div>
-                </div>
+                @endif
+                @endforeach
             </div>
         </div>
     </section>
 
+    @if ($data->gift->show)
     <section class="gift">
         <div class="container">
-            <h2>Wedding Gift</h2>
+            <h2>{{ $data->gift->title }}</h2>
             <div class="gift-box">
-                <p>Doa restu Anda adalah hadiah terindah bagi kami. 
-                Namun jika memberi adalah ungkapan kasih Anda, 
-                Anda dapat mengirimkannya melalui:</p>
+                <p>{{ $data->gift->content }}</p>
                 <p style="margin-top: 1rem; font-weight: 600;">
-                    Bank BCA: 1234567890<br>
-                    a.n. Nama Penerima
+                    {{ $data->gift->bank->option }}: {{ $data->gift->bank->code }}<br>
+                    a.n. {{ $data->gift->bank->name }}
                 </p>
             </div>
         </div>
     </section>
+    @endif
 
     <footer>
         <p>Made with ❤️ by Risa Digital Invitation</p>
-        <p>&copy; 2024</p>
+        <p>&copy; {{ date('Y') }}</p>
     </footer>
 </body>
 </html>

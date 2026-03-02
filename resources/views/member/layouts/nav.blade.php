@@ -1,6 +1,6 @@
 <nav class="cread-navbar navbar navbar-expand-lg fixed-top">
 	<div class="container-fluid">
-		<a class="navbar-brand" href="{{ route('member.main') }}">{{ Str::upper('creasik digital') }}</a>
+		<a class="navbar-brand" href="{{ route('member.main') }}">Risa Digital Invitation</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
@@ -8,7 +8,7 @@
 			<ul class="navbar-nav mb-2 mb-lg-0">
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-						<img src="{{ (Auth::user()->third_party=='google') ? Auth::user()->acc->file : url('storage/xs/'.Auth::user()->acc->file) }}" class="me-2" alt="avatar" @style('height:40px;width:40px;object-fit:cover')>
+						<img src="{{ Auth::user()->acc ? ((Auth::user()->third_party=='google') ? Auth::user()->acc->file : url('storage/xs/'.Auth::user()->acc->file)) : 'https://via.placeholder.com/40' }}" class="me-2" alt="avatar" @style('height:40px;width:40px;object-fit:cover')>
 						<span>{{ Auth::user()->name }}</span>
 					</a>
 					<ul class="dropdown-menu rounded animate slideIn" aria-labelledby="navbarDropdown">
@@ -44,7 +44,7 @@
 	</div>
 </nav>
 <div class="nav-holder"></div>
-@if (Auth::user()->acc->actived=='0')
+@if (Auth::user()->acc && Auth::user()->acc->actived=='0')
 <div class="container">
 	<div class="alert alert-danger alert-dismissible mt-3" role="alert">
 		<h5 class="d-flex align-items-center mb-1"><i class="bx bx-error me-2"></i> <small class="fw-normal">Hai, <b>{{ Auth::user()->name }}</b></small></h5>

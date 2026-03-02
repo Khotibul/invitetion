@@ -412,41 +412,97 @@
             }
         }
 
-        /* Auth Links */
-        .auth-links {
+        /* Navbar */
+        .navbar {
             position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            background: transparent;
         }
 
-        .auth-links a {
+        .navbar.scrolled {
+            background: white;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
             color: white;
             text-decoration: none;
-            margin-left: 1.5rem;
+        }
+
+        .navbar.scrolled .nav-brand {
+            color: var(--primary-green);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
 
-        .auth-links a:hover {
+        .navbar.scrolled .nav-links a {
+            color: var(--text-dark);
+        }
+
+        .nav-links a:hover {
             color: var(--accent-gold);
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            background: white;
+            color: var(--primary-green) !important;
+            font-weight: 600;
+        }
+
+        .navbar.scrolled .nav-btn {
+            background: var(--primary-green);
+            color: white !important;
+        }
+
+        /* Auth Links - Legacy override */
+        .auth-links {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Auth Links -->
-    <div class="auth-links">
-        @if (Route::has('login'))
-            @auth
-                <a href="{{ url('/home') }}">Dashboard</a>
-            @else
-                <a href="{{ route('login') }}">Masuk</a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}">Daftar</a>
-                @endif
-            @endauth
-        @endif
-    </div>
+    <!-- Navbar -->
+    <nav class="navbar" id="mainNav">
+        <a href="{{ url('/') }}" class="nav-brand">Risa Digital Invitation</a>
+        <div class="nav-links">
+            <a href="#templates">Template</a>
+            <a href="{{ route('landing.home') }}#pricing">Harga</a>
+            @if (Route::has('login'))
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="nav-btn">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}">Masuk</a>
+                    @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="nav-btn">Daftar</a>
+                    @endif
+                @endauth
+            @endif
+        </div>
+    </nav>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -506,41 +562,18 @@
             <h2 class="section-title">Template Pilihan</h2>
             <p class="section-subtitle">Desain modern dan elegant untuk berbagai jenis acara</p>
             <div class="templates-grid">
+                @foreach ($data['templates'] as $item)
                 <div class="template-card">
-                    <div class="template-image">Modern Elegant</div>
+                    <div class="template-image">
+                        <img src="{{ url('storage/'.$item->file) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
                     <div class="template-info">
-                        <h4>Modern Elegant</h4>
-                        <p>Design modern dengan animasi smooth dan warna hijau elegant</p>
+                        <h4>{{ $item->title }}</h4>
+                        <p class="text-capitalize">{{ $item->grade }}</p>
+                        <a href="{{ route('preview-template.index', $item->slug) }}" class="btn btn-sm btn-outline" style="color: var(--primary-green); border-color: var(--primary-green); margin-top: 10px;">Preview</a>
                     </div>
                 </div>
-                <div class="template-card">
-                    <div class="template-image">Romantic Garden</div>
-                    <div class="template-info">
-                        <h4>Romantic Garden</h4>
-                        <p>Tema taman romantis dengan elemen floral yang indah</p>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <div class="template-image">Luxury Botanical</div>
-                    <div class="template-info">
-                        <h4>Luxury Botanical</h4>
-                        <p>Design mewah dengan countdown timer dan gallery masonry</p>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <div class="template-image">Tropical Paradise</div>
-                    <div class="template-info">
-                        <h4>Tropical Paradise</h4>
-                        <p>Tema pantai tropis untuk beach wedding yang sempurna</p>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <div class="template-image">Minimalist Green</div>
-                    <div class="template-info">
-                        <h4>Minimalist Green</h4>
-                        <p>Design minimalis dengan sage green untuk intimate wedding</p>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -638,5 +671,16 @@
             <p style="margin-top: 1rem; opacity: 0.8;">Made with 💚 in Indonesia</p>
         </div>
     </footer>
+    <script>
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
 </body>
 </html>

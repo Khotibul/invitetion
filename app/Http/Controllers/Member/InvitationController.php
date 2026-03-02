@@ -165,7 +165,11 @@ class InvitationController extends Controller
 		$this->middleware(function ($request, $next) {
 			$this->activation = AccountInvoice::select('date', 'package_id')->with('pack')->current()->first();
 			if ($this->activation!=null) :
-				$this->active = json_decode($this->activation->pack->content)->active;
+                if ($this->activation->pack) {
+				    $this->active = json_decode($this->activation->pack->content)->active ?? 0;
+                } else {
+                    $this->active = 0;
+                }
 				if (isexpired($this->activation->date, $this->active)===false) :
 					return $next($request);
 				elseif (isexpired($this->activation->date, $this->active)===true) :
@@ -180,19 +184,25 @@ class InvitationController extends Controller
 	public function main(): Response|RedirectResponse
 	{
 		$menu = $this->menu;
-		$conditional_menu = json_decode($this->activation->pack->content, true);
+        $pack_content = $this->activation->pack ? json_decode($this->activation->pack->content, true) : [];
+		$conditional_menu = $pack_content;
 		$bagpack = [
-			'name' => Auth::user()->inv->title,
-			'date' => json_decode(Auth::user()->inv->preset)->detail->calendar,// Preset
-			'subdomain' => Auth::user()->inv->slug,
-			'template' => Auth::user()->inv->temp->grade
+			'name' => Auth::user()->inv ? Auth::user()->inv->title : json_encode(['-', '-']),
+			'date' => (Auth::user()->inv && Auth::user()->inv->preset) ? json_decode(Auth::user()->inv->preset)->detail->calendar : null,
+			'subdomain' => Auth::user()->inv ? Auth::user()->inv->slug : '',
+			'template' => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
+            'templates' => [
+                'basic' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'basic')->publish()->get(),
+                'premium' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'premium')->publish()->get(),
+                'exclusive' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'exclusive')->publish()->get()
+            ],
 		];
-		$bagpack['name'] = implode(' & ', json_decode($bagpack['name'], true));
+		$bagpack['name'] = implode(' & ', json_decode($bagpack['name'], true) ?? ['-', '-']);
 		$data = json_decode(json_encode($bagpack));
 		$conditional = [
-			'e-invitation' => $conditional_menu['e-invitation'],
-			'story' => $conditional_menu['story'],
-			'event' => $conditional_menu['event']
+			'e-invitation' => $conditional_menu['e-invitation'] ?? false,
+			'story' => $conditional_menu['story'] ?? false,
+			'event' => $conditional_menu['event'] ?? false
 		];
 
 		return response()->view('member.dashboard', compact('menu', 'data', 'conditional'));
