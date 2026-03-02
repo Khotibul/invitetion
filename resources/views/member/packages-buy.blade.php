@@ -1,5 +1,5 @@
 @extends('member.layouts.app')
-@section('title', Str::title('beli paket'))
+@section('title', Str::title('pembayaran undangan'))
 @section('content')
 <section class="py-3">
     <form action="{{ route('invoice-add', request()->id) }}" class="pay-for-upgrade" method="post">

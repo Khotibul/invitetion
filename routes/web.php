@@ -50,6 +50,8 @@ Route::prefix('template')->group(function () {
 	Route::get('preview/{slug}', [MemberPublic::class, 'template'])->name('preview-template.index');
 });
 
+// Override login route to use custom signin page
+Route::get('login', [MemberAccount::class, 'signin'])->name('login');
 Auth::routes();
 Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::get('/', [MemberInvite::class, 'main'])->name('member.main');

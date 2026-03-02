@@ -27,12 +27,16 @@
 		<div class="col-md-3 border-right">
 			<div class="bg-white rounded shadow-sm d-flex flex-column align-items-center text-center p-3">
 				<figure class="img-profile">
-					<img class="rounded-circle my-2" src="@if (Auth::user()->third_party=='google')
-					{{ Auth::user()->acc->file }}
+					<img class="rounded-circle my-2" src="@if (Auth::user()->acc)
+						@if (Auth::user()->third_party=='google')
+						{{ Auth::user()->acc->file }}
+						@else
+						{{ url('storage/'.Auth::user()->acc->file) }}
+						@endif
 					@else
-					{{ url('storage/'.Auth::user()->acc->file) }}
+						{{ 'https://via.placeholder.com/150' }}
 					@endif">
-					@if (isexpired($activation, $data['active'])===false)
+					@if (isexpired($activation, $data['active'] ?? 0)===false)
 					<button type="button" data-bs-toggle="modal" data-bs-target="#storage">
 						<i class="bx bx-edit"></i>
 					</button>
@@ -71,17 +75,17 @@
 							<label for="phone" class="form-label">
 								<var dir="phone">Nomor telepon (Whatsapp)</var>
 							</label>
-							<input type="text" name="phone" id="phone" class="form-control" value="{{ $account->phone ?? null }}" placeholder="Nomor whatsapp">
+							<input type="text" name="phone" id="phone" class="form-control" value="{{ $account?->phone ?? null }}" placeholder="Nomor whatsapp">
 						</div>
 						<div class="mb-2">
 							<label for="address" class="form-label">
 								<var dir="address">Alamat</var>
 							</label>
-							<textarea name="address" id="address" class="form-control" placeholder="Alamat">{{ $account->address ?? null }}</textarea>
+							<textarea name="address" id="address" class="form-control" placeholder="Alamat">{{ $account?->address ?? null }}</textarea>
 						</div>
 					</div>
 					<div class="my-2">
-						<input type="hidden" name="file" value="{{ Auth::user()->acc->file }}" readonly>
+						<input type="hidden" name="file" value="{{ Auth::user()->acc->file ?? 'default.png' }}" readonly>
 						<button class="btn btn-creasik-primary w-100" type="submit">
 							<i class="bx bx-check-circle"></i>
 							<span>Simpan</span>
@@ -91,12 +95,12 @@
 			</div>
 		</div>
 		<div class="col-md-4">
-			@if ($data['activation']!=null)				
+			@if ($data['activation']!=null && $data['activation']->pack)				
 			<div class="bg-white rounded shadow-sm p-3 mb-2">
 				<div class="d-flex justify-content-between align-items-center experience">
 					<span>
 						<small class="d-block">Paket</small>
-						<b>{{ Auth::user()->invoice[0]->pack->title }}</b>
+						<b>{{ $data['activation']->pack->title }}</b>
 					</span>
 					<a href="{{ route('packages') }}" class="btn btn-creasik-primary">
 						<i class="bx bx-chevrons-up"></i>
@@ -104,6 +108,7 @@
 					</a>
 				</div>
 			</div>
+            @if(Auth::user()->inv)
 			<div class="bg-white rounded shadow-sm p-3 mb-2">
 				<div class="d-flex justify-content-between align-items-center experience">
 					<span>Undangan</span>
@@ -113,9 +118,10 @@
 					</a>
 				</div>
 			</div>
+            @endif
 			<hr>
 			@endif
-			<button type="button" class="btn btn-danger w-100">
+			<button type="button" class="btn btn-danger w-100 logout-form">
 				<i class="bx bx-log-out"></i>
 				<span>Keluar</span>
 			</button>

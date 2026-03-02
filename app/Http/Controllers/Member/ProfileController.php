@@ -52,12 +52,12 @@ class ProfileController extends Controller
     // Account
 	public function profile(): Response
 	{
-		$account = json_decode(Auth::user()->acc->content);
+		$account = (Auth::user()->acc) ? json_decode(Auth::user()->acc->content) : null;
 		$data = [
 			'activation' => AccountInvoice::select('date', 'package_id')->with('pack')->current()->first(),
 		];
-		if ($data['activation']!=null) :
-			$data['active'] = json_decode($data['activation']->pack->content)->active;
+		if ($data['activation']!=null && $data['activation']->pack) :
+			$data['active'] = json_decode($data['activation']->pack->content)->active ?? 0;
 		else :
 			$data['active'] = 0;
 		endif;
@@ -77,10 +77,21 @@ class ProfileController extends Controller
 			'name' => $request->name,
 			'email' => $request->email
 		]);
-		Account::find(Auth::user()->acc->id)->update([
-			'content' => json_encode(['phone' => $request->phone, 'address' => $request->address]),
-			'file' => $request->file
-		]);
+        
+        if (Auth::user()->acc) {
+            Account::find(Auth::user()->acc->id)->update([
+                'content' => json_encode(['phone' => $request->phone, 'address' => $request->address]),
+                'file' => $request->file ?? 'default.png'
+            ]);
+        } else {
+             Account::create([
+                'user_id' => Auth::user()->id,
+                'content' => json_encode(['phone' => $request->phone, 'address' => $request->address]),
+                'file' => $request->file ?? 'default.png',
+                'actived' => '1', // Default active
+                'guestbook' => '0' // Default guestbook
+            ]);
+        }
 
 		$response = ['toast' => ['icon' => 'success', 'title' => 'Profil disimpan', 'text' => 'Profile baru kamu disimpan.']];
 

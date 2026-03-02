@@ -25,6 +25,12 @@
 							</a>
 						</li>
 						<li>
+							<a class="dropdown-item" href="{{ route('packages') }}">
+								<i class="bx bx-cart-alt"></i>
+								<span>Pesan Undangan</span>
+							</a>
+						</li>
+						<li>
 							<a class="dropdown-item" href="{{ route('transaction') }}">
 								<i class="bx bx-receipt"></i>
 								<span>Transaksi</span>

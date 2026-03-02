@@ -1,5 +1,5 @@
 @extends('member.layouts.app')
-@section('title', Str::title('upgrade paket'))
+@section('title', Str::title('pesan undangan'))
 @php
 	use Carbon\Carbon;
     $menu = [
