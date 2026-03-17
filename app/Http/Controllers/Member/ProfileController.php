@@ -111,37 +111,50 @@ class ProfileController extends Controller
 	public function account_transaction_list(Request $request): JsonResponse
 	{
 		$totalFilteredRecord = $totalDataRecord = $draw_val = "";
-		$column = [0 => 'image', 1 => 'title', 2 => 'info'];
 		$totalDataRecord = AccountInvoice::where('user_id', Auth::user()->id)->count();
 		$totalFilteredRecord = $totalDataRecord;
 		$limit_val	= $request->input('length');
 		$start_val	= $request->input('start');
-		if (empty($request->input('search.value'))) :
-			$datatable = AccountInvoice::where('user_id', Auth::user()->id)->offset($start_val)->limit($limit_val)->latest()->get();
-		else :
-			$search_text = $request->input('search.value');
-			$datatable =  AccountInvoice::where('user_id', Auth::user()->id)->where('id', 'LIKE', "%{$search_text}%")->orWhere('date', 'LIKE', "%{$search_text}%")->offset($start_val)->limit($limit_val)->get();
-			$totalFilteredRecord = AccountInvoice::where('id', 'LIKE', "%{$search_text}%")->orWhere('date', 'LIKE', "%{$search_text}%")->count();
+		$query = AccountInvoice::with('pack')->where('user_id', Auth::user()->id);
+		$search_text = $request->input('search.value');
+		if (!empty($search_text)) :
+			$query->where(function ($q) use ($search_text) {
+				$q->where('payment_code', 'LIKE', "%{$search_text}%")
+					->orWhere('date', 'LIKE', "%{$search_text}%")
+					->orWhere('status', 'LIKE', "%{$search_text}%");
+			});
 		endif;
+		$totalFilteredRecord = $query->count();
+		$datatable = $query->offset($start_val)->limit($limit_val)->latest()->get();
 		$data_val = [];
 		if (!empty($datatable)) :
-			$badge = ['PENDING'=>'bg-warning'];
 			foreach ($datatable as $key => $item) :
-                $content = json_decode($item->content);
-                $status = ['color'=>'bg-secondary', 'text'=>'unknown']; // Default status
+				$content = $item->content ? json_decode($item->content) : null;
 
+				$status = ['color' => 'bg-secondary', 'text' => 'unknown'];
 				if ($item->status=='CONFIRMED') :
-                    $status = ['color'=>'bg-creasik-primary', 'text'=>'done'];
-                elseif ($item->status=='PENDING' && $content && empty($content->payment)) :
-                    $status = ['color'=>'bg-info', 'text'=>'pending'];
-                elseif ($item->status=='PENDING' && $content && !empty($content->payment)) :
-                    $status = ['color'=>'bg-warning', 'text'=>'waiting confirmation'];
-                endif;
-				
-                $pack_title = ($item->pack) ? $item->pack->title : 'Paket Tidak Diketahui';
-				$data_val[$key]['image'] = anchor(text:"<b>#:".$item->payment_code."</b>", href:route('invoice', encrypt($item->id)))."<br/> Pembelian paket <u>".$pack_title."</u>";
-				$data_val[$key]['title'] = $item->date;
-				$data_val[$key]['info'] = "<span class=\"badge {$status['color']} w-100\">".Str::upper($status['text'])."</span>";
+					$status = ['color' => 'bg-success', 'text' => 'done'];
+				elseif ($item->status=='PENDING' && $content && empty($content->payment)) :
+					$status = ['color' => 'bg-info', 'text' => 'pending'];
+				elseif ($item->status=='PENDING' && $content && !empty($content->payment)) :
+					$status = ['color' => 'bg-warning', 'text' => 'waiting confirmation'];
+				endif;
+
+				$invoice_number = ($content && !empty($content->invoice_number)) ? $content->invoice_number : '#-';
+				$pack_title = $item->pack ? $item->pack->title : 'Paket Tidak Diketahui';
+				$method = ($item->payment_link=='#manual') ? 'Manual' : 'Otomatis';
+				$date = $item->date ? date('Y-m-d', strtotime($item->date)) : '-';
+
+				$has_proof = ($content && !empty($content->payment) && !empty($content->payment->image));
+				$proof_badge = $has_proof ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-secondary">Belum</span>';
+
+				$data_val[$key]['invoice'] = anchor(text:"<b>{$invoice_number}:{$item->payment_code}</b>", href:route('invoice', encrypt($item->id)));
+				$data_val[$key]['package'] = "<span class=\"fw-semibold\">{$pack_title}</span><br/><small class=\"text-muted\">{$proof_badge}</small>";
+				$data_val[$key]['amount'] = idr($item->amount ?? 0);
+				$data_val[$key]['method'] = $method;
+				$data_val[$key]['status'] = "<span class=\"badge {$status['color']}\">".Str::upper($status['text'])."</span>";
+				$data_val[$key]['date'] = $date;
+				$data_val[$key]['action'] = "<a class=\"btn btn-sm btn-creasik-primary\" href=\"".route('invoice', encrypt($item->id))."\"><i class=\"bx bx-receipt\"></i> Detail</a>";
 			endforeach;
 		endif;
 		$draw_val = $request->input('draw');

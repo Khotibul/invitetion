@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TemplateSeeder::class,
             NewTemplateSeeder::class, // New templates
+            TheWeddingTemplateSeeder::class,
             TemplateAssetSeeder::class,
             PackageSeeder::class,
             InfoSeeder::class,

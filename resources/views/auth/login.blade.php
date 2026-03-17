@@ -1,44 +1,48 @@
-@extends('panel.layouts.auth')
-@section('title', 'Login')
+@extends('member.layouts.auth')
+@section('title', Str::title('masuk'))
 @section('content')
-<form id="formAuthentication" class="mb-3" action="{{ route('login') }}" method="POST">
-	@csrf
-	<div class="mb-3">
-		<label for="email" class="form-label">Email</label>
-		@error('email')
-		<span class="text-danger small" role="alert">
-			<strong>{{ $message }}</strong>
-		</span>
-		@enderror
-		<input
-			type="text"
-			class="form-control"
-			id="email"
-			name="email"
-			placeholder="Enter your email"
-			autofocus/>
-	</div>
-	
-	<div class="mb-3 form-password-toggle">
-		<label class="form-label" for="password">Password</label>
-		@error('password')
-		<span class="text-danger small" role="alert">
-			<strong>{{ $message }}</strong>
-		</span>
-		@enderror
-		<div class="input-group input-group-merge">
-			<input
-				type="password"
-				id="password"
-				class="form-control"
-				name="password"
-				placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-				aria-describedby="password"/>
-			<span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
-		</div>
-	</div>
-	<div class="mb-3">
-	  	<button class="btn btn-primary d-grid w-100" type="submit">{{ __('Login') }}</button>
-	</div>
-</form>
+@php
+    $googleReady = config('services.google.client_id') && config('services.google.client_secret') && config('services.google.redirect');
+@endphp
+<div class="auth__title text-center py-3">
+	<h1>{{ Str::upper('masuk') }}</h1>
+	<p>Masuk dan kustomisasi undangan pernikahanmu, sesuai dengan apa yang kamu mau.</p>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="sign-form bg-white p-3">
+            <form action="{{ route('signin-store') }}" method="post" class="login">
+                @csrf
+                <div class="mb-3">
+                    <label for="email" class="form-label">{{ Str::title('email') }}</label>
+                    <input type="email" name="email" id="email" class="form-control form-control-sm" value="{{ old('email') ?? null }}" placeholder="email">
+                    @error('email')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">{{ Str::title('kata sandi') }}</label>
+                    <input type="password" name="password" id="password" class="form-control form-control-sm" placeholder="password">
+                    @error('password')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+                <div class="text-center py-2">
+                    <button type="submit" name="submit" id="submit" class="btn btn-creasik-primary text-uppercase w-100">
+                        <i class="bx bx-log-in"></i>
+                        <span>{{ Str::title('masuk') }}</span>
+                    </button>
+                    <hr class="spliter" data-text="atau">
+                    <a href="{{ '/auth/redirect' }}" class="login-with-google-btn">
+                        <span>Google</span>
+                    </a>
+                    @if (!$googleReady)
+                        <div class="pt-2 small text-danger text-start">Login Google belum dikonfigurasi.</div>
+                    @endif
+                </div>
+            </form>
+        </div>
+        <div class="text-center py-3">Belum punya akun? <a href="{{ route('signup') }}" class="text-creasik-primary">{{ Str::title('buat akun baru') }}</a></div>
+    </div>
+</div>
 @endsection

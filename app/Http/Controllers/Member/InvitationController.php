@@ -192,9 +192,9 @@ class InvitationController extends Controller
 			'subdomain' => Auth::user()->inv ? Auth::user()->inv->slug : '',
 			'template' => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
             'templates' => [
-                'basic' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'basic')->publish()->get(),
-                'premium' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'premium')->publish()->get(),
-                'exclusive' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'exclusive')->publish()->get()
+                'basic' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('slug', 'the-wedding')->publish()->get(),
+                'premium' => null,
+                'exclusive' => null,
             ],
 		];
 		$bagpack['name'] = implode(' & ', json_decode($bagpack['name'], true) ?? ['-', '-']);
@@ -214,11 +214,11 @@ class InvitationController extends Controller
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
 			'template' => [
-				'basic' => Template::select('id', 'title', 'slug', 'file')->where('grade', 'basic')->publish()->get(),
-				'premium' => Template::select('id', 'title', 'slug', 'file')->where('grade', 'premium')->publish()->get(),
-				'exclusive' => Template::select('id', 'title', 'slug', 'file')->where('grade', 'exclusive')->publish()->get()
+				'basic' => Template::select('id', 'title', 'slug', 'file')->where('slug', 'the-wedding')->publish()->get(),
+				'premium' => null,
+				'exclusive' => null,
 			],
-			'limit' => json_decode($access->pack->content, true)['template'],
+			'limit' => ['basic'],
 			'font' => TemplateAssets::select('title', 'content')->where('type', 'font')->publish()->get(),
 			'preset' => json_decode(Auth::user()->inv->preset)->design,// Preset
 		];
@@ -745,6 +745,9 @@ class InvitationController extends Controller
 		$save_inv_column = [];
 		$column = [];
 		$preset = json_decode($recent_inv->preset, true);
+		if (!isset($preset['design']['template'])) :
+			$preset['design']['template'] = Auth::user()->inv->template_id;
+		endif;
 		if ($menu=='design') :
 			// validation
 			$column['design_template'] = 'required';
@@ -755,6 +758,10 @@ class InvitationController extends Controller
 			$column['design_button_color'] = 'required';
 			$column['design_title_font'] = 'required';
 			$column['design_content_font'] = 'required';
+			$allowed_template = Template::select('id')->where('slug', 'the-wedding')->publish()->first();
+			if (!$allowed_template || (string) $request->input('design_template') !== (string) $allowed_template->id) :
+				return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Template tidak tersedia.']]);
+			endif;
 			// new preset
 			if (isitsame($request->input('design_template'), $preset['design']['template'])===false) :
 				$access = AccountInvoice::select('package_id')->with('pack')->current()->first();

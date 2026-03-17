@@ -9,6 +9,7 @@ use App\Models\AccountInvoice;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,6 +28,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+
+        if (!Schema::hasTable('contacts') || !Schema::hasTable('settings') || !Schema::hasTable('link_externals') || !Schema::hasTable('account_invoices')) {
+            View::share('global', [
+                'setting' => collect([]),
+                'contact' => [json_decode(json_encode(['title'=>null, 'content'=>null]), false), json_decode(json_encode(['title'=>null, 'content'=>'no-map']), false), collect([]), collect([]), collect([])],
+                'social' => collect([]),
+                'admin' => ['payment_waiting' => 0],
+            ]);
+            return;
+        }
         
         $address = Contact::select('title', 'content')->whereType('address')->whereActived('1')->firstOr(function() {
             return json_decode(json_encode(['title'=>null, 'content'=>null]), FALSE);

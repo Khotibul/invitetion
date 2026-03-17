@@ -17,6 +17,7 @@ use App\Http\Controllers\Member\InvitationController as MemberInvite;
 use App\Http\Controllers\Guest\GuestController as Guestbook;
 use App\Http\Controllers\Guest\GuestSouvenirController as GuestbookSouvenir;
 use App\Http\Controllers\HomeController as HomePublic;
+use App\Http\Controllers\Panel\AuthController as PanelAuth;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,7 @@ Route::prefix('template')->group(function () {
 
 // Override login route to use custom signin page
 Route::get('login', [MemberAccount::class, 'signin'])->name('login');
+Route::get('register', [MemberAccount::class, 'signup'])->name('register');
 Auth::routes();
 Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::get('/', [MemberInvite::class, 'main'])->name('member.main');
@@ -122,6 +124,10 @@ Route::prefix('guestbook')->middleware('is_member')->group(function () {
 //** End of Guestbook */
 // ===============================================================================================
 //** Panel */
+
+Route::get('control-panel/login', [PanelAuth::class, 'login'])->name('admin.login');
+Route::post('control-panel/login', [PanelAuth::class, 'login_store'])->name('admin.login.store');
+Route::post('control-panel/logout', [PanelAuth::class, 'logout'])->name('admin.logout');
 
 Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::get('/', [SettingController::class, 'dashboard'])->name('home.dashboard');

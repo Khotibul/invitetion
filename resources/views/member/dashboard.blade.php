@@ -18,6 +18,38 @@
 @endphp
 @section('content')
 <section class="py-3">
+    <ul class="nav nav-pills creasik-nav-pill mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page">
+                <i class="bx bxs-widget"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('profile') }}">
+                <i class="bx bx-user-circle"></i>
+                <span>Profil</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('packages') }}">
+                <i class="bx bx-cart-alt"></i>
+                <span>Pesan Undangan</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('storage') }}">
+                <i class="bx bx-images"></i>
+                <span>Penyimpanan</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('transaction') }}">
+                <i class="bx bx-receipt"></i>
+                <span>Transaksi</span>
+            </a>
+        </li>
+    </ul>
     <div class="row flex-lg-row-reverse g-3 mb-3">
         <div class="col-12 col-lg-3">
             <div class="package-book bg-white shadow-sm rounded text-center p-2 mb-3">
@@ -163,7 +195,7 @@
                                 @foreach ($data->templates->$grade as $item)
                                     <div class="card shadow-sm border-0" style="min-width: 200px; max-width: 200px;">
                                         <div class="position-relative">
-                                            <img src="{{ url('storage/'.$item->file) }}" class="card-img-top rounded" alt="{{ $item->title }}" style="height: 150px; object-fit: cover;">
+                                            <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" class="card-img-top rounded" alt="{{ $item->title }}" style="height: 150px; object-fit: cover;">
                                             @if (Auth::user()->inv && Auth::user()->inv->temp && $item->id == Auth::user()->inv->temp->id)
                                                 <span class="badge bg-warning position-absolute top-0 end-0 m-2">Aktif</span>
                                             @endif

@@ -32,3 +32,28 @@
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Login/Register Google (Laravel Socialite)
+
+Project ini menggunakan package resmi Laravel: `laravel/socialite`.
+
+### Environment
+
+Tambahkan ke `.env`:
+
+- `APP_URL=https://domain-anda.com`
+- `GOOGLE_CLIENT_ID=...`
+- `GOOGLE_CLIENT_SECRET=...`
+- `GOOGLE_REDIRECT_URI=${APP_URL}/auth/callback`
+
+### Google Cloud Console
+
+- Buat OAuth Client ID (Web application)
+- Isi Authorized redirect URIs:
+  - Lokal: `http://localhost/auth/callback`
+  - Produksi: `https://domain-anda.com/auth/callback`
+
+### Route
+
+- Start OAuth: `GET /auth/redirect`
+- Callback: `GET /auth/callback`

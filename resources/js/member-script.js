@@ -45,8 +45,25 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 })
 
 if ($(".dataTables").length > 0) {
-	let action = $(".dataTables").data('list'),
+	let columnsMode = $(".dataTables").data('columns'),
+		action = $(".dataTables").data('list'),
 		csrf = $("meta[name=csrf-token]").attr('content');
+	let columns = [
+		{ data: "image", name: "image" },
+		{ data: "title", name: "title" },
+		{ data: "info", name: "info" },
+	];
+	if (columnsMode === 'transaction') {
+		columns = [
+			{ data: "invoice", name: "invoice" },
+			{ data: "package", name: "package" },
+			{ data: "amount", name: "amount" },
+			{ data: "method", name: "method" },
+			{ data: "status", name: "status" },
+			{ data: "date", name: "date" },
+			{ data: "action", name: "action" },
+		];
+	}
 	var dataTables = $(".dataTables").DataTable({
 		responsive: true,
 		ordering: false,
@@ -78,11 +95,7 @@ if ($(".dataTables").length > 0) {
 				console.log(q, w, e);
 			}
 		},
-		columns: [
-			{ data: "image", name: "image" },
-			{ data: "title", name: "title" },
-			{ data: "info", name: "info" },
-		],
+		columns,
 	});
 	$(".dataTables_filter").css('float', 'unset');
 	$(".dataTables_filter").children('label').addClass('d-block pb-1');

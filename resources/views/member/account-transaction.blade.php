@@ -10,6 +10,18 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="{{ route('packages') }}">
+                <i class="bx bx-cart-alt"></i>
+                <span>Pesan Undangan</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('storage') }}">
+                <i class="bx bx-images"></i>
+                <span>Penyimpanan</span>
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link active" aria-current="page">
                 <i class="bx bx-receipt"></i>
                 <span>Transaksi</span>
@@ -19,7 +31,18 @@
     <div class="bg-white rounded shadow p-3">
         <div class="row g-0">
             <div class="col-12">
-                <table class="dataTables" data-list="{{ route('transaction.list') }}">
+                <table class="dataTables" data-columns="transaction" data-list="{{ route('transaction.list') }}">
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Paket</th>
+                            <th>Total</th>
+                            <th>Metode</th>
+                            <th>Status</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
                 </table>
             </div>
         </div>

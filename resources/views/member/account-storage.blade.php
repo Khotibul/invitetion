@@ -1,12 +1,18 @@
 @extends('member.layouts.app')
-@section('title', Str::title(implode(' - ', json_decode(Auth::user()->name, true))).' | Penyimpanan')
+@section('title', Str::title(Auth::user()->name).' | Penyimpanan')
 @section('content')
 <section class="py-3">
-    <ul class="nav nav-pills mb-3">
+    <ul class="nav nav-pills creasik-nav-pill mb-3">
         <li class="nav-item">
             <a class="nav-link" href="{{ route('profile') }}">
                 <i class="bx bx-user-circle"></i>
                 <span>Profil</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('packages') }}">
+                <i class="bx bx-cart-alt"></i>
+                <span>Pesan Undangan</span>
             </a>
         </li>
         <li class="nav-item">

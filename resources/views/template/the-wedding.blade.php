@@ -4,10 +4,15 @@
 		use Carbon\Carbon;
 		use Illuminate\Support\Str;
 		setlocale(LC_ALL, 'IND');
+		$invitationFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
+		$coverImageObj = $data->cover->description->image ?? null;
+		$coverImageFile = ($coverImageObj && !empty($coverImageObj->image))
+			? (($coverImageObj->method == 'asset') ? asset($coverImageObj->image) : url('storage/cover/'.$coverImageObj->image))
+			: $invitationFile;
 		$set = [
 			'title' => "Wedding of ".$invitation->title." | The Wedding",
-			'file' => url('storage/'.$invitation->file),
-			'content' => Carbon::parse($data->detail->calendar->date)->formatLocalized('%A, %d %B %Y')
+			'file' => $invitationFile,
+			'content' => Carbon::parse($data->detail->calendar->date ?? now()->toDateString())->formatLocalized('%A, %d %B %Y')
 		];
 	@endphp
 	<meta charset="utf-8">
@@ -32,7 +37,7 @@
 	<meta name="twitter:image" content="{{ $set['file'] }}" />
 	<meta name="twitter:url" content="{{ request()->fullUrl() }}" />
 
-	<link rel="icon" href="{{ ($data->cover->description->image->method == 'asset') ? asset($data->cover->description->image->image) : url('storage/cover/'.$data->cover->description->image->image) }}">
+	<link rel="icon" href="{{ $coverImageFile }}">
 
 	<!--
       //////////////////////////////////////////////////////
@@ -104,7 +109,7 @@
 					<img src="{{ asset('template/the-wedding/images/audio/play.png') }}" alt="Play Music" style="width: 20px;">
 				</a>
 				<audio id="bg-music" loop>
-					<source src="{{ $data->music->url }}" type="audio/mp3">
+					<source src="{{ $data->music->url ?? '' }}" type="audio/mp3">
 				</audio>
 			</div>
 			<ul class="right-sidebar">
@@ -463,7 +468,7 @@
 		</div>
 	</div>
 
-	@if ($data->wishes->public===true)
+	@if (($data->wishes->public ?? false)===true)
 	<div id="fh5co-testimonial" style="background: url('{{ asset('template/the-wedding/images/background/repeat-background/so-white.png') }}'); background-repeat:repeat; border-top: 1px solid #f2f2f2">
 		<img height="400" class="flower-bukutamu-right" style="right: 0;top: 0;position: absolute;" src="{{ asset('template/the-wedding/images/background/flowers/top-right-3.svg') }}">
 		<img height="400" class="flower-bukutamu-left" style="position: absolute; left: 0; bottom: 0" src="{{ asset('template/the-wedding/images/background/flowers/bottom-left-3.svg') }}">
@@ -565,7 +570,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.0.3/showdown.min.js"></script>
 
 <script>
-	var d = new Date("{{ $data->detail->calendar->date }}T{{ $data->detail->calendar->time }}");
+	var d = new Date("{{ $data->detail->calendar->date ?? now()->toDateString() }}T{{ $data->detail->calendar->time ?? '00:00' }}");
 
 	// default example
 	simplyCountdown('.simply-countdown-wedding', {
@@ -658,7 +663,7 @@
 
 	audioControl.onclick = toggleAudio;
 
-	@if($data->music->url)
+	@if(!empty($data->music->url ?? null))
 		audioControl.style.display = "block";
 	@endif
 </script>

@@ -35,8 +35,11 @@ class AccountController extends Controller
         $this->middleware('guest');
     }
 	
-    public function signin(): Response
+    public function signin(): Response|RedirectResponse
 	{
+		if (request()->get('manual') != '1' && config('services.google.client_id') && config('services.google.client_secret') && config('services.google.redirect')) {
+			return redirect()->to('/auth/redirect');
+		}
 		return response()->view('member.auth.signin');
 	}
 
@@ -65,10 +68,13 @@ class AccountController extends Controller
 
 	public function signup(): Response|RedirectResponse
 	{
+		if (request()->get('manual') != '1' && config('services.google.client_id') && config('services.google.client_secret') && config('services.google.redirect')) {
+			return redirect()->to('/auth/redirect');
+		}
 		$bagpack = ['package' => null, 'template' => null];
 		$data = json_decode(json_encode($bagpack));
 		$data->package = Package::select('id', 'title', 'price')->publish()->get();
-		$data->template = Template::select('id', 'title', 'file', 'grade')->publish()->get();
+		$data->template = Template::select('id', 'title', 'file', 'grade')->where('slug', 'the-wedding')->publish()->get();
 		$data->bank = Bank::select('id', 'name', 'file')->publish()->get();
 
 		return response()->view('member.auth.signup', compact('data'));
@@ -110,7 +116,7 @@ class AccountController extends Controller
 			];
 			$inv_slug = Str::lower($request->subdomain);
 			$inv_check = Invitation::select('id')->where('slug', $inv_slug)->count();
-			$temp_check = Template::select('id')->where('id', $request->preset)->count();
+			$temp_check = Template::select('id')->where('id', $request->preset)->where('slug', 'the-wedding')->count();
 			$pack_check = Package::select('id', 'price')->where('id', $request->bundle)->count();
 			$package = Package::select('id', 'price')->where('id', $request->bundle)->first();
 			if ($pack_check > 0) :
@@ -234,11 +240,17 @@ class AccountController extends Controller
 	// google
 	public function redirectToProvider()
 	{
+		if (!config('services.google.client_id') || !config('services.google.client_secret') || !config('services.google.redirect')) {
+			return redirect()->route('signin')->withErrors(['email' => 'Login Google belum dikonfigurasi.']);
+		}
 		return Socialite::driver('google')->redirect();
 	}
 
 	public function handleProviderCallback(Request $request): RedirectResponse
 	{
+		if (!config('services.google.client_id') || !config('services.google.client_secret') || !config('services.google.redirect')) {
+			return redirect()->route('signin')->withErrors(['email' => 'Login Google belum dikonfigurasi.']);
+		}
 		try {
 			$user_google = Socialite::driver('google')->user();
 			$user = User::where('email', $user_google->getEmail())->first();
@@ -255,13 +267,13 @@ class AccountController extends Controller
 				$create = User::Create([
 					'email'             => $user_google->getEmail(),
 					'name'              => $user_google->getName(),
-					'password'          => 0,
+					'password'          => Hash::make(Str::random(32)),
 					'third_party'		=> 'google',
 					'email_verified_at' => now()
 				]);
 				auth()->login($create, true);
 				$package = Package::select('id', 'price')->where('id', 1)->first();
-				$template = Template::select('id', 'preset', 'file')->where('grade', 'basic')->first();
+				$template = Template::select('id', 'preset', 'file')->where('slug', 'the-wedding')->first();
 				$template->new_preset = json_decode($template->preset);
 				$template->new_preset->cover->name->male = $user_google->getName();
 				$template->new_preset->cover->name->female = $user_google->getName();
@@ -304,7 +316,7 @@ class AccountController extends Controller
 				return redirect()->route('member.main');
 			endif;
 		} catch (Exception $e) {
-			return redirect()->route('signin');
+			return redirect()->to(route('signin').'?manual=1')->withErrors(['email' => 'Login Google gagal, silakan coba lagi.']);
 		}
 	}
 }

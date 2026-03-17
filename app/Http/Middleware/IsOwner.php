@@ -21,9 +21,9 @@ class IsOwner
                 return $next($request);
             endif;
         else :
-            return redirect()->route('login');
+            return redirect()->route('admin.login');
         endif;
 
-        return redirect()->route('login');
+        return redirect()->route('admin.login');
     }
 }

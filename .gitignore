@@ -1,3 +1,24 @@
+# Laravel / app runtime
+/.env
+/.env.*.local
+/.phpunit.result.cache
+/.idea/
+/.vscode/
+
+/bootstrap/cache/
+/storage/*.key
+/storage/app/
+/storage/framework/
+/storage/logs/
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build outputs
+/public/build/
+/public/hot
+
+# Custom
 /cache/
 /config/development/
-node_modules

@@ -40,21 +40,21 @@ class PublicController extends Controller
 
 		if (isexpired($activation_date, $invitation_active)===false) :
 			$data = json_decode($invitation->preset);
+			$protocol = null;
+			if (isset($data->additional) && isset($data->additional->protocol) && isset($data->additional->protocol->code)) {
+				$protocol = TemplateAssets::select('content')->where('type', 'protocol')->whereId($data->additional->protocol->code)->first();
+			}
 			$other = [
 				'video' => InvitationGallery::where('type', 'video')->where('invitation_id', $invitation->id)->first(),
 				'photo' => InvitationGallery::where('type', 'photo')->where('invitation_id', $invitation->id)->first(),
-				'protocol' => TemplateAssets::select('content')->where('type', 'protocol')->whereId($data->additional->protocol->code)->first(),
+				'protocol' => $protocol,
 			];
-			if (json_decode($invitation_activation->pack->content)->event) :
-				$other['event'] = InvitationEvent::where('invitation_id', $invitation->id)->get();
-			else :
-				$other['event'] = [];
-			endif;
-			if (json_decode($invitation_activation->pack->content)->story) :
-				$other['story'] = InvitationStory::where('invitation_id', $invitation->id)->get();
-			else :
-				$other['story'] = [];
-			endif;
+			$packContent = null;
+			if ($invitation_activation && $invitation_activation->pack && $invitation_activation->pack->content) {
+				$packContent = json_decode($invitation_activation->pack->content);
+			}
+			$other['event'] = ($packContent && !empty($packContent->event)) ? InvitationEvent::where('invitation_id', $invitation->id)->get() : [];
+			$other['story'] = ($packContent && !empty($packContent->story)) ? InvitationStory::where('invitation_id', $invitation->id)->get() : [];
 			if ($other['photo']!=null) :
 				$other['photo']->prop = json_decode($other['photo']->content);
 			endif;

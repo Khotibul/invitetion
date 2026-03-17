@@ -17,6 +17,18 @@
 			</a>
 		</li>
 		<li class="nav-item">
+			<a class="nav-link" href="{{ route('packages') }}">
+				<i class="bx bx-cart-alt"></i>
+				<span>Pesan Undangan</span>
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="{{ route('storage') }}">
+				<i class="bx bx-images"></i>
+				<span>Penyimpanan</span>
+			</a>
+		</li>
+		<li class="nav-item">
 			<a class="nav-link" href="{{ route('transaction') }}">
 				<i class="bx bx-receipt"></i>
 				<span>Transaksi</span>
