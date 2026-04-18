@@ -167,6 +167,11 @@
 						<div class="card border mb-3">
 							<div class="card-body">
 								<div class="form-group">
+									<label for="price" class="form-label mb-1">{{ __('harga') }}</label>
+									<div class="input-group mb-3">
+										<span class="input-group-text">Rp.</span>
+										<input type="number" name="price" id="price" class="form-control" placeholder="{{ __('isi disini') }}" value="{{ $template->price ?? old('price', 0) }}" min="0">
+									</div>
 									<label for="grade" class="form-label mb-1">{{ __('katalog') }}</label>
 									<select name="grade" id="grade" class="form-control select2">
 										@forelse (['basic', 'premium', 'exclusive'] as $item)

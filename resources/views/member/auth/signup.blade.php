@@ -113,7 +113,7 @@
 							</label>
 							<div class="package-list rounded">
 								@foreach ($data->package as $item)
-								<input type="radio" name="bundle" id="pack{{ $item->id }}" value="{{ $item->id }}">
+								<input type="radio" name="bundle" id="pack{{ $item->id }}" value="{{ $item->id }}" data-price="{{ $item->price }}">
 								<label for="pack{{ $item->id }}" class="d-flex justify-content-between">
 									<b>{{ $item->title }}</b>
 									<span>{!! idr($item->price) !!}</span>
@@ -129,10 +129,11 @@
 								@foreach ($data->template as $item)
 								<figure>
 									<sup class="badge {{ $item->grade }}">{{ $item->grade }}</sup>
-									<input type="radio" name="preset" id="temp{{ $item->id }}" value="{{ $item->id }}">
+									<input type="radio" name="preset" id="temp{{ $item->id }}" value="{{ $item->id }}" data-price="{{ $item->price ?? 0 }}">
 									<label for="temp{{ $item->id }}">
-										<img src="{{ url('storage/'.$item->file) }}" alt="">
+										<img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
 										<span>{{ $item->title }}</span>
+										<small class="text-muted d-block">{!! idr((string) ($item->price ?? 0)) !!}</small>
 									</label>
 								</figure>
 								@endforeach
@@ -219,14 +220,22 @@
 		let info = $(this).data('text');
 		$("#modal-info").find('.modal-body').text(info);
 	});
-	$("input[name=bundle]").on('change', function(e) {
-		let next = $(".payment-method");
-		if (e.target.value=='1') {
-			next.fadeOut();
+	function updatePaymentVisibility() {
+		let packPrice = parseInt($("input[name=bundle]:checked").data('price') || 0, 10);
+		let templatePrice = parseInt($("input[name=preset]:checked").data('price') || 0, 10);
+		let total = packPrice + templatePrice;
+
+		if (total > 0) {
+			$(".payment-method").fadeIn();
 		} else {
-			next.fadeIn();
+			$(".payment-method").fadeOut();
+			$(".bank-list").fadeOut();
+			$("input[name=payment]").prop('checked', false);
+			$("input[name=bank]").prop('checked', false);
 		}
-	});
+	}
+	$("input[name=bundle], input[name=preset]").on('change', updatePaymentVisibility);
+	updatePaymentVisibility();
 	$("input[name=payment]").on('change', function(e) {
 		let next = $(".bank-list");
 		if (e.target.value=='manual') {

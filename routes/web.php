@@ -46,6 +46,8 @@ Route::post('signingup/{step}', [MemberAccount::class, 'signup_store'])->name('s
 // socialite
 Route::get('/auth/redirect', [MemberAccount::class, 'redirectToProvider']);
 Route::get('/auth/callback', [MemberAccount::class, 'handleProviderCallback']);
+// Alias for common Google callback path (matches GOOGLE_REDIRECT_URI used in some setups).
+Route::get('/auth/google/callback', [MemberAccount::class, 'handleProviderCallback']);
 
 Route::prefix('template')->group(function () {
 	Route::get('preview/{slug}', [MemberPublic::class, 'template'])->name('preview-template.index');

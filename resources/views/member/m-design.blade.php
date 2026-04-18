@@ -53,7 +53,7 @@
                                 @endif
                                 <input type="radio" name="design_template" id="temp{{ $item->id }}" value="{{ $item->id }}" @checked($check)>
                                 <label for="temp{{ $item->id }}" class="shadow-sm">
-                                    <img src="{{ url('storage/sm/'.$item->file) }}" alt="">
+                                    <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
                                     <span>{{ $item->title }}</span>
                                 </label>
                                 <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_BLANK">pratinjau</a>
@@ -82,7 +82,7 @@
                                 @endif
                                 <input type="radio" name="design_template" id="temp{{ $item->id }}" value="{{ $item->id }}" @checked($check)>
                                 <label for="temp{{ $item->id }}" class="shadow-sm">
-                                    <img src="{{ url('storage/sm/'.$item->file) }}" alt="">
+                                    <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
                                     <span>{{ $item->title }}</span>
                                 </label>
                             </figure>

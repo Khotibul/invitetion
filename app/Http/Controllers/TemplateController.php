@@ -61,7 +61,8 @@ class TemplateController extends Controller
 				$publish = ['title' => Str::title($item->publish), 'publish' => 'd-none', 'draft' => 'bg-warning'];
 				$data_val[$key]['id'] = null;
 				$data_val[$key]['title'] = anchor(text:$item->title, href:route('template.edit', $item->id));
-				$data_val[$key]['info'] = "<div class=\"d-flex\"><span class=\"badge me-2 {$grade[$item->grade]}\">{$grade['title']}</span><span class=\"badge {$publish[$item->publish]}\">{$publish['title']}</span></div>";
+				$priceBadge = "<span class=\"badge bg-success me-2\">".strip_tags(idr((string) ($item->price ?? 0)))."</span>";
+				$data_val[$key]['info'] = "<div class=\"d-flex\">{$priceBadge}<span class=\"badge me-2 {$grade[$item->grade]}\">{$grade['title']}</span><span class=\"badge {$publish[$item->publish]}\">{$publish['title']}</span></div>";
 				$data_val[$key]['log'] = date_info($item->created_at);
 			endforeach;
 		endif;
@@ -114,7 +115,8 @@ class TemplateController extends Controller
         $this->validate($request, [
 			'title'		=> 'required|max:110',
 			'file_type'	=> 'required',
-			'grade'	    => 'required'
+			'grade'	    => 'required',
+			'price'		=> 'nullable|integer|min:0',
 		],
 		[
 			'required'	=> '<code>:attribute</code> harus diisi.',
@@ -126,6 +128,7 @@ class TemplateController extends Controller
 			'preset'	=> json_encode([]),
 			'url'		=> 'no-file',
             'grade'     => $request->grade,
+			'price'		=> $request->price ?? 0,
 			'publish'	=> 'draft',
 			'ip_addr'	=> $_SERVER['REMOTE_ADDR'],
 			'user_id'	=> Auth::user()->id
@@ -242,7 +245,8 @@ class TemplateController extends Controller
         $this->validate($request, [
 			'title'		=> 'required|max:110',
 			'file_type'	=> 'required',
-			'grade'	    => 'required'
+			'grade'	    => 'required',
+			'price'		=> 'nullable|integer|min:0',
 		],
 		[
 			'required'	=> '<code>:attribute</code> harus diisi.',
@@ -252,6 +256,7 @@ class TemplateController extends Controller
 			'title'		=> $request->title,
 			'slug'		=> clean_str($request->title),
             'grade'     => $request->grade,
+			'price'		=> $request->price ?? 0,
 			'ip_addr'	=> $_SERVER['REMOTE_ADDR'],
 			'user_id'	=> Auth::user()->id
 		];

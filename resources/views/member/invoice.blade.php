@@ -35,6 +35,17 @@
 							{!! idr($invoice->pack ? $invoice->pack->price : 0) !!}
 						</div>
 					</div>
+					@if (!empty($invoice->content->template_price) && (int) $invoice->content->template_price > 0)
+					<div class="d-flex justify-content-between border-top">
+						<div class="d-block py-2 px-3">
+							<h5 class="mb-0">Template</h5>
+							<span>Biaya template</span>
+						</div>
+						<div class="d-block py-2 px-3">
+							{!! idr((string) $invoice->content->template_price) !!}
+						</div>
+					</div>
+					@endif
 					<div class="text-center p-3">
 						Total pembayaran
 						<span class="d-block fs-3">{!! idr($invoice->amount) !!}</span>

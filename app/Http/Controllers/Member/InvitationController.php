@@ -186,15 +186,26 @@ class InvitationController extends Controller
 		$menu = $this->menu;
         $pack_content = $this->activation->pack ? json_decode($this->activation->pack->content, true) : [];
 		$conditional_menu = $pack_content;
+
+		$templateLimit = $pack_content['template'] ?? ['basic'];
+		if (!is_array($templateLimit) || empty($templateLimit)) {
+			$templateLimit = ['basic'];
+		}
 		$bagpack = [
 			'name' => Auth::user()->inv ? Auth::user()->inv->title : json_encode(['-', '-']),
 			'date' => (Auth::user()->inv && Auth::user()->inv->preset) ? json_decode(Auth::user()->inv->preset)->detail->calendar : null,
 			'subdomain' => Auth::user()->inv ? Auth::user()->inv->slug : '',
 			'template' => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
             'templates' => [
-                'basic' => Template::select('id', 'title', 'slug', 'file', 'grade')->where('slug', 'the-wedding')->publish()->get(),
-                'premium' => null,
-                'exclusive' => null,
+                'basic' => in_array('basic', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'basic')->publish()->latest()->get()
+					: null,
+                'premium' => in_array('premium', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'premium')->publish()->latest()->get()
+					: null,
+                'exclusive' => in_array('exclusive', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'exclusive')->publish()->latest()->get()
+					: null,
             ],
 		];
 		$bagpack['name'] = implode(' & ', json_decode($bagpack['name'], true) ?? ['-', '-']);
@@ -212,13 +223,27 @@ class InvitationController extends Controller
 	{
 		$menu = $this->menu['design'];
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+		$templateLimit = ['basic'];
+		if ($access && $access->pack && $access->pack->content) {
+			$content = json_decode($access->pack->content, true);
+			$templateLimit = $content['template'] ?? ['basic'];
+		}
+		if (!is_array($templateLimit) || empty($templateLimit)) {
+			$templateLimit = ['basic'];
+		}
 		$bagpack = [
 			'template' => [
-				'basic' => Template::select('id', 'title', 'slug', 'file')->where('slug', 'the-wedding')->publish()->get(),
-				'premium' => null,
-				'exclusive' => null,
+				'basic' => in_array('basic', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'basic')->publish()->latest()->get()
+					: null,
+				'premium' => in_array('premium', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'premium')->publish()->latest()->get()
+					: null,
+				'exclusive' => in_array('exclusive', $templateLimit, true)
+					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'exclusive')->publish()->latest()->get()
+					: null,
 			],
-			'limit' => ['basic'],
+			'limit' => $templateLimit,
 			'font' => TemplateAssets::select('title', 'content')->where('type', 'font')->publish()->get(),
 			'preset' => json_decode(Auth::user()->inv->preset)->design,// Preset
 		];
@@ -758,16 +783,21 @@ class InvitationController extends Controller
 			$column['design_button_color'] = 'required';
 			$column['design_title_font'] = 'required';
 			$column['design_content_font'] = 'required';
-			$allowed_template = Template::select('id')->where('slug', 'the-wedding')->publish()->first();
-			if (!$allowed_template || (string) $request->input('design_template') !== (string) $allowed_template->id) :
+			$allowed_template = Template::select('id', 'grade')->whereId($request->input('design_template'))->publish()->first();
+			if (!$allowed_template) :
 				return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Template tidak tersedia.']]);
 			endif;
 			// new preset
 			if (isitsame($request->input('design_template'), $preset['design']['template'])===false) :
 				$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
-				$template = Template::select('grade')->whereId($request->input('design_template'))->first();
-				$limit = json_decode($access->pack->content)->{'template'};
-				if (in_array($template->grade, $limit)) :
+				$limit = [];
+				if ($access && $access->pack && $access->pack->content) {
+					$limit = json_decode($access->pack->content)->{'template'} ?? [];
+				}
+				if (!is_array($limit) || empty($limit)) {
+					$limit = ['basic'];
+				}
+				if (in_array($allowed_template->grade, $limit, true)) :
 					$preset['design']['template'] = $request->input('design_template');
 					Invitation::whereId(Auth::user()->inv->id)->update(['template_id'=>$request->input('design_template')]);
 				else :

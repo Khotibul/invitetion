@@ -74,7 +74,7 @@ class AccountController extends Controller
 		$bagpack = ['package' => null, 'template' => null];
 		$data = json_decode(json_encode($bagpack));
 		$data->package = Package::select('id', 'title', 'price')->publish()->get();
-		$data->template = Template::select('id', 'title', 'file', 'grade')->where('slug', 'the-wedding')->publish()->get();
+		$data->template = Template::select('id', 'title', 'file', 'grade', 'price')->publish()->orderBy('grade')->latest()->get();
 		$data->bank = Bank::select('id', 'name', 'file')->publish()->get();
 
 		return response()->view('member.auth.signup', compact('data'));
@@ -116,11 +116,13 @@ class AccountController extends Controller
 			];
 			$inv_slug = Str::lower($request->subdomain);
 			$inv_check = Invitation::select('id')->where('slug', $inv_slug)->count();
-			$temp_check = Template::select('id')->where('id', $request->preset)->where('slug', 'the-wedding')->count();
+			$template = Template::select('id', 'preset', 'file', 'grade', 'price')->where('id', $request->preset)->publish()->first();
+			$temp_check = $template ? 1 : 0;
 			$pack_check = Package::select('id', 'price')->where('id', $request->bundle)->count();
-			$package = Package::select('id', 'price')->where('id', $request->bundle)->first();
+			$package = Package::select('id', 'price', 'content')->where('id', $request->bundle)->first();
+			$totalAmount = (int) ($package->price ?? 0) + (int) ($template->price ?? 0);
 			if ($pack_check > 0) :
-				if ($package->price > 0) :
+				if ($totalAmount > 0) :
 					$require['payment'] = 'required';
 					if ($request->payment=='manual') :
 						$require['bank'] = 'required';
@@ -138,6 +140,21 @@ class AccountController extends Controller
 				'bank.required' => 'Pilih bank tujuan.'
 			]);
 			if ($inv_check == 0 && $temp_check > 0 && $pack_check > 0) :
+				// Ensure selected template grade is allowed by the selected package.
+				$allowedGrades = [];
+				if ($package && $package->content) {
+					$packContent = json_decode($package->content);
+					$allowedGrades = $packContent->template ?? [];
+				}
+				if (!is_array($allowedGrades) || empty($allowedGrades)) {
+					$allowedGrades = ['basic'];
+				}
+				if (!in_array($template->grade, $allowedGrades, true)) {
+					$data['code'] = 500;
+					$data['command'] = 'retry';
+					$data['message']['preset'] = "Template tidak tersedia untuk paket ini.";
+					return response()->json($data);
+				}
 				User::create([
 					'name' => $request->male_name,
 					'email' => $request->email,
@@ -147,7 +164,6 @@ class AccountController extends Controller
 				$credentials = $request->only('email', 'password');
 				if (Auth::attempt($credentials)) :
 					$request->session()->regenerate();
-					$template = Template::select('id', 'preset', 'file')->where('id', $request->preset)->first();
 					$template->new_preset = json_decode($template->preset);
 					$template->new_preset->cover->name->male = $request->male_name;
 					$template->new_preset->cover->name->female = $request->female_name;
@@ -175,12 +191,19 @@ class AccountController extends Controller
 					]);
 					$invoice_column = [
 						'date' => now(),
-						'amount' => $package->price,
+						'amount' => $totalAmount,
 						'package_id'=> $package->id,
 						'user_id'	=> Auth::user()->id,
 						'ip_addr'	=> $_SERVER['REMOTE_ADDR'],
 					];
-					if ($package->price > 0) :
+					// Keep a minimal breakdown for admin-side verification.
+					$invoiceContent = [
+						'invoice_number' => '#0',
+						'template_id' => $template->id,
+						'template_price' => (int) ($template->price ?? 0),
+						'package_price' => (int) ($package->price ?? 0),
+					];
+					if ($totalAmount > 0) :
 						if ($request->payment=='fast') :
 							// start xendit
 							$secret_key = 'Basic '.config('xendit.key_auth');
@@ -189,11 +212,11 @@ class AccountController extends Controller
 								'Authorization' => $secret_key
 							])->post('https://api.xendit.co/v2/invoices', [
 								'external_id' => $external_id,
-								'amount' => $package->price
+								'amount' => $totalAmount
 							]);
 							$data_response = $data_request->object();
 							// end xendit
-							$invoice_column['content'] = json_encode(['invoice_number'=>'#0']);
+							$invoice_column['content'] = json_encode($invoiceContent);
 							$invoice_column['status'] = $data_response->status;
 							$invoice_column['payment_link'] = $data_response->invoice_url;
 							$invoice_column['payment_code'] = $external_id;
@@ -201,24 +224,25 @@ class AccountController extends Controller
 							// start manual
 							$external_id = Str::random(10);
 							// end manual
-							$invoice_column['content'] = json_encode(['invoice_number'=>'#0', 'bank'=>$request->bank]);
+							$invoiceContent['bank'] = $request->bank;
+							$invoice_column['content'] = json_encode($invoiceContent);
 							$invoice_column['status'] = 'PENDING';
 							$invoice_column['payment_link'] = '#manual';
 							$invoice_column['payment_code'] = $external_id;
 						endif;
-					elseif ($package->price == 0) :
-						$invoice_column['content'] = json_encode(['invoice_number'=>'#free']);
-						$invoice_column['status'] = Str::upper('confirmed');
+					elseif ($totalAmount == 0) :
+						$invoice_column['content'] = json_encode(['invoice_number'=>'#free'] + $invoiceContent);
+						$invoice_column['status'] = 'CONFIRMED';
 						$invoice_column['payment_link'] = '#';
 						$invoice_column['payment_code'] = 'Free';
 					endif;
 					$invoice = AccountInvoice::create($invoice_column);
 					$data['code'] = 200;
 					$data['command'] = 'start';
-					if ($package->price > 0) :
+					if ($totalAmount > 0) :
 						$last_id = AccountInvoice::select('id')->where('user_id', Auth::user()->id)->whereDate('created_at', date('Y-m-d'))->first();
 						$data['redirect'] = route('invoice', encrypt($last_id->id));
-					elseif ($package->price == 0) :
+					elseif ($totalAmount == 0) :
 						$data['redirect'] = route('member.main');
 					endif;
 				else :

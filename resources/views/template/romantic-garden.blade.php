@@ -13,7 +13,8 @@
         }
 
         :root {
-            --rose-pink: #e8b4b8;
+            /* Replaced pink accent with green to match the global theme. */
+            --rose-pink: #2d7a4f;
             --sage-green: #8ba888;
             --cream: #faf8f3;
             --gold: #c9a961;
@@ -38,7 +39,7 @@
             width: 100%;
             height: 100%;
             opacity: 0.08;
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="40" fill="%238ba888"/><path d="M100 60 Q 80 80 100 100 Q 120 80 100 60" fill="%23e8b4b8"/><path d="M140 100 Q 120 80 100 100 Q 120 120 140 100" fill="%23e8b4b8"/><path d="M100 140 Q 120 120 100 100 Q 80 120 100 140" fill="%23e8b4b8"/><path d="M60 100 Q 80 120 100 100 Q 80 80 60 100" fill="%23e8b4b8"/></svg>');
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="40" fill="%238ba888"/><path d="M100 60 Q 80 80 100 100 Q 120 80 100 60" fill="%232d7a4f"/><path d="M140 100 Q 120 80 100 100 Q 120 120 140 100" fill="%232d7a4f"/><path d="M100 140 Q 120 120 100 100 Q 80 120 100 140" fill="%232d7a4f"/><path d="M60 100 Q 80 120 100 100 Q 80 80 60 100" fill="%232d7a4f"/></svg>');
             background-size: 300px;
             z-index: -1;
         }

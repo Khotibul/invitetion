@@ -13,14 +13,14 @@ class Template extends Model
     use LogsActivity, HasFactory, SoftDeletes;
 
     protected $fillable = [
-		'title', 'slug', 'file', 'file_type', 'preset', 'url', 'grade', 'publish',
+		'title', 'slug', 'file', 'file_type', 'preset', 'url', 'grade', 'price', 'publish',
 		'user_id', 'ip_addr' // harus selalu ada
 	];
 	protected $dates = ['deleted_at'];
 
 	public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()->logOnly(['title', 'file', 'preset', 'url', 'grade', 'publish']);
+        return LogOptions::defaults()->logOnly(['title', 'file', 'preset', 'url', 'grade', 'price', 'publish']);
     }
 
     public function scopePublish($query)
