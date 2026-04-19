@@ -580,7 +580,7 @@ class InvitationController extends Controller
 		$video = InvitationGallery::where('type', 'video')->where('invitation_id', Auth::user()->inv->id)->count();
 		if ($video>=1) :
 			InvitationGallery::where('type', 'video')->where('invitation_id', Auth::user()->inv->id)->update($preset['video']);
-		elseif ($photo==0) :
+		elseif ($video==0) :
 			$preset['video']['type'] = 'video';
 			$preset['video']['invitation_id'] = Auth::user()->inv->id;
 			$preset['video']['ip_addr'] = $_SERVER['REMOTE_ADDR'];
@@ -597,10 +597,10 @@ class InvitationController extends Controller
 		$menu = $this->menu['music'];
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
-			'music' => TemplateAssets::select('title', 'content')->where('type', 'music')->where('user_id', 1)->publish()->get(),
+			'music'    => TemplateAssets::select('title', 'content')->where('type', 'music')->whereHas('user', fn($q) => $q->where('role', 'admin'))->publish()->get(),
 			'my_music' => TemplateAssets::select('title', 'content')->where('type', 'music')->where('user_id', Auth::user()->id)->publish()->first(),
-			'custom' => json_decode($access->pack->content)->{'music'},
-			'preset' => json_decode(Auth::user()->inv->preset)->music,// Preset
+			'custom'   => json_decode($access->pack->content)->{'music'},
+			'preset'   => json_decode(Auth::user()->inv->preset)->music,
 		];
 		$data = json_decode(json_encode($bagpack));
 
@@ -746,22 +746,47 @@ class InvitationController extends Controller
 		return response()->view('member.m-share', compact('menu', 'data'));
 	}
 
-	public function m_share_add(Request $request): void
+	public function m_share_add(Request $request): JsonResponse
 	{
 		$this->validate($request, [
-			'share_guest_type' => 'required',
-			'share_guest_name' => 'required',
-			'share_guest_location' => 'required'
+			'share_guest_type'     => 'required|in:personal,group,private',
+			'share_guest_name'     => 'required|string|max:100',
+			'share_guest_location' => 'required|string|max:100',
 		]);
-		$column = [
-			'type' => $request->share_guest_type,
-			'name' => json_encode(['name'=>$request->share_guest_name, 'location'=>$request->share_guest_location]),
-			'slug' => clean_str($request->share_guest_name).clean_str(substr($request->share_guest_location,0,3).strlen($request->share_guest_name)),
+
+		$slug = clean_str($request->share_guest_name)
+			. clean_str(substr($request->share_guest_location, 0, 3) . strlen($request->share_guest_name));
+
+		// Pastikan slug unik
+		$existing = InvitationGuest::where('slug', $slug)
+			->where('invitation_id', Auth::user()->inv->id)
+			->exists();
+		if ($existing) {
+			$slug .= rand(10, 99);
+		}
+
+		InvitationGuest::create([
+			'type'          => $request->share_guest_type,
+			'name'          => json_encode(['name' => $request->share_guest_name, 'location' => $request->share_guest_location]),
+			'slug'          => $slug,
 			'invitation_id' => Auth::user()->inv->id,
-			'user_id' => Auth::user()->id,
-			'ip_addr' => $_SERVER['REMOTE_ADDR']
-		];
-		InvitationGuest::create($column);
+			'user_id'       => Auth::user()->id,
+			'ip_addr'       => $_SERVER['REMOTE_ADDR'],
+		]);
+
+		return response()->json([
+			'toast' => ['icon' => 'success', 'title' => 'Tamu ditambahkan!', 'text' => $request->share_guest_name.' berhasil ditambahkan.'],
+			'page'  => 'reload',
+		]);
+	}
+
+	public function m_share_delete(int $id): JsonResponse
+	{
+		InvitationGuest::where('id', $id)
+			->where('invitation_id', Auth::user()->inv->id)
+			->delete();
+
+		return response()->json(['toast' => ['icon' => 'success', 'title' => 'Tamu dihapus'], 'page' => 'reload']);
 	}
 
 	public function save_setting(Request $request, string $menu): JsonResponse
@@ -854,12 +879,9 @@ class InvitationController extends Controller
 		elseif ($menu=='profile') :
 			$column['profile_name_male'] = 'required';
 			$column['profile_name_female'] = 'required';
-			$column['profile_photo_male__method'] = 'required';
-			$column['profile_photo_female__method'] = 'required';
 			if ($request->profile_instagram_show!='on') :
 				$column['profile_instagram_male'] = 'required';
 				$column['profile_instagram_female'] = 'required';
-				// new preset
 				$preset['profile']['instagram']['male'] = $request->input('profile_instagram_male');
 				$preset['profile']['instagram']['female'] = $request->input('profile_instagram_female');
 			endif;
@@ -870,7 +892,6 @@ class InvitationController extends Controller
 				$column['profile_parent_female_father'] = 'required';
 				$column['profile_parent_female_mother'] = 'required';
 				$column['profile_parent_female_childhood'] = 'required';
-				// new preset
 				$preset['profile']['parent']['male']['father'] = $request->input('profile_parent_male_father');
 				$preset['profile']['parent']['male']['mother'] = $request->input('profile_parent_male_mother');
 				$preset['profile']['parent']['male']['childhood'] = $request->input('profile_parent_male_childhood');
@@ -878,49 +899,54 @@ class InvitationController extends Controller
 				$preset['profile']['parent']['female']['mother'] = $request->input('profile_parent_female_mother');
 				$preset['profile']['parent']['female']['childhood'] = $request->input('profile_parent_female_childhood');
 			endif;
-			if ($request->profile_photo_male__method=='upload') :
+			// Foto pria
+			$maleMethod = $request->input('profile_photo_male__method');
+			if ($maleMethod === 'upload') :
 				$column['profile_photo_male'] = 'required|mimes:jpg,jpeg,png';
-				// new preset
-				if (!empty($request->profile_photo_male)) :
+				if ($request->hasFile('profile_photo_male')) :
 					$image_name = $request->file('profile_photo_male')->hashName();
 					Storage::disk('public')->put($image_name, file_get_contents($request->file('profile_photo_male')));
 					image_reducer(file_get_contents($request->file('profile_photo_male')), $image_name);
 					$preset['profile']['photo']['male']['method'] = 'storage';
 					$preset['profile']['photo']['male']['image'] = $image_name;
-					// strbox
 					Strbox::create(['title' => $request->profile_name_male, 'file' => $image_name, 'file_type' => 'image', 'user_id' => Auth::user()->id, 'ip_addr' => $_SERVER['REMOTE_ADDR']]);
 				endif;
-			elseif ($request->profile_photo_male__method=='avatar' || $request->profile_photo_male__method=='storage') :
+			elseif ($maleMethod === 'avatar' || $maleMethod === 'storage') :
 				$column['profile_photo_male__filename'] = 'required';
-				// new preset
-				$preset['profile']['photo']['male']['method'] = $request->input('profile_photo_male__method');
+				$preset['profile']['photo']['male']['method'] = $maleMethod;
 				$preset['profile']['photo']['male']['image'] = $request->input('profile_photo_male__filename');
+			elseif ($maleMethod === 'none' || empty($maleMethod)) :
+				// Foto dihapus
+				$preset['profile']['photo']['male']['method'] = 'none';
+				$preset['profile']['photo']['male']['image'] = '';
 			endif;
-			if ($request->profile_photo_female__method=='upload') :
+			// Foto wanita
+			$femaleMethod = $request->input('profile_photo_female__method');
+			if ($femaleMethod === 'upload') :
 				$column['profile_photo_female'] = 'required|mimes:jpg,jpeg,png';
-				// new preset
-				if (!empty($request->profile_photo_female)) :
+				if ($request->hasFile('profile_photo_female')) :
 					$image_name = $request->file('profile_photo_female')->hashName();
 					Storage::disk('public')->put($image_name, file_get_contents($request->file('profile_photo_female')));
 					image_reducer(file_get_contents($request->file('profile_photo_female')), $image_name);
 					$preset['profile']['photo']['female']['method'] = 'storage';
 					$preset['profile']['photo']['female']['image'] = $image_name;
-					// strbox
 					Strbox::create(['title' => $request->profile_name_female, 'file' => $image_name, 'file_type' => 'image', 'user_id' => Auth::user()->id, 'ip_addr' => $_SERVER['REMOTE_ADDR']]);
 				endif;
-			elseif ($request->profile_photo_female__method=='avatar' || $request->profile_photo_female__method=='storage') :
+			elseif ($femaleMethod === 'avatar' || $femaleMethod === 'storage') :
 				$column['profile_photo_female__filename'] = 'required';
-				// new preset
-				$preset['profile']['photo']['female']['method'] = $request->input('profile_photo_female__method');
+				$preset['profile']['photo']['female']['method'] = $femaleMethod;
 				$preset['profile']['photo']['female']['image'] = $request->input('profile_photo_female__filename');
+			elseif ($femaleMethod === 'none' || empty($femaleMethod)) :
+				$preset['profile']['photo']['female']['method'] = 'none';
+				$preset['profile']['photo']['female']['image'] = '';
 			endif;
-			// new preset
+			// Nama, bingkai, toggle
 			$preset['profile']['name']['male'] = $request->input('profile_name_male');
 			$preset['profile']['name']['female'] = $request->input('profile_name_female');
-			$preset['profile']['photo']['male']['frame'] = $request->input('profile_photo_male_frame');
-			$preset['profile']['photo']['female']['frame'] = $request->input('profile_photo_female_frame');
-			$preset['profile']['instagram']['show'] = ($request->input('profile_instagram_show')=='on') ? false : true;
-			$preset['profile']['parent']['show'] = ($request->input('profile_parent_show')=='on') ? false : true;
+			$preset['profile']['photo']['male']['frame'] = $request->input('profile_photo_male_frame') ?? '';
+			$preset['profile']['photo']['female']['frame'] = $request->input('profile_photo_female_frame') ?? '';
+			$preset['profile']['instagram']['show'] = ($request->input('profile_instagram_show') === 'on') ? false : true;
+			$preset['profile']['parent']['show'] = ($request->input('profile_parent_show') === 'on') ? false : true;
 		elseif ($menu=='detail') :
 			$column['detail_calendar_date'] = 'required';
 			$column['detail_calendar_time'] = 'required';

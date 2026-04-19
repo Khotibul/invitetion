@@ -133,9 +133,18 @@
 					<div class="py-2">
 						<h6 class="m-1">Gunakan bingkai</h6>
 						<figure class="assets-figure border p-2 mb-0 mx-1">
+							{{-- Opsi tanpa bingkai --}}
+							<label for="male_frame_none" class="item">
+								<input type="radio" name="profile_photo_male_frame" id="male_frame_none" value=""
+									@checked(empty($data->preset->photo->male->frame))>
+								<span class="d-flex align-items-center justify-content-center border rounded"
+									style="width:60px;height:60px;font-size:0.65rem;color:#aaa;background:#f8f9fa">
+									Tanpa<br>Bingkai
+								</span>
+							</label>
 							@foreach ($data->frame as $key => $item)
 							<label for="male_frame_{{ $key }}" class="item">
-								<input type="radio" name="profile_photo_male_frame" id="male_frame_{{ $key }}" value="{{ $item->content }}" @checked($data->preset->photo->male->frame==$item->content)>
+								<input type="radio" name="profile_photo_male_frame" id="male_frame_{{ $key }}" value="{{ $item->content }}" @checked(!empty($data->preset->photo->male->frame) && $data->preset->photo->male->frame==$item->content)>
 								{!! image(src:url('storage/frame/'.$item->content), alt:$item->title) !!}
 							</label>
 							@endforeach
@@ -249,9 +258,18 @@
 					<div class="py-2">
 						<h6 class="m-1">Gunakan bingkai</h6>
 						<figure class="assets-figure border p-2 mb-0 mx-1">
+							{{-- Opsi tanpa bingkai --}}
+							<label for="female_frame_none" class="item">
+								<input type="radio" name="profile_photo_female_frame" id="female_frame_none" value=""
+									@checked(empty($data->preset->photo->female->frame))>
+								<span class="d-flex align-items-center justify-content-center border rounded"
+									style="width:60px;height:60px;font-size:0.65rem;color:#aaa;background:#f8f9fa">
+									Tanpa<br>Bingkai
+								</span>
+							</label>
 							@foreach ($data->frame as $key => $item)
 							<label for="female_frame_{{ $key }}" class="item">
-								<input type="radio" name="profile_photo_female_frame" id="female_frame_{{ $key }}" value="{{ $item->content }}" @checked($data->preset->photo->female->frame==$item->content)>
+								<input type="radio" name="profile_photo_female_frame" id="female_frame_{{ $key }}" value="{{ $item->content }}" @checked(!empty($data->preset->photo->female->frame) && $data->preset->photo->female->frame==$item->content)>
 								{!! image(src:url('storage/frame/'.$item->content), alt:$item->title) !!}
 							</label>
 							@endforeach
@@ -281,105 +299,103 @@
 @include('member.layouts.component', ['content'=>'modal-storage', 'mode'=>'single'])
 <script src="{{ asset('modules/datatable/datatables.min.js') }}" type="text/javascript"></script>
 <script>
-	var show = true;
+$(function() {
+	// Pilih avatar dari modal
 	$(".change-asset").on('change', function(e) {
 		e.preventDefault();
-		if (e.target.name=='profile_frame_image') {
-			let frame = $(this).siblings('img').attr('src');
-		} else if (e.target.name=='profile_avatar_male') {
+		if (e.target.name === 'profile_avatar_male') {
 			let avatar = $(this).siblings('img').attr('src'),
 				source = $(this).val();
 			$(".set_profile_photo_male").attr('src', avatar);
 			$("input[name=profile_photo_male__filename]").val(source);
 			$("input[name=profile_photo_male__method]").val('avatar');
-			$("input[name=profile_photo_male]").parent().siblings().children().find('.remove-image').prop('disabled', false);
-			$("input[name=profile_photo_male]").parent().parent().find('.remove-image').prop('disabled', false);
-		} else if (e.target.name=='profile_avatar_female') {
+			$("button.remove-image[data-target=profile_photo_male]").prop('disabled', false);
+		} else if (e.target.name === 'profile_avatar_female') {
 			let avatar = $(this).siblings('img').attr('src'),
 				source = $(this).val();
 			$(".set_profile_photo_female").attr('src', avatar);
 			$("input[name=profile_photo_female__filename]").val(source);
 			$("input[name=profile_photo_female__method]").val('avatar');
-			$("input[name=profile_photo_female]").parent().siblings().children().find('.remove-image').prop('disabled', false);
-			$("input[name=profile_photo_female]").parent().parent().find('.remove-image').prop('disabled', false);
+			$("button.remove-image[data-target=profile_photo_female]").prop('disabled', false);
 		}
 	});
+
+	// Klik tombol penyimpanan
 	$(".change-data").on('click', function(e) {
 		e.preventDefault();
-		let data = $(this).data('image');
-		$(".use-image").attr('data-image', data);
+		$(".use-image").attr('data-image', $(this).data('image'));
 	});
+
+	// Upload foto langsung
 	$(".change-img").on('change', function(e) {
-		if (e.target.name=='profile_photo_male') {
-			const file = e.target.files[0];
-			if (file) {
-				let reader = new FileReader();
-				reader.onload = function(render) {
-					$(".set_profile_photo_male").attr('src', render.target.result);
-				}
-				reader.readAsDataURL(file);
-				$("input[name=profile_photo_male__method]").val('upload');
-			}
-			$("input[name=profile_photo_female]").parent().parent().find('.remove-image').prop('disabled', false);
-		} else if (e.target.name=='profile_photo_female') {
-			const file = e.target.files[0];
-			if (file) {
-				let reader = new FileReader();
-				reader.onload = function(render) {
-					$(".set_profile_photo_female").attr('src', render.target.result);
-				}
-				reader.readAsDataURL(file);
-				$("input[name=profile_photo_female__method]").val('upload');
-			}
-			$("input[name=profile_photo_female]").parent().parent().find('.remove-image').prop('disabled', false);
+		const file = e.target.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		if (e.target.name === 'profile_photo_male') {
+			reader.onload = r => $(".set_profile_photo_male").attr('src', r.target.result);
+			reader.readAsDataURL(file);
+			$("input[name=profile_photo_male__method]").val('upload');
+			$("button.remove-image[data-target=profile_photo_male]").prop('disabled', false);
+		} else if (e.target.name === 'profile_photo_female') {
+			reader.onload = r => $(".set_profile_photo_female").attr('src', r.target.result);
+			reader.readAsDataURL(file);
+			$("input[name=profile_photo_female__method]").val('upload');
+			$("button.remove-image[data-target=profile_photo_female]").prop('disabled', false);
 		}
 	});
+
+	// Toggle tampilan orang tua & instagram
 	$(".change-style").on('change', function(e) {
-		if (e.target.name=='profile_parent_show') {
-			show = (e.target.checked) ? 'none' : 'inherit';
+		const show = e.target.checked ? 'none' : 'inherit';
+		if (e.target.name === 'profile_parent_show') {
 			$(".set_profile_parent_show").css('display', show);
-		} else if (e.target.name=='profile_instagram_show') {
-			show = (e.target.checked) ? 'none' : 'inherit';
+		} else if (e.target.name === 'profile_instagram_show') {
 			$(".set_profile_instagram_show").css('display', show);
 		}
 	});
+
+	// Hapus foto
 	$(".remove-image").on('click', function(e) {
 		e.preventDefault();
-		if ($(this).data('target')=='profile_photo_male') {
-			$(".set_profile_photo_male").attr('src', null);
-			$("input[name=profile_photo_male]").val(null);
-			$("input[name=profile_photo_male__filename]").val(null);
-			$("input[name=profile_photo_male__method]").val(null);
+		const target = $(this).data('target');
+		if (target === 'profile_photo_male') {
+			$(".set_profile_photo_male").attr('src', '');
+			$("input[name=profile_photo_male]").val('');
+			$("input[name=profile_photo_male__filename]").val('');
+			$("input[name=profile_photo_male__method]").val('none');
 			$("input[name=profile_avatar_male]").prop('checked', false);
-		} else if ($(this).data('target')=='profile_photo_female') {
-			$(".set_profile_photo_female").attr('src', null);
-			$("input[name=profile_photo_female]").val(null);
-			$("input[name=profile_photo_female__filename]").val(null);
-			$("input[name=profile_photo_female__method]").val(null);
+		} else if (target === 'profile_photo_female') {
+			$(".set_profile_photo_female").attr('src', '');
+			$("input[name=profile_photo_female]").val('');
+			$("input[name=profile_photo_female__filename]").val('');
+			$("input[name=profile_photo_female__method]").val('none');
 			$("input[name=profile_avatar_female]").prop('checked', false);
 		}
 		$(this).prop('disabled', true);
 	});
+
+	// Pilih dari penyimpanan
 	$(".use-image").on('click', function(e) {
-		var file = $("input[name='storage_file[]']").map(function() {
+		const target = $(this).data('image');
+		$("input[name='storage_file[]']").each(function() {
 			if ($(this).prop('checked')) {
-				let key = $(this).attr('id'),
-					source = $(this).val(),
-					url = $(this).siblings().children('img').attr('src');
-				if (e.target.dataset.image=='for-male') {
-					$(".set_profile_photo_male").attr('src', url);
+				const source = $(this).val();
+				const imgUrl = $(this).siblings().children('img').attr('src');
+				if (target === 'for-male') {
+					$(".set_profile_photo_male").attr('src', imgUrl);
 					$("input[name=profile_photo_male__filename]").val(source);
 					$("input[name=profile_photo_male__method]").val('storage');
-					$("input[name=profile_photo_male]").parent().parent().find('.remove-image').prop('disabled', false);
-				} else if (e.target.dataset.image=='for-female') {
-					$(".set_profile_photo_female").attr('src', url);
+					$("button.remove-image[data-target=profile_photo_male]").prop('disabled', false);
+				} else if (target === 'for-female') {
+					$(".set_profile_photo_female").attr('src', imgUrl);
 					$("input[name=profile_photo_female__filename]").val(source);
 					$("input[name=profile_photo_female__method]").val('storage');
-					$("input[name=profile_photo_female]").parent().parent().find('.remove-image').prop('disabled', false);
+					$("button.remove-image[data-target=profile_photo_female]").prop('disabled', false);
 				}
 			}
 		});
 		$("#storage").modal('hide');
 	});
+});
 </script>
 @endpush

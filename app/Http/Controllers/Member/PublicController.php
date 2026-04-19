@@ -15,134 +15,209 @@ use App\Models\InvitationGuest;
 use App\Models\InvitationStory;
 use App\Models\InvitationGallery;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use App\Http\Controllers\Controller;
 
 class PublicController extends Controller
 {
-	public function invitation(string $slug): Response|RedirectResponse
+	public function invitation(string $slug = null): Response|RedirectResponse
 	{
-		$invitation = Invitation::select('id', 'title', 'file', 'preset', 'user_id', 'template_id')->where('slug', $slug)->firstOr(function() {
-			return abort(404, 'tidak ditemukan');
-		});
-		$invitation->title = implode(' & ', json_decode($invitation->title, true));
-		$invitation_activation = AccountInvoice::select('date', 'package_id')->where('status', 'confirmed')->where('user_id', $invitation->user_id)->latest()->first();
-		
-        $invitation_active = 0;
-        $activation_date = date('Y-m-d');
+		if (empty($slug)) {
+			return abort(404);
+		}
 
-        if ($invitation_activation) {
-            $activation_date = $invitation_activation->date;
-            if ($invitation_activation->pack) {
-                 $content = json_decode($invitation_activation->pack->content);
-                 $invitation_active = $content->active ?? 0;
-            }
-        }
+		$invitation = Invitation::select('id', 'title', 'file', 'preset', 'publish', 'user_id', 'template_id')
+			->where('slug', $slug)
+			->first();
 
-		if (isexpired($activation_date, $invitation_active)===false) :
+		if (!$invitation) {
+			return abort(404, 'Undangan tidak ditemukan');
+		}
+
+		if ($invitation->publish !== 'publish') {
+			return abort(404, 'Undangan belum dipublikasikan');
+		}
+
+		$invitation->title = implode(' & ', json_decode($invitation->title, true) ?? ['-', '-']);
+
+		// Cek aktivasi — status CONFIRMED (case-insensitive)
+		$invitation_activation = AccountInvoice::select('date', 'package_id')
+			->with('pack')
+			->whereRaw('UPPER(status) = ?', ['CONFIRMED'])
+			->where('user_id', $invitation->user_id)
+			->latest()
+			->first();
+
+		$invitation_active = 0;
+		$activation_date   = date('Y-m-d');
+
+		if ($invitation_activation) {
+			$activation_date = $invitation_activation->date;
+			if ($invitation_activation->pack) {
+				$content = json_decode($invitation_activation->pack->content);
+				$invitation_active = $content->active ?? 0;
+			}
+		}
+
+		if (isexpired($activation_date, $invitation_active) === false) {
 			$data = json_decode($invitation->preset);
-			$protocol = null;
-			if (isset($data->additional) && isset($data->additional->protocol) && isset($data->additional->protocol->code)) {
-				$protocol = TemplateAssets::select('content')->where('type', 'protocol')->whereId($data->additional->protocol->code)->first();
-			}
-			$other = [
-				'video' => InvitationGallery::where('type', 'video')->where('invitation_id', $invitation->id)->first(),
-				'photo' => InvitationGallery::where('type', 'photo')->where('invitation_id', $invitation->id)->first(),
-				'protocol' => $protocol,
-			];
-			$packContent = null;
-			if ($invitation_activation && $invitation_activation->pack && $invitation_activation->pack->content) {
-				$packContent = json_decode($invitation_activation->pack->content);
-			}
-			$other['event'] = ($packContent && !empty($packContent->event)) ? InvitationEvent::where('invitation_id', $invitation->id)->get() : [];
-			$other['story'] = ($packContent && !empty($packContent->story)) ? InvitationStory::where('invitation_id', $invitation->id)->get() : [];
-			if ($other['photo']!=null) :
-				$other['photo']->prop = json_decode($other['photo']->content);
-			endif;
-			if ($other['video']!=null) :
-				$other['video']->prop = json_decode($other['video']->content);
-			endif;
-			if (request()->get('to')!='') :
-				$guest = InvitationGuest::select('type', 'name')->where('slug', request()->get('to'))->where('invitation_id', $invitation->id)->first();
-				if (!empty($guest)) :
-					$other['guest'] = json_decode($guest->name, true);
-				else :
-					$other['guest'] = null;
-				endif;
-			else :
-				$other['guest'] = null;
-			endif;
 
-			return response()->view('template.'.$invitation->temp->url, compact('invitation', 'data', 'other'));
-		else :
-			return abort(402, "apa?");
-		endif;
+			if (!$data) {
+				return abort(500, 'Data undangan tidak valid');
+			}
+
+			// Protocol
+			$protocol = null;
+			if (isset($data->additional->protocol->code)) {
+				$protocol = TemplateAssets::select('content')
+					->where('type', 'protocol')
+					->whereId($data->additional->protocol->code)
+					->first();
+			}
+
+			$packContent = $invitation_activation?->pack
+				? json_decode($invitation_activation->pack->content)
+				: null;
+
+			$other = [
+				'video'    => InvitationGallery::where('type', 'video')->where('invitation_id', $invitation->id)->first(),
+				'photo'    => InvitationGallery::where('type', 'photo')->where('invitation_id', $invitation->id)->first(),
+				'protocol' => $protocol,
+				'event'    => ($packContent && !empty($packContent->event))
+					? InvitationEvent::where('invitation_id', $invitation->id)->get()
+					: [],
+				'story'    => ($packContent && !empty($packContent->story))
+					? InvitationStory::where('invitation_id', $invitation->id)->get()
+					: [],
+				'guest'    => null,
+			];
+
+			if ($other['photo']) {
+				$other['photo']->prop = json_decode($other['photo']->content);
+			}
+			if ($other['video']) {
+				$other['video']->prop = json_decode($other['video']->content);
+			}
+
+			// Guest personalization
+			$guestSlug = request()->get('to');
+			if (!empty($guestSlug)) {
+				$guest = InvitationGuest::select('type', 'name')
+					->where('slug', $guestSlug)
+					->where('invitation_id', $invitation->id)
+					->first();
+				$other['guest'] = $guest ? json_decode($guest->name, true) : null;
+			}
+
+			$templateUrl = $invitation->temp?->url ?? 'default';
+
+			return response()->view('template.'.$templateUrl, compact('invitation', 'data', 'other'));
+		}
+
+		return abort(402, 'Undangan sudah tidak aktif');
 	}
 
 	public function invitation_present(Request $request, string $slug): JsonResponse
 	{
 		$this->validate($request, [
-			'name' => 'required',
+			'name'   => 'required|string|max:100',
 			'option' => 'required',
-			'amount' => 'numeric|min:0|not_in:0',
-		],
-		[
-			'required' => 'Kolom harus diisi.'
+			'amount' => 'nullable|numeric|min:1',
+		], ['required' => 'Kolom harus diisi.']);
+
+		$invitation = Invitation::select('id', 'preset')->where('slug', $slug)->first();
+		if (!$invitation) {
+			return response()->json(['message' => 'Undangan tidak ditemukan.'], 404);
+		}
+
+		$preset = json_decode($invitation->preset, true)['rsvp'] ?? [];
+
+		$spam = Feedback::whereDate('created_at', Carbon::today())
+			->where('type', 'present')
+			->where('ip_addr', $_SERVER['REMOTE_ADDR'])
+			->count();
+
+		if ($spam > 5) {
+			return response()->json(['message' => 'Batas pengiriman tercapai. Coba lagi besok.']);
+		}
+
+		Feedback::create([
+			'type'          => 'present',
+			'content'       => json_encode([
+				'name'   => $request->name,
+				'option' => $request->option,
+				'amount' => $request->amount ?? 1,
+			]),
+			'invitation_id' => $invitation->id,
+			'ip_addr'       => $_SERVER['REMOTE_ADDR'],
 		]);
-		$invitation_id = Invitation::select('id', 'preset')->where('slug', $slug)->first();
-		$preset = json_decode($invitation_id->preset, true)['rsvp'];
-		$spam = Feedback::whereDate('created_at', Carbon::today())->where('type', 'present')->where('ip_addr', $_SERVER['REMOTE_ADDR'])->count();
-		if ($spam <= 5) :
-			$feedback = Feedback::create([
-				'type' => 'present',
-				'content' => json_encode(['name'=>$request->name, 'option'=>$request->option, 'amount'=>$request->amount ?? 1]),
-				'invitation_id' => $invitation_id->id,
-				'ip_addr' => $_SERVER['REMOTE_ADDR']
-			]);
-			return response()->json(['message'=>$preset[$request->option]['content']]);
-		elseif ($spam > 5) :
-			return response()->json(['message'=>"Batas pengiriman tercapai."]);
-		endif;
+
+		$message = $preset[$request->option]['content'] ?? 'Terima kasih atas konfirmasi kehadiran Anda.';
+
+		return response()->json(['message' => $message]);
 	}
 
 	public function invitation_wish(Request $request, string $slug): JsonResponse
 	{
 		$this->validate($request, [
-			'name' => 'required',
-			'phone' => 'required',
-			'message' => 'required',
-		],
-		[
-			'required' => ' - Kolom harus diisi.'
+			'name'    => 'required|string|max:100',
+			'phone'   => 'required|string|max:20',
+			'message' => 'required|string|max:500',
+		], ['required' => ' - Kolom harus diisi.']);
+
+		$invitation = Invitation::select('id')->where('slug', $slug)->first();
+		if (!$invitation) {
+			return response()->json(['message' => 'Undangan tidak ditemukan.'], 404);
+		}
+
+		$spam = Feedback::whereDate('created_at', Carbon::today())
+			->where('type', 'wishes')
+			->where('ip_addr', $_SERVER['REMOTE_ADDR'])
+			->count();
+
+		if ($spam > 5) {
+			return response()->json(['message' => 'Batas pengiriman tercapai. Coba lagi besok.']);
+		}
+
+		Feedback::create([
+			'type'          => 'wishes',
+			'content'       => json_encode([
+				'name'    => $request->name,
+				'phone'   => $request->phone,
+				'message' => $request->message,
+			]),
+			'invitation_id' => $invitation->id,
+			'ip_addr'       => $_SERVER['REMOTE_ADDR'],
 		]);
-		$invitation_id = Invitation::select('id', 'preset')->where('slug', $slug)->first();
-		$preset = json_decode($invitation_id->preset, true)['rsvp'];
-		$spam = Feedback::whereDate('created_at', Carbon::today())->where('type', 'wishes')->where('ip_addr', $_SERVER['REMOTE_ADDR'])->count();
-		if ($spam <= 5) :
-			$feedback = Feedback::create([
-				'type' => 'wishes',
-				'content' => json_encode(['name'=>$request->name, 'phone'=>$request->phone, 'message'=>$request->message]),
-				'invitation_id' => $invitation_id->id,
-				'ip_addr' => $_SERVER['REMOTE_ADDR']
-			]);
-			return response()->json(['message'=>'Terkirim']);
-		elseif ($spam > 5) :
-			return response()->json(['message'=>"Batas pengiriman tercapai."]);
-		endif;
+
+		return response()->json(['message' => 'Ucapan berhasil dikirim. Terima kasih!']);
 	}
 
-    // Preview Template
-    public function template(string $slug): Response
+	// Preview Template
+	public function template(string $slug): Response
 	{
-		$invitation = Template::select('title', 'slug', 'preset', 'url', 'file')->where('slug', $slug)->publish()->firstOrFail();
-		$data = json_decode($invitation->preset);
+		$template = Template::select('title', 'slug', 'preset', 'url', 'file')
+			->where('slug', $slug)
+			->publish()
+			->firstOrFail();
+
+		$data  = json_decode($template->preset);
 		$other = [
-			'event' => [],
-			'story' => [],
-			'photo' => null,
-			'video' => null,
-			'guest' => null,
+			'event'    => [],
+			'story'    => [],
+			'photo'    => null,
+			'video'    => null,
+			'guest'    => null,
+			'protocol' => null,
 		];
 
-		return response()->view('template.'.$invitation->url, compact('data', 'invitation', 'other'));
+		// Objek invitation dummy untuk template preview
+		$invitation = (object)[
+			'title' => 'Preview Template',
+			'file'  => null,
+			'temp'  => $template,
+		];
+
+		return response()->view('template.'.$template->url, compact('data', 'invitation', 'other'));
 	}
 }

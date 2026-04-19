@@ -212,11 +212,24 @@
 			<div class="couple-wrap animate-box">
 				<div class="couple-half">
 					<div class="groom">
-						@if ($data->profile->photo->male->image)
-						<img src="{{ ($data->profile->photo->male->method == 'asset') ? asset($data->profile->photo->male->image) : url('storage/avatar/'.$data->profile->photo->male->image) }}" alt="groom" class="img-responsive">
+						@php
+							$maleFrame = $data->profile->photo->male->frame ?? '';
+							$maleImg   = $data->profile->photo->male->image ?? '';
+							$maleMethod = $data->profile->photo->male->method ?? 'none';
+						@endphp
+						@if(!empty($maleImg) && $maleMethod !== 'none')
+						<div class="position-relative d-inline-block">
+							<img src="{{ $maleMethod === 'storage' ? url('storage/sm/'.$maleImg) : url('storage/avatar/'.$maleImg) }}"
+								alt="groom" class="img-responsive"
+								style="border-radius:50%; width:200px; height:200px; object-fit:cover;">
+							@if(!empty($maleFrame))
+							<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="frame"
+								style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
+							@endif
+						</div>
 						@else
-						<div style="width: 100%; height: 300px; background: #eee; display: flex; align-items: center; justify-content: center;">
-							<span style="color: #aaa;">Foto Pria</span>
+						<div style="width:200px;height:200px;background:#f5f0e8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+							<i class="icon-user" style="font-size:4rem;color:#bf9b73"></i>
 						</div>
 						@endif
 					</div>
@@ -241,11 +254,24 @@
 				<p class="heart text-center"><i class="icon-heart2"></i></p>
 				<div class="couple-half">
 					<div class="bride">
-						@if ($data->profile->photo->female->image)
-						<img src="{{ ($data->profile->photo->female->method == 'asset') ? asset($data->profile->photo->female->image) : url('storage/avatar/'.$data->profile->photo->female->image) }}" alt="bride" class="img-responsive">
+						@php
+							$femaleFrame = $data->profile->photo->female->frame ?? '';
+							$femaleImg   = $data->profile->photo->female->image ?? '';
+							$femaleMethod = $data->profile->photo->female->method ?? 'none';
+						@endphp
+						@if(!empty($femaleImg) && $femaleMethod !== 'none')
+						<div class="position-relative d-inline-block">
+							<img src="{{ $femaleMethod === 'storage' ? url('storage/sm/'.$femaleImg) : url('storage/avatar/'.$femaleImg) }}"
+								alt="bride" class="img-responsive"
+								style="border-radius:50%; width:200px; height:200px; object-fit:cover;">
+							@if(!empty($femaleFrame))
+							<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="frame"
+								style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
+							@endif
+						</div>
 						@else
-						<div style="width: 100%; height: 300px; background: #eee; display: flex; align-items: center; justify-content: center;">
-							<span style="color: #aaa;">Foto Wanita</span>
+						<div style="width:200px;height:200px;background:#f5f0e8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+							<i class="icon-user" style="font-size:4rem;color:#bf9b73"></i>
 						</div>
 						@endif
 					</div>

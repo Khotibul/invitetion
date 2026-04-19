@@ -221,61 +221,66 @@ class ProfileController extends Controller
 			endif;
 
 			return response()->view('member.invoice', compact('invoice', 'bank_pay', 'status'));
-		} catch (DecryptException $e) {
+		} catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
 			return redirect()->route('member.main');
 		}
 	}
 
 	public function invoice_add(Request $request, int $id): JsonResponse
 	{
-		$column = [
-			'payment' => 'required'
-		];	
+		$column = ['payment' => 'required'];
 		$invoice_number = AccountInvoice::count();
-		$package = Package::select('id','price')->whereId($id)->firstOrFail();
+		$package = Package::select('id', 'price', 'title')->whereId($id)->publish()->firstOrFail();
 		$invoice_column = [
-			'date' => now(),
-			'amount' => $package->price,
-			'package_id'=> $package->id,
-			'user_id'	=> Auth::user()->id,
-			'ip_addr'	=> $_SERVER['REMOTE_ADDR'],
+			'date'       => now(),
+			'amount'     => $package->price,
+			'package_id' => $package->id,
+			'user_id'    => Auth::user()->id,
+			'ip_addr'    => $_SERVER['REMOTE_ADDR'],
 		];
-		if ($request->payment=='fast') :
-			// start xendit
-			$secret_key = 'Basic '.config('xendit.key_auth');
+
+		if ($request->payment === 'free' || (int)$package->price === 0) {
+			// Paket gratis — langsung konfirmasi
 			$external_id = Str::random(10);
-			$data_request = Http::withHeaders([
-				'Authorization' => $secret_key
-			])->post('https://api.xendit.co/v2/invoices', [
-				'external_id' => $external_id,
-				'amount' => $package->price
-			]);
-			$data_response = $data_request->object();
-			// end xendit
-			$invoice_column['content'] = json_encode(['invoice_number'=>'#'.($invoice_number+1)]);
-			$invoice_column['status'] = $data_response->status;
-			$invoice_column['payment_link'] = $data_response->invoice_url;
+			$invoice_column['content']      = json_encode(['invoice_number' => '#'.($invoice_number + 1)]);
+			$invoice_column['status']       = 'CONFIRMED';
+			$invoice_column['payment_link'] = '#free';
 			$invoice_column['payment_code'] = $external_id;
-		elseif ($request->payment=='manual') :
-			$column['bank'] = 'required';
-			// start manual
+			$this->validate($request, []);
+		} elseif ($request->payment === 'fast') {
+			// Xendit
+			$secret_key  = 'Basic '.config('xendit.key_auth');
 			$external_id = Str::random(10);
-			// end manual
-			$invoice_column['content'] = json_encode(['invoice_number'=>'#'.($invoice_number+1), 'bank'=>$request->bank]);
-			$invoice_column['status'] = 'PENDING';
+			$data_request = Http::withHeaders(['Authorization' => $secret_key])
+				->post('https://api.xendit.co/v2/invoices', [
+					'external_id' => $external_id,
+					'amount'      => $package->price,
+					'description' => 'Paket '.$package->title.' - Risa Digital Invitation',
+					'customer'    => ['given_names' => Auth::user()->name, 'email' => Auth::user()->email],
+				]);
+			$data_response = $data_request->object();
+			$invoice_column['content']      = json_encode(['invoice_number' => '#'.($invoice_number + 1)]);
+			$invoice_column['status']       = $data_response->status ?? 'PENDING';
+			$invoice_column['payment_link'] = $data_response->invoice_url ?? '#';
+			$invoice_column['payment_code'] = $external_id;
+		} elseif ($request->payment === 'manual') {
+			$column['bank'] = 'required';
+			$external_id = Str::random(10);
+			$invoice_column['content']      = json_encode(['invoice_number' => '#'.($invoice_number + 1), 'bank' => $request->bank]);
+			$invoice_column['status']       = 'PENDING';
 			$invoice_column['payment_link'] = '#manual';
 			$invoice_column['payment_code'] = $external_id;
-		endif;
+		}
 
 		$this->validate($request, $column, [
 			'payment.required' => 'Pilih metode pembayaran.',
-			'bank.required' => 'Pilih bank tujuan.'
+			'bank.required'    => 'Pilih bank tujuan.',
 		]);
 
 		AccountInvoice::create($invoice_column);
-		$last = AccountInvoice::select('id')->where('user_id', Auth::user()->id)->where('ip_addr', $_SERVER['REMOTE_ADDR'])->latest()->first();
+		$last = AccountInvoice::select('id')->where('user_id', Auth::user()->id)->latest()->first();
 
-		return response()->json(['code'=>200, 'redirect'=>route('invoice', encrypt($last->id))]);
+		return response()->json(['code' => 200, 'redirect' => route('invoice', encrypt($last->id))]);
 	}
 
 	public function invoice_provement(Request $request, string $id): JsonResponse|RedirectResponse
@@ -303,7 +308,7 @@ class ProfileController extends Controller
 			AccountInvoice::select('content')->where('user_id', Auth::user()->id)->where('id', $decrypted)->where('status', 'PENDING')->update(['content' => json_encode($prove)]);
 
 			return response()->json(['toast'=>['icon'=>'success', 'title'=>'Dikirim!', 'text'=>'Bukti pembayaran telah dikirim.'], 'page' => 'reload']);
-		} catch (DecryptException $e) {
+		} catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
 			return response()->json(['toast'=>['icon'=>'error', 'title'=>'Proses tidak diketahui', 'text'=>'Proses tidak diketahui.'], 'page' => 'reload']);
 		}
 	}
@@ -312,10 +317,13 @@ class ProfileController extends Controller
 	{
 		try {
 			$decrypted = decrypt($id);
-			$invoice =  AccountInvoice::where('user_id', Auth::user()->id)->where('id', $decrypted)->where('status', 'PENDING')->update(['status'=>'confirmed']);
-			
+			AccountInvoice::where('user_id', Auth::user()->id)
+				->where('id', $decrypted)
+				->where('status', 'PENDING')
+				->update(['status' => 'CONFIRMED']);
+
 			return redirect()->route('member.main');
-		} catch (DecryptException $e) {
+		} catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
 			return redirect()->route('member.main');
 		}
 	}

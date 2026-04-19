@@ -87,6 +87,7 @@ Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::delete('delete/story/{id}', [MemberInvite::class, 'm_story_delete'])->name('menu.story-delete');
 	Route::put('edit/e-invitation', [MemberInvite::class, 'm_einvitation_edit'])->name('menu.einvitation-edit');
 	Route::post('create/guest', [MemberInvite::class, 'm_share_add'])->name('menu.share-add');
+	Route::delete('delete/guest/{id}', [MemberInvite::class, 'm_share_delete'])->name('menu.share-delete');
 	Route::put('create/gallery', [MemberInvite::class, 'm_gallery_add'])->name('menu.gallery-add');
 	Route::post('create/music', [MemberInvite::class, 'm_music_add'])->name('menu.music-add');
 	// assets
@@ -120,7 +121,11 @@ Route::prefix('guestbook')->middleware('is_member')->group(function () {
 	Route::put('edit/souvenir/{id}', [Guestbook::class, 'm_souvenir_edit'])->name('menu.souvenir-edit');
 	Route::delete('delete/souvenir/{id}', [Guestbook::class, 'm_souvenir_delete'])->name('menu.souvenir-delete');
 	Route::get('reservation', [Guestbook::class, 'm_reservation'])->name('menu.reservation');
+	Route::post('reservation/checkin', [Guestbook::class, 'm_reservation_checkin'])->name('menu.reservation-checkin');
+	Route::get('reservation/search', [Guestbook::class, 'm_reservation_search'])->name('menu.reservation-search');
 	Route::get('table-management', [Guestbook::class, 'm_management'])->name('menu.management');
+	Route::post('table-management/add', [Guestbook::class, 'm_management_add'])->name('menu.management-add');
+	Route::delete('table-management/{id}', [Guestbook::class, 'm_management_delete'])->name('menu.management-delete');
 });
 
 //** End of Guestbook */

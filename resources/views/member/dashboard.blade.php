@@ -129,19 +129,35 @@
                 <div class="col-lg-5">
                     <div class="bg-white shadow-sm rounded p-3 {{ (Auth::user()->acc && Auth::user()->acc->guestbook==0) ? 'lock' : null }}">
                         <h4>Statistik</h4>
+                        @php
+                            use App\Models\Feedback;
+                            $invId = Auth::user()->inv?->id;
+                            $statHadir = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
+                                ->whereRaw("content::text LIKE '%\"option\":\"yes\"%' OR content::text LIKE '%\"option\":\"hadir\"%'")
+                                ->count() : 0;
+                            $statTidak = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
+                                ->whereRaw("content::text NOT LIKE '%\"option\":\"yes\"%' AND content::text NOT LIKE '%\"option\":\"hadir\"%'")
+                                ->count() : 0;
+                            $statTotal = $statHadir + $statTidak;
+                        @endphp
                         <div class="d-flex justify-content-between">
-                            <div class="progress" data-max="3" data-value="1"></div>
+                            <div class="progress" data-max="{{ max(1, $statTotal) }}" data-value="{{ $statHadir }}"></div>
                             <div class="progress-summary p-2">
                                 <div>
                                     <span>Hadir</span>
-                                    <b>0</b>
+                                    <b>{{ $statHadir }}</b>
                                 </div>
                                 <div>
                                     <span>Tidak hadir</span>
-                                    <b>0</b>
+                                    <b>{{ $statTidak }}</b>
                                 </div>
                             </div>
                         </div>
+                        @if($statTotal > 0)
+                        <div class="text-center mt-2">
+                            <small class="text-muted">{{ $statTotal }} konfirmasi kehadiran</small>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

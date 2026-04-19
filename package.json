@@ -17,6 +17,7 @@
         "aos": "^2.3.4",
         "boxicons": "^2.1.4",
         "html2canvas": "^1.4.1",
+        "jquery": "^4.0.0",
         "js-circle-progress": "^0.2.4",
         "owl-carousel": "^1.0.0",
         "perfect-scrollbar": "^1.5.5",

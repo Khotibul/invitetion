@@ -6,12 +6,12 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title'){{ (Auth::user()->inv) ? " - Wedding of ".implode(' & ', json_decode(Auth::user()->inv->title, true) ?? ['-', '-']) : "" }} | Risa Digital Invitation</title>
     <meta name="theme-color" content="{{ isset($global['setting'][3]) ? $global['setting'][3]->content : '#ffffff' }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords" content="">
     <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
+    {{-- jQuery harus dimuat SEBELUM Vite bundle agar $ tersedia --}}
+    <script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
 	@vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-03d7fa95.css') }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-46c277b6.css') }}"> --}}
-    {{-- <script src="{{ asset('build/assets/member-script-72440df0.js') }}" type="module"></script> --}}
     @stack('style')
 </head>
 <body>
@@ -22,7 +22,6 @@
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
 		@csrf
 	</form>
-	<script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
     @stack('script')
     <script>
         $(".logout-form").on('click', function(e) {

@@ -1,7 +1,11 @@
+import $ from 'jquery';
 import * as bootstrap from 'bootstrap';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import CircleProgress from 'js-circle-progress';
+
+// Expose jQuery globally agar script inline di blade bisa pakai $
+window.$ = window.jQuery = $;
 
 // swal
 const Toast = Swal.mixin({

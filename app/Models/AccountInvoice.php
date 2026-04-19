@@ -38,12 +38,12 @@ class AccountInvoice extends Model
 
     public function scopeCurrent($query, $id = null)
     {
-        if (Auth::user()->role=='member') :
+        if (Auth::user()->role === 'member') {
             $id = Auth::user()->id;
-        else :
-            $id = $id;
-        endif;
+        }
 
-        return $query->where('user_id', $id)->where('status', 'CONFIRMED')->latest();
+        return $query->where('user_id', $id)
+            ->whereRaw('UPPER(status) = ?', ['CONFIRMED'])
+            ->latest();
     }
 }

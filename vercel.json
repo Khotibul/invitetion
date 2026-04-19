@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.2",
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
+    },
+    {
+      "src": "/storage/(.*)",
+      "dest": "/public/storage/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/public/images/$1"
+    },
+    {
+      "src": "/modules/(.*)",
+      "dest": "/public/modules/$1"
+    },
+    {
+      "src": "/template/(.*)",
+      "dest": "/public/template/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ],
+  "env": {
+    "APP_NAME": "Risa Digital Invitation",
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "APP_KEY": "base64:egol25DwAIDHhYJI4rxKDFjVta+OBT1VeW+NtNG24ms=",
+    "LOG_CHANNEL": "stderr",
+    "LOG_LEVEL": "error",
+
+    "DB_CONNECTION": "pgsql",
+    "DB_HOST": "ep-shy-meadow-ao500hsi-pooler.c-2.ap-southeast-1.aws.neon.tech",
+    "DB_PORT": "5432",
+    "DB_DATABASE": "neondb",
+    "DB_USERNAME": "neondb_owner",
+    "DB_PASSWORD": "npg_ykqATEVxvK31",
+    "DB_SSLMODE": "require",
+    "DB_NEON_ENDPOINT": "ep-shy-meadow-ao500hsi",
+    "DATABASE_URL": "postgresql://neondb_owner:npg_ykqATEVxvK31@ep-shy-meadow-ao500hsi-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
+
+    "CACHE_DRIVER": "database",
+    "SESSION_DRIVER": "database",
+    "SESSION_LIFETIME": "120",
+    "QUEUE_CONNECTION": "sync",
+    "FILESYSTEM_DISK": "public",
+    "BROADCAST_DRIVER": "log"
+  }
+}

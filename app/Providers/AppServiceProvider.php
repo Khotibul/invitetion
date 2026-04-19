@@ -6,6 +6,7 @@ use App\Models\Contact;
 use App\Models\Setting;
 use App\Models\LinkExternal;
 use App\Models\AccountInvoice;
+use App\Database\NeonPostgresConnector;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
@@ -19,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register custom Neon PostgreSQL connector (SNI fix untuk libpq lama)
+        $this->app->bind('db.connector.pgsql', NeonPostgresConnector::class);
     }
 
     /**

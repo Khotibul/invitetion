@@ -53,56 +53,31 @@ function image_info($params = null): string
 
 function image_reducer($data, string $file_name): void
 {
-	$size = [
-		'xs' => [
-			'size'	=> 60,
-			'folder'=> '/app/public/xs/'
-		],
-		'sm' => [
-			'size'	=> 280,
-			'folder'=> '/app/public/sm/'
-		],
-		'md' => [
-			'size'	=> 650,
-			'folder'=> '/app/public/md/'
-		]
+	$sizes = [
+		'xs' => 60,
+		'sm' => 280,
+		'md' => 650,
 	];
-	// xs start
-	$size['xs']['image'] = \Image::make($data);
-	$size['xs']['ratio'] = $size['xs']['image']->width() / $size['xs']['size'];
-	$size['xs']['width'] = $size['xs']['image']->width() / $size['xs']['ratio'];
-	$size['xs']['height'] = $size['xs']['image']->height() / $size['xs']['ratio'];
-	$size['xs']['image']->resize($size['xs']['width'], $size['xs']['height'], function($prop) {
-		$prop->aspectRatio();
-		$prop->upsize();
-	});
-	$canvas = \Image::canvas($size['xs']['width'], $size['xs']['height']);
-	$canvas->insert($size['xs']['image'], 'center');
-	$canvas->save(storage_path().$size['xs']['folder'].$file_name);
-	// sm start
-	$size['sm']['image'] = \Image::make($data);
-	$size['sm']['ratio'] = $size['sm']['image']->width() / $size['sm']['size'];
-	$size['sm']['width'] = $size['sm']['image']->width() / $size['sm']['ratio'];
-	$size['sm']['height'] = $size['sm']['image']->height() / $size['sm']['ratio'];
-	$size['sm']['image']->resize($size['sm']['width'], $size['sm']['height'], function($prop) {
-		$prop->aspectRatio();
-		$prop->upsize();
-	});
-	$canvas = \Image::canvas($size['sm']['width'], $size['sm']['height']);
-	$canvas->insert($size['sm']['image'], 'center');
-	$canvas->save(storage_path().$size['sm']['folder'].$file_name);
-	// md start
-	$size['md']['image'] = \Image::make($data);
-	$size['md']['ratio'] = $size['md']['image']->width() / $size['md']['size'];
-	$size['md']['width'] = $size['md']['image']->width() / $size['md']['ratio'];
-	$size['md']['height'] = $size['md']['image']->height() / $size['md']['ratio'];
-	$size['md']['image']->resize($size['md']['width'], $size['md']['height'], function($prop) {
-		$prop->aspectRatio();
-		$prop->upsize();
-	});
-	$canvas = \Image::canvas($size['md']['width'], $size['md']['height']);
-	$canvas->insert($size['md']['image'], 'center');
-	$canvas->save(storage_path().$size['md']['folder'].$file_name);
+
+	foreach ($sizes as $key => $maxWidth) {
+		try {
+			$img = \Image::make($data);
+			$ratio = $img->width() / $maxWidth;
+			$w = (int) ($img->width() / $ratio);
+			$h = (int) ($img->height() / $ratio);
+			$img->resize($w, $h, function ($c) {
+				$c->aspectRatio();
+				$c->upsize();
+			});
+			$canvas = \Image::canvas($w, $h);
+			$canvas->insert($img, 'center');
+			// Simpan via Storage disk agar kompatibel dengan Vercel (/tmp) dan lokal
+			Storage::disk('public')->put($key . '/' . $file_name, $canvas->encode()->getEncoded());
+		} catch (\Exception $e) {
+			// Jika resize gagal (misal di Vercel), simpan file asli saja
+			Storage::disk('public')->put($key . '/' . $file_name, $data);
+		}
+	}
 }
 
 function isitsame($needle, $target): bool

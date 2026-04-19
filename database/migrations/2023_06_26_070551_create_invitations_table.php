@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('file', 110)->nullable();
             $table->enum('file_type', ['image', 'video', 'audio', 'pdf'])->default('image');
             $table->text('file_preview')->nullable();
-            $table->longtext('preset');
+            $table->longText('preset');
             $table->enum('publish', ['publish', 'draft', 'archive'])->default('draft');
             $table->bigInteger('template_id')->index()->nullable()->unsigned();
 			$table->foreign('template_id')->references('id')->on('templates')->onUpdate('cascade')->onDelete('cascade');
