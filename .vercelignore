@@ -1,12 +1,36 @@
+# Dependencies — tidak perlu di bundle Vercel
 node_modules
+vendor/bin
+vendor/fakerphp
+vendor/laravel/sail
+vendor/laravel/pint
+vendor/mockery
+vendor/nunomaduro
+vendor/phpunit
+vendor/spatie/laravel-ignition
+
+# Git
 .git
+
+# Storage runtime
 storage/logs
 storage/framework/cache
 storage/framework/sessions
 storage/framework/views
+storage/app/public
+
+# Dev files
 tests
 .env
 .env.*
 README.md
+*.md
 vite.config.js
-resources
+package.json
+package-lock.json
+resources/sass
+resources/js
+resources/css
+
+# Large static assets tidak perlu di function
+public/modules

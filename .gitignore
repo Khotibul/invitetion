@@ -1,24 +1,27 @@
-# Laravel / app runtime
-/.env
-/.env.*.local
-/.phpunit.result.cache
-/.idea/
-/.vscode/
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env.*.local
+.phpunit.result.cache
 
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+
+# ── Laravel runtime ───────────────────────────────────────────────────────────
 /bootstrap/cache/
 /storage/*.key
 /storage/app/
 /storage/framework/
 /storage/logs/
 
-# Dependencies — node_modules tetap di-ignore, vendor di-commit untuk Vercel
-# /vendor/
+# ── Dependencies — JANGAN di-push ─────────────────────────────────────────────
+/vendor/
 /node_modules/
 
-# Build outputs — JANGAN ignore public/build agar Vercel bisa deploy
-# /public/build/
+# ── Build output — Vercel build sendiri ───────────────────────────────────────
+/public/build/
 /public/hot
 
-# Custom
-/cache/
-/config/development/
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
