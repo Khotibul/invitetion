@@ -11,12 +11,12 @@
 /storage/framework/
 /storage/logs/
 
-# Dependencies
-/vendor/
+# Dependencies — node_modules tetap di-ignore, vendor di-commit untuk Vercel
+# /vendor/
 /node_modules/
 
-# Build outputs
-/public/build/
+# Build outputs — JANGAN ignore public/build agar Vercel bisa deploy
+# /public/build/
 /public/hot
 
 # Custom

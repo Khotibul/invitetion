@@ -71,11 +71,13 @@ function image_reducer($data, string $file_name): void
 			});
 			$canvas = \Image::canvas($w, $h);
 			$canvas->insert($img, 'center');
-			// Simpan via Storage disk agar kompatibel dengan Vercel (/tmp) dan lokal
-			Storage::disk('public')->put($key . '/' . $file_name, $canvas->encode()->getEncoded());
+			// Simpan ke disk aktif (r2 atau public)
+			Storage::disk(config('filesystems.default', 'public'))
+				->put($key . '/' . $file_name, $canvas->encode()->getEncoded());
 		} catch (\Exception $e) {
-			// Jika resize gagal (misal di Vercel), simpan file asli saja
-			Storage::disk('public')->put($key . '/' . $file_name, $data);
+			// Fallback: simpan file asli tanpa resize
+			Storage::disk(config('filesystems.default', 'public'))
+				->put($key . '/' . $file_name, $data);
 		}
 	}
 }

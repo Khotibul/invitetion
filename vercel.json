@@ -1,6 +1,7 @@
 {
   "version": 2,
   "framework": null,
+  "outputDirectory": "public",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2",
@@ -55,7 +56,13 @@
     "SESSION_DRIVER": "database",
     "SESSION_LIFETIME": "120",
     "QUEUE_CONNECTION": "sync",
-    "FILESYSTEM_DISK": "public",
-    "BROADCAST_DRIVER": "log"
+    "FILESYSTEM_DISK": "r2",
+    "BROADCAST_DRIVER": "log",
+
+    "R2_ACCESS_KEY_ID": "03c0e54f32d7230fa48ab6152ec020fc",
+    "R2_SECRET_ACCESS_KEY": "71959264a03e7032ce59ea7e3bc4545088d68ad7a3bd506219ad1f331f896405",
+    "R2_BUCKET": "invitetion",
+    "R2_ENDPOINT": "https://03c0e54f32d7230fa48ab6152ec020fc.r2.cloudflarestorage.com",
+    "R2_URL": "https://pub-9727f878454c41f5b416804853e5d871.r2.dev"
   }
 }

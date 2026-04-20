@@ -33,7 +33,22 @@ export default defineConfig({
     optimizeDeps: {
         exclude: ['html2canvas']
     },
-    // server: {
-    //     host: true
-    // }
+    // Suppress Dart Sass deprecation warnings dari Bootstrap 5.x
+    css: {
+        preprocessorOptions: {
+            scss: {
+                // Gunakan legacy API agar kompatibel dengan Bootstrap 5 @import
+                api: 'legacy',
+                // Suppress semua deprecation warnings
+                silenceDeprecations: [
+                    'import',
+                    'global-builtin',
+                    'color-functions',
+                    'if-function',
+                    'abs-percent',
+                ],
+                quietDeps: true,
+            },
+        },
+    },
 });
