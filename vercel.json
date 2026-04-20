@@ -2,21 +2,15 @@
   "version": 2,
   "framework": null,
   "buildCommand": "composer install --no-dev --no-scripts && npm install && npm run build",
-  "outputDirectory": "public",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2",
       "maxDuration": 30,
-      "excludeFiles": "{node_modules/**,tests/**,storage/logs/**,storage/framework/cache/**,storage/framework/sessions/**,storage/framework/views/**,resources/sass/**,resources/js/**,public/modules/**,.git/**,vendor/fakerphp/**,vendor/laravel/sail/**,vendor/laravel/pint/**,vendor/mockery/**,vendor/nunomaduro/**,vendor/phpunit/**,vendor/spatie/laravel-ignition/**}"
+"excludeFiles": "{node_modules/**,tests/**,storage/**,resources/**,public/images/**,public/modules/**,public/template/**,.git/**}"
     }
   },
   "routes": [
-    { "src": "/build/(.*)",    "dest": "/public/build/$1" },
-    { "src": "/storage/(.*)",  "dest": "/public/storage/$1" },
-    { "src": "/images/(.*)",   "dest": "/public/images/$1" },
-    { "src": "/modules/(.*)",  "dest": "/public/modules/$1" },
-    { "src": "/template/(.*)", "dest": "/public/template/$1" },
-    { "src": "/(.*)",          "dest": "/api/index.php" }
+    { "src": "/(.*)","dest": "/api/index.php" }
   ],
   "env": {
     "APP_NAME": "Risa Digital Invitation",
