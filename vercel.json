@@ -5,6 +5,7 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2",
+      "excludeFiles": "{node_modules/**,tests/**,storage/**,resources/**}",
       "maxDuration": 30
     }
   },
