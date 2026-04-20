@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "composer install --no-dev --optimize-autoloader",
+  "buildCommand": "composer install --no-dev --no-scripts --classmap-authoritative",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2",
