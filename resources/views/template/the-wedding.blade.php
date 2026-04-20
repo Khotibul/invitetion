@@ -152,6 +152,101 @@
 		color: #bf9b73;
 		font-family: 'Satisfy', Arial, serif;
 	}
+
+	/* ── MOBILE FIX: section couple ── */
+
+	/* Desktop: foto kiri, teks kanan (bawaan template) */
+	/* Mobile: foto atas, teks bawah, tidak tumpang tindih */
+
+	@media screen and (max-width: 767px) {
+
+		/* Wrap pasangan jadi kolom vertikal */
+		.couple-wrap {
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: center !important;
+			gap: 2.5rem !important;
+		}
+
+		/* Tiap half jadi block penuh */
+		.couple-half {
+			width: 100% !important;
+			float: none !important;
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: center !important;
+			text-align: center !important;
+		}
+
+		/* Foto — ukuran lebih kecil di mobile */
+		.couple-half .groom,
+		.couple-half .bride {
+			width: 180px !important;
+			height: 180px !important;
+			margin: 0 auto 1rem auto !important;
+			flex-shrink: 0 !important;
+		}
+
+		.couple-half .groom img,
+		.couple-half .bride img {
+			width: 180px !important;
+			height: 180px !important;
+		}
+
+		/* Nama — pastikan di BAWAH foto, tidak menimpa */
+		.desc-groom,
+		.desc-bride {
+			position: static !important;
+			width: 100% !important;
+			padding: 0 1rem !important;
+			margin-top: 0.5rem !important;
+			text-align: center !important;
+		}
+
+		/* Nama teks ukuran lebih kecil */
+		.desc-groom h3,
+		.desc-bride h3 {
+			font-size: 1.8rem !important;
+			margin-bottom: 0.5rem !important;
+			line-height: 1.3 !important;
+		}
+
+		/* Info orang tua */
+		.desc-groom p,
+		.desc-bride p {
+			font-size: 0.9rem !important;
+			line-height: 1.7 !important;
+		}
+
+		/* Ikon instagram */
+		.fh5co-social-icons {
+			justify-content: center !important;
+		}
+
+		/* Simbol hati di tengah */
+		.heart {
+			margin: 0 !important;
+			font-size: 1.5rem !important;
+		}
+
+		/* Foto lingkaran di mobile */
+		.couple-half .groom .position-relative,
+		.couple-half .bride .position-relative {
+			display: inline-block !important;
+			margin: 0 auto !important;
+		}
+	}
+
+	/* Tablet */
+	@media screen and (min-width: 768px) and (max-width: 991px) {
+		.couple-half {
+			width: 45% !important;
+		}
+		.desc-groom h3,
+		.desc-bride h3 {
+			font-size: 1.6rem !important;
+		}
+	}
 	</style>
 
 	<!-- Modernizr JS -->
