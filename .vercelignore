@@ -1,5 +1,15 @@
-# Dependencies — tidak perlu di bundle Vercel
+# Tidak perlu di Vercel function bundle
 node_modules
+.git
+tests
+
+# Storage runtime (dibuat ulang di /tmp)
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+
+# Dev vendor packages (sudah di-exclude dari composer --no-dev)
 vendor/bin
 vendor/fakerphp
 vendor/laravel/sail
@@ -9,28 +19,9 @@ vendor/nunomaduro
 vendor/phpunit
 vendor/spatie/laravel-ignition
 
-# Git
-.git
-
-# Storage runtime
-storage/logs
-storage/framework/cache
-storage/framework/sessions
-storage/framework/views
-storage/app/public
-
-# Dev files
-tests
-.env
-.env.*
-README.md
-*.md
-vite.config.js
-package.json
-package-lock.json
+# Source files (tidak perlu di PHP function)
 resources/sass
 resources/js
-resources/css
 
-# Large static assets tidak perlu di function
+# Large static assets (dilayani langsung, bukan via PHP)
 public/modules

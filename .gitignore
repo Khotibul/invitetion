@@ -14,12 +14,21 @@
 /storage/framework/
 /storage/logs/
 
-# ── Dependencies — JANGAN di-push ─────────────────────────────────────────────
-/vendor/
+# ── node_modules — tidak perlu di-push ────────────────────────────────────────
 /node_modules/
 
-# ── Build output — Vercel build sendiri ───────────────────────────────────────
-/public/build/
+# ── vendor DEV packages — tidak perlu di-push ─────────────────────────────────
+# vendor/ sendiri HARUS di-push agar Vercel bisa jalan (tidak ada composer di Vercel)
+/vendor/bin/
+/vendor/fakerphp/
+/vendor/laravel/sail/
+/vendor/laravel/pint/
+/vendor/mockery/
+/vendor/nunomaduro/
+/vendor/phpunit/
+/vendor/spatie/laravel-ignition/
+
+# ── Vite hot reload ───────────────────────────────────────────────────────────
 /public/hot
 
 # ── OS ────────────────────────────────────────────────────────────────────────
