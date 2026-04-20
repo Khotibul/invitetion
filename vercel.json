@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "npm ci && npm run build",
+  "buildCommand": "composer install --no-dev --no-scripts && npm install && npm run build",
   "outputDirectory": "public",
   "functions": {
     "api/index.php": {
