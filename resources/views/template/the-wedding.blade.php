@@ -5,14 +5,25 @@
 		use Illuminate\Support\Str;
 		setlocale(LC_ALL, 'IND');
 		$invitationFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-		$coverImageObj = $data->cover->description->image ?? null;
-		$coverImageFile = ($coverImageObj && !empty($coverImageObj->image))
-			? (($coverImageObj->method == 'asset') ? asset($coverImageObj->image) : url('storage/cover/'.$coverImageObj->image))
-			: $invitationFile;
+		$coverImageObj  = $data->cover->description->image ?? null;
+		// Fix path: sistem simpan di storage/ bukan storage/cover/
+		$coverImageFile = null;
+		if ($coverImageObj && !empty($coverImageObj->image)) {
+			if ($coverImageObj->method === 'asset') {
+				$coverImageFile = asset($coverImageObj->image);
+			} elseif ($coverImageObj->method === 'storage') {
+				$coverImageFile = url('storage/sm/'.$coverImageObj->image);
+			} elseif ($coverImageObj->method === 'avatar') {
+				$coverImageFile = url('storage/avatar/'.$coverImageObj->image);
+			} else {
+				$coverImageFile = url('storage/'.$coverImageObj->image);
+			}
+		}
+		$coverImageFile = $coverImageFile ?? $invitationFile;
 		$set = [
-			'title' => "Wedding of ".$invitation->title." | The Wedding",
-			'file' => $invitationFile,
-			'content' => Carbon::parse($data->detail->calendar->date ?? now()->toDateString())->formatLocalized('%A, %d %B %Y')
+			'title'   => "Wedding of ".$invitation->title." | The Wedding",
+			'file'    => $invitationFile,
+			'content' => Carbon::parse($data->detail->calendar->date ?? now()->toDateString())->formatLocalized('%A, %d %B %Y'),
 		];
 	@endphp
 	<meta charset="utf-8">
@@ -87,6 +98,62 @@
 	<!-- Theme style  -->
 	<link rel="stylesheet" href="{{ asset('template/the-wedding/css/style.css') }}">
 
+	<!-- Fix: semua foto menjadi lingkaran -->
+	<style>
+	/* Foto sampul — lingkaran di overlay dan header */
+	.couple-main {
+		border-radius: 50% !important;
+		object-fit: cover !important;
+		display: block;
+		margin: 0 auto;
+	}
+	#overlay .content .couple-main {
+		width: 200px;
+		height: 200px;
+	}
+	#fh5co-header .couple-main {
+		width: 220px;
+		height: 220px;
+	}
+	@media screen and (max-width: 480px) {
+		#fh5co-header .couple-main { width: 160px; height: 160px; }
+		#overlay .content .couple-main { width: 160px; height: 160px; }
+	}
+	/* Footer foto pasangan */
+	.footer-couple-photos {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		margin: 1.2rem 0;
+	}
+	.footer-couple-photo {
+		width: 100px;
+		height: 100px;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 3px solid #bf9b73;
+		box-shadow: 0 4px 15px rgba(0,0,0,.15);
+	}
+	.footer-couple-placeholder {
+		width: 100px;
+		height: 100px;
+		border-radius: 50%;
+		background: #f5f0e8;
+		border: 3px solid #bf9b73;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #bf9b73;
+		font-size: 2.5rem;
+	}
+	.footer-couple-sep {
+		font-size: 1.8rem;
+		color: #bf9b73;
+		font-family: 'Satisfy', Arial, serif;
+	}
+	</style>
+
 	<!-- Modernizr JS -->
 	<script src="{{ asset('template/the-wedding/js/modernizr-2.6.2.min.js') }}"></script>
 	<!-- FOR IE9 below -->
@@ -134,11 +201,13 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box fadeInUp animated-fast">
-						@if ($data->cover->description->image->image)
-						<img src="{{ ($data->cover->description->image->method == 'asset') ? asset($data->cover->description->image->image) : url('storage/cover/'.$data->cover->description->image->image) }}" alt="" class="couple-main">
+						@if ($coverImageFile && $coverImageFile !== $invitationFile)
+						<img src="{{ $coverImageFile }}" alt="" class="couple-main">
+						@elseif($invitationFile)
+						<img src="{{ $invitationFile }}" alt="" class="couple-main">
 						@else
-						<div style="width: 200px; height: 200px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-							<span style="color: #aaa;">Foto Sampul</span>
+						<div style="width:200px;height:200px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto">
+							<span style="color:#aaa">Foto Sampul</span>
 						</div>
 						@endif
 					</div>
@@ -172,11 +241,13 @@
 			</div>
 			<div class="row">
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box">
-					@if ($data->cover->description->image->image)
-					<img src="{{ ($data->cover->description->image->method == 'asset') ? asset($data->cover->description->image->image) : url('storage/cover/'.$data->cover->description->image->image) }}" alt="" class="couple-main">
+					@if ($coverImageFile && $coverImageFile !== $invitationFile)
+					<img src="{{ $coverImageFile }}" alt="" class="couple-main">
+					@elseif($invitationFile)
+					<img src="{{ $invitationFile }}" alt="" class="couple-main">
 					@else
-					<div style="width: 200px; height: 200px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-						<span style="color: #aaa;">Foto Sampul</span>
+					<div style="width:220px;height:220px;background:#f5f0e8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;border:3px solid #bf9b73">
+						<span style="color:#bf9b73;font-size:3rem">📷</span>
 					</div>
 					@endif
 				</div>
@@ -185,6 +256,37 @@
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box">
 					<h1>{{ $data->cover->name->male }} & {{ $data->cover->name->female }}</h1>
 					<p style="color: #bf9b73">{{ $data->cover->content }}</p>
+
+					{{-- Jadwal di bawah teks "Kami berharap..." --}}
+					@if(!empty($data->detail->calendar->date ?? ''))
+					<div style="display:inline-block;margin:.5rem 0 1rem;padding:.9rem 2rem;background:rgba(191,155,115,.1);border:1px solid rgba(191,155,115,.35);border-radius:12px;text-align:center">
+						<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.4rem;color:#5d4037;font-size:.95rem;font-weight:600">
+							<i class="icon-calendar" style="color:#bf9b73"></i>
+							{{ Carbon::parse($data->detail->calendar->date)->formatLocalized('%A, %d %B %Y') }}
+						</div>
+						@if(!empty($data->detail->calendar->time ?? ''))
+						<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;color:#828282;font-size:.85rem;margin-bottom:.3rem">
+							<i class="icon-clock" style="color:#bf9b73"></i>
+							Pukul {{ $data->detail->calendar->time }} {{ strtoupper($data->detail->calendar->timezone ?? 'WIB') }}
+						</div>
+						@endif
+						@if(!empty($data->detail->location->address ?? ''))
+						<div style="display:flex;align-items:flex-start;justify-content:center;gap:.5rem;color:#828282;font-size:.85rem;line-height:1.5">
+							<i class="icon-location" style="color:#bf9b73;margin-top:2px;flex-shrink:0"></i>
+							<span>{{ $data->detail->location->address }}</span>
+						</div>
+						@if(!empty($data->detail->location->map ?? ''))
+						<div style="margin-top:.6rem">
+							<a href="{{ $data->detail->location->map }}" target="_blank"
+							   style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .9rem;background:#bf9b73;color:#fff;border-radius:50px;font-size:.75rem;text-decoration:none">
+								<i class="icon-map2"></i> Lihat Lokasi
+							</a>
+						</div>
+						@endif
+						@endif
+					</div>
+					@endif
+
 					<div class="simply-countdown simply-countdown-wedding"></div>
 					<br>
 					@if ($data->detail->calendar->save->show===true)
@@ -508,7 +610,7 @@
 
 			<div class="row animate-box">
 				<div class="col-md-8 col-md-offset-2">
-					<form action="{{ route('invitation.wish', request()->slug) }}" class="sender" method="post">
+					<form action="{{ $invitation->slug ? route('invitation.wish', $invitation->slug) : '#' }}" class="sender" method="post">
 						@csrf
 						<div class="form-group">
 							<label for="wishper-name">Nama <var dir="name"></var></label>
@@ -539,18 +641,106 @@
 			<div class="row copyright animate-box">
 				<div class="col-md-12 text-center">
 					@if ($data->detail->additional->show===true)
-					<p>
-						{{ $data->detail->additional->closing }}
-					</p>
+					<p>{{ $data->detail->additional->closing }}</p>
 					@endif
 					<h3 style="color: #bf9b73">Wassalamu'alaikum Wr. Wb.</h3>
-					Jazakumullahu Khairan
-					</p>
-					<img src="{{ asset('template/the-wedding/images/readme/half%20circle-200.png') }}" width="100" height="100">
-					<br>
+					<p>Jazakumullahu Khairan</p>
+
+					{{-- Foto pasangan dalam dua lingkaran terpisah --}}
+					@php
+						$fMaleMethod  = $data->profile->photo->male->method   ?? 'none';
+						$fMaleImg     = $data->profile->photo->male->image     ?? '';
+						$fFemaleMethod= $data->profile->photo->female->method  ?? 'none';
+						$fFemaleImg   = $data->profile->photo->female->image   ?? '';
+						$fMaleSrc     = (!empty($fMaleImg)   && $fMaleMethod   !== 'none')
+							? ($fMaleMethod   === 'storage' ? url('storage/sm/'.$fMaleImg)   : url('storage/avatar/'.$fMaleImg))   : null;
+						$fFemaleSrc   = (!empty($fFemaleImg) && $fFemaleMethod !== 'none')
+							? ($fFemaleMethod === 'storage' ? url('storage/sm/'.$fFemaleImg) : url('storage/avatar/'.$fFemaleImg)) : null;
+					@endphp
+					<div class="footer-couple-photos">
+						{{-- Pria di kiri --}}
+						@if($fMaleSrc)
+						<img src="{{ $fMaleSrc }}" alt="{{ $data->profile->name->male ?? '' }}" class="footer-couple-photo">
+						@else
+						<div class="footer-couple-placeholder">🤵</div>
+						@endif
+
+						<span class="footer-couple-sep">&amp;</span>
+
+						{{-- Wanita di kanan --}}
+						@if($fFemaleSrc)
+						<img src="{{ $fFemaleSrc }}" alt="{{ $data->profile->name->female ?? '' }}" class="footer-couple-photo">
+						@else
+						<div class="footer-couple-placeholder">👰</div>
+						@endif
+					</div>
+
 					<h1 style="font-family: 'Satisfy', Arial, serif">{{ $data->cover->name->male }} & {{ $data->cover->name->female }}</h1>
+
+					{{-- Detail acara di footer --}}
+					@php
+						$footerDate = $data->detail->calendar->date ?? null;
+						$footerTime = $data->detail->calendar->time ?? null;
+						$footerTz   = strtoupper($data->detail->calendar->timezone ?? 'WIB');
+						$footerAddr = $data->detail->location->address ?? null;
+						$footerMap  = $data->detail->location->map ?? null;
+					@endphp
+					@if($footerDate)
+					<div style="margin:1.2rem auto;max-width:500px;padding:1.2rem 1.5rem;background:rgba(191,155,115,.08);border:1px solid rgba(191,155,115,.3);border-radius:12px">
+						<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.5rem;color:#bf9b73;font-size:.9rem">
+							<i class="icon-calendar" style="font-size:1.1rem"></i>
+							<span style="font-weight:600">
+								{{ Carbon::parse($footerDate)->locale('id')->translatedFormat('l, d F Y') }}
+							</span>
+						</div>
+						@if($footerTime)
+						<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.5rem;color:#828282;font-size:.85rem">
+							<i class="icon-clock" style="font-size:1rem;color:#bf9b73"></i>
+							<span>Pukul {{ $footerTime }} {{ $footerTz }}</span>
+						</div>
+						@endif
+						@if($footerAddr)
+						<div style="display:flex;align-items:flex-start;justify-content:center;gap:.5rem;color:#828282;font-size:.85rem;line-height:1.5">
+							<i class="icon-location" style="font-size:1rem;color:#bf9b73;margin-top:2px;flex-shrink:0"></i>
+							<span>{{ $footerAddr }}</span>
+						</div>
+						@if($footerMap)
+						<div style="margin-top:.8rem">
+							<a href="{{ $footerMap }}" target="_blank"
+							   style="display:inline-flex;align-items:center;gap:.3rem;padding:.4rem 1rem;background:#bf9b73;color:#fff;border-radius:50px;font-size:.75rem;text-decoration:none;transition:opacity .2s"
+							   onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+								<i class="icon-map2"></i> Lihat Lokasi
+							</a>
+						</div>
+						@endif
+						@endif
+					</div>
+					@endif
+
+					{{-- Acara dari event list --}}
+					@if(count($other['event'] ?? []) > 0)
+					<div style="margin:.8rem auto;max-width:600px;display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center">
+						@foreach($other['event'] as $ev)
+						@php $ep = json_decode($ev->content); @endphp
+						@if($ep)
+						<div style="background:rgba(191,155,115,.06);border:1px solid rgba(191,155,115,.25);border-radius:10px;padding:.8rem 1.2rem;min-width:180px;text-align:center">
+							<div style="font-weight:700;color:#bf9b73;font-size:.9rem;margin-bottom:.3rem">{{ $ev->title }}</div>
+							<div style="font-size:.8rem;color:#828282">
+								{{ date('H:i', strtotime($ep->time->start)) }}
+								@if(!($ep->time->done ?? false)) – {{ date('H:i', strtotime($ep->time->end)) }} @else – selesai @endif
+								{{ $footerTz }}
+							</div>
+							@if(!empty($ep->location->address ?? '') && !($ep->location->sync ?? false))
+							<div style="font-size:.75rem;color:#aaa;margin-top:.2rem">{{ $ep->location->address }}</div>
+							@endif
+						</div>
+						@endif
+						@endforeach
+					</div>
+					@endif
+
 					<p>
-						© Copyright {{ date('Y') }} Risa Digital Invitation All Rights Reserved </br>
+						© Copyright {{ date('Y') }} Risa Digital Invitation All Rights Reserved<br>
 						<small>Risa Digital Invitation</small>
 					</p>
 				</div>

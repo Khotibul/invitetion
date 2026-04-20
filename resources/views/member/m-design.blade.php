@@ -13,13 +13,13 @@
                     @if (in_array('basic', $data->limit))
                     <div class="d-flex template-category mb-2 basic">
                         <div class="template-list">
-                            @forelse ($data->template->basic as $item)
+                            @forelse ($data->template->basic ?? [] as $item)
                             @php
-                                $check = ($item->id==Auth::user()->inv->temp->id) ? true : false;
-                                $label = ($item->id==Auth::user()->inv->temp->id) ? true : false;
+                                $activeTemp = Auth::user()->inv?->temp;
+                                $check = $activeTemp && ($item->id == $activeTemp->id);
                             @endphp
                             <figure>
-                                @if ($label===true)
+                                @if ($check)
                                 <span class="badge bg-warning">Saat ini</span>
                                 @endif
                                 <input type="radio" name="design_template" id="temp{{ $item->id }}" value="{{ $item->id }}" @checked($check)>
@@ -27,28 +27,26 @@
                                     <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
                                     <span>{{ $item->title }}</span>
                                 </label>
-                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_BLANK">pratinjau</a>
+                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_blank">pratinjau</a>
                             </figure>
                             @empty
                             <div class="empty m-2 py-5">Kosong</div>
                             @endforelse
                         </div>
-                        <div class="template-label">
-                            <span>Basic</span>
-                        </div>
+                        <div class="template-label"><span>Basic</span></div>
                         <div class="clearfix"></div>
                     </div>
                     @endif
                     @if (in_array('premium', $data->limit))
                     <div class="d-flex template-category mb-2 premium">
                         <div class="template-list">
-                            @forelse ($data->template->premium as $item)
+                            @forelse ($data->template->premium ?? [] as $item)
                             @php
-                                $check = ($item->id==Auth::user()->inv->temp->id) ? true : false;
-                                $label = ($item->id==Auth::user()->inv->temp->id) ? true : false;
+                                $activeTemp = Auth::user()->inv?->temp;
+                                $check = $activeTemp && ($item->id == $activeTemp->id);
                             @endphp
                             <figure>
-                                @if ($label===true)
+                                @if ($check)
                                 <span class="badge bg-warning">Saat ini</span>
                                 @endif
                                 <input type="radio" name="design_template" id="temp{{ $item->id }}" value="{{ $item->id }}" @checked($check)>
@@ -56,28 +54,26 @@
                                     <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
                                     <span>{{ $item->title }}</span>
                                 </label>
-                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_BLANK">pratinjau</a>
+                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_blank">pratinjau</a>
                             </figure>
                             @empty
                             <div class="empty m-2 py-5">Kosong</div>
                             @endforelse
                         </div>
-                        <div class="template-label">
-                            <span>Premium</span>
-                        </div>
+                        <div class="template-label"><span>Premium</span></div>
                         <div class="clearfix"></div>
                     </div>
                     @endif
                     @if (in_array('exclusive', $data->limit))
                     <div class="d-flex template-category mb-2 exclusive">
                         <div class="template-list">
-                            @forelse ($data->template->exclusive as $item)
+                            @forelse ($data->template->exclusive ?? [] as $item)
                             @php
-                                $check = ($item->id==Auth::user()->inv->temp->id) ? true : false;
-                                $label = ($item->id==Auth::user()->inv->temp->id) ? true : false;
+                                $activeTemp = Auth::user()->inv?->temp;
+                                $check = $activeTemp && ($item->id == $activeTemp->id);
                             @endphp
                             <figure>
-                                @if ($label===true)
+                                @if ($check)
                                 <span class="badge bg-warning">Saat ini</span>
                                 @endif
                                 <input type="radio" name="design_template" id="temp{{ $item->id }}" value="{{ $item->id }}" @checked($check)>
@@ -85,14 +81,13 @@
                                     <img src="{{ Str::startsWith($item->file, 'template/') ? asset($item->file) : url('storage/'.$item->file) }}" alt="">
                                     <span>{{ $item->title }}</span>
                                 </label>
+                                <a href="{{ route('preview-template.index', $item->slug) }}" class="btn text-dark text-capitalize bg-white w-100 btn-sm my-1" target="_blank">pratinjau</a>
                             </figure>
                             @empty
                             <div class="empty m-2 py-5">Kosong</div>
                             @endforelse
                         </div>
-                        <div class="template-label">
-                            <span>Exclusive</span>
-                        </div>
+                        <div class="template-label"><span>Exclusive</span></div>
                         <div class="clearfix"></div>
                     </div>
                     @endif

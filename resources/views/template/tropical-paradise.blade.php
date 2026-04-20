@@ -233,96 +233,90 @@
         }
     </style>
 </head>
+@include('template.partials.helpers')
 <body>
     <section class="hero-beach">
         <div class="hero-content">
+            @if($coverSrc)
+            <img src="{{ $coverSrc }}" alt="foto sampul"
+                 style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.7);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.2)">
+            @endif
             <h1>Beach Wedding</h1>
-            <div class="names">Bride & Groom</div>
-            <p style="font-size: 1.2rem;">15 Juni 2024</p>
+            <div class="names">{{ $femaleName }} &amp; {{ $maleName }}</div>
+            <p style="font-size:1.1rem;opacity:.9">{{ $weddingDateFormatted }}</p>
+            @if($other['guest'])<p style="font-size:.85rem;opacity:.8;margin-top:.5rem">Kepada: {{ $other['guest']['name'] ?? '' }}</p>@endif
         </div>
         <div class="wave-divider"></div>
     </section>
 
-    <section style="background: white;">
+    <section style="background:white">
         <div class="container">
             <h2 class="section-title">The Couple</h2>
             <div class="couple-grid">
                 <div class="couple-card">
-                    <div class="couple-photo">
-                        <img src="https://via.placeholder.com/180" alt="Bride">
+                    <div class="couple-photo" style="position:relative">
+                        @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
+                        @else<img src="https://via.placeholder.com/180/00a86b/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
+                        @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                     </div>
-                    <h3 style="color: var(--coral); font-size: 2rem;">Bride Name</h3>
-                    <p>Putri dari Bapak & Ibu</p>
+                    <h3 style="color:var(--tropical-green);font-size:1.8rem">{{ $femaleName }}</h3>
+                    @if($showParent)<p>Putri ke-{{ $femaleChildhood }} dari Bapak {{ $femaleFather }} &amp; Ibu {{ $femaleMother }}</p>@endif
+                    @if($showIg && $femaleIg)<p style="font-size:.8rem;color:var(--tropical-green);margin-top:.4rem">@{{ $femaleIg }}</p>@endif
                 </div>
                 <div class="couple-card">
-                    <div class="couple-photo">
-                        <img src="https://via.placeholder.com/180" alt="Groom">
+                    <div class="couple-photo" style="position:relative">
+                        @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
+                        @else<img src="https://via.placeholder.com/180/0077be/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
+                        @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                     </div>
-                    <h3 style="color: var(--ocean-blue); font-size: 2rem;">Groom Name</h3>
-                    <p>Putra dari Bapak & Ibu</p>
+                    <h3 style="color:var(--ocean-blue);font-size:1.8rem">{{ $maleName }}</h3>
+                    @if($showParent)<p>Putra ke-{{ $maleChildhood }} dari Bapak {{ $maleFather }} &amp; Ibu {{ $maleMother }}</p>@endif
+                    @if($showIg && $maleIg)<p style="font-size:.8rem;color:var(--ocean-blue);margin-top:.4rem">@{{ $maleIg }}</p>@endif
                 </div>
             </div>
         </div>
     </section>
 
-    <section style="background: var(--sand);">
+    @if(count($other['event'] ?? []) > 0)
+    <section style="background:var(--sand)">
         <div class="container">
             <h2 class="section-title">Event Details</h2>
             <div class="event-grid">
+                @foreach($other['event'] as $ev)
+                @php $ep = json_decode($ev->content); @endphp
+                @if($ep)
                 <div class="event-card">
-                    <h3 style="color: var(--tropical-green); font-size: 1.8rem;">Akad Nikah</h3>
-                    <p style="margin: 1rem 0;">Sabtu, 15 Juni 2024<br>08:00 - 10:00 WIB</p>
-                    <p>Masjid Al-Ikhlas<br>Jakarta</p>
+                    <h3 style="color:var(--tropical-green);font-size:1.6rem">{{ $ev->title }}</h3>
+                    <p style="margin:1rem 0">{{ $weddingDateFormatted }}<br>{{ date('H:i',strtotime($ep->time->start)) }} - {{ ($ep->time->done??false)?'selesai':date('H:i',strtotime($ep->time->end)) }} {{ $weddingTz }}</p>
+                    @if(!empty($ep->location->address??''))<p>{{ $ep->location->address }}</p>@endif
+                    @if(!empty($ep->location->map??''))<a href="{{ $ep->location->map }}" target="_blank" style="display:inline-block;margin-top:.8rem;padding:.5rem 1.2rem;background:var(--tropical-green);color:#fff;border-radius:50px;font-size:.85rem;text-decoration:none">📍 Peta</a>@endif
                 </div>
-                <div class="event-card">
-                    <h3 style="color: var(--ocean-blue); font-size: 1.8rem;">Resepsi</h3>
-                    <p style="margin: 1rem 0;">Sabtu, 15 Juni 2024<br>11:00 - 14:00 WIB</p>
-                    <p>Beach Resort<br>Jakarta</p>
-                </div>
+                @endif
+                @endforeach
             </div>
         </div>
     </section>
+    @endif
 
-    <section style="background: white;">
+    @if(count($galleryFiles) > 0)
+    <section style="background:white">
         <div class="container">
             <h2 class="section-title">Gallery</h2>
             <div class="gallery-grid">
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="1"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="2"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="3"></div>
-                <div class="gallery-item"><img src="https://via.placeholder.com/300" alt="4"></div>
+                @foreach($galleryFiles as $i => $gf)
+                <div class="gallery-item"><img src="{{ url('storage/'.$gf) }}" alt="galeri {{ $i+1 }}" loading="lazy"></div>
+                @endforeach
             </div>
         </div>
     </section>
+    @endif
 
-    <section style="background: var(--sand);">
-        <div class="container">
-            <h2 class="section-title">RSVP</h2>
-            <form class="rsvp-form">
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input type="text" required>
-                </div>
-                <div class="form-group">
-                    <label>Kehadiran</label>
-                    <select required>
-                        <option value="">Pilih</option>
-                        <option value="hadir">Hadir</option>
-                        <option value="tidak">Tidak Hadir</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Ucapan</label>
-                    <textarea rows="4"></textarea>
-                </div>
-                <button type="submit" class="btn-submit">Kirim</button>
-            </form>
-        </div>
-    </section>
+    @include('template.partials.rsvp-wishes')
 
     <footer>
-        <p>Made with 🌴 by Risa Digital Invitation</p>
-        <p>&copy; 2024</p>
+        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
+        <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>
 </body>
 </html>

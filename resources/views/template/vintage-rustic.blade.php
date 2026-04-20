@@ -1,9 +1,7 @@
+@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @php
-        use Carbon\Carbon;
-    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $invitation->title }} | Risa Digital Invitation</title>
@@ -360,6 +358,10 @@
     <section class="hero">
         <div class="hero-content">
             <div class="ornament-top">❦</div>
+            @if($coverSrc)
+            <img src="{{ $coverSrc }}" alt="foto sampul"
+                 style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.5);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.25)">
+            @endif
             <h1>{{ $data->cover->description->top }}</h1>
             <div class="names">{{ $data->cover->name->female }} & {{ $data->cover->name->male }}</div>
             <div class="date">{{ Carbon::parse($data->detail->calendar->date)->format('d F Y') }}</div>

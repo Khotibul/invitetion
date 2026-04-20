@@ -53,6 +53,11 @@ Route::prefix('template')->group(function () {
 	Route::get('preview/{slug}', [MemberPublic::class, 'template'])->name('preview-template.index');
 });
 
+// Preview undangan member — di luar middleware InvitationController agar tidak terkena cek invoice
+Route::get('dashboard/preview-invitation', [MemberPublic::class, 'preview_member_invitation'])
+	->middleware('is_member')
+	->name('member.preview');
+
 // Override login route to use custom signin page
 Route::get('login', [MemberAccount::class, 'signin'])->name('login');
 Route::get('register', [MemberAccount::class, 'signup'])->name('register');
@@ -90,9 +95,8 @@ Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::delete('delete/guest/{id}', [MemberInvite::class, 'm_share_delete'])->name('menu.share-delete');
 	Route::put('create/gallery', [MemberInvite::class, 'm_gallery_add'])->name('menu.gallery-add');
 	Route::post('create/music', [MemberInvite::class, 'm_music_add'])->name('menu.music-add');
-	// assets
-	Route::post('storage/list/{mode}', [MemberProfile::class, 'strbox_list'])->name('strbox.list');
     Route::post('storage/upload', [MemberProfile::class, 'strbox_store'])->name('strbox.store');
+	Route::post('storage/list/{mode}', [MemberProfile::class, 'strbox_list'])->name('strbox.list');
 	// account
 	Route::get('account-profile', [MemberProfile::class, 'profile'])->name('profile');
 	Route::put('account-profile/save', [MemberProfile::class, 'profile_update'])->name('profile.update');

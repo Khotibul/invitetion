@@ -588,19 +588,23 @@
 <body>
     <div class="floral-bg"></div>
 
+@include('template.partials.helpers')
+
     <!-- Opening Cover -->
     <section class="opening-cover">
         <div class="opening-content">
             <div class="ornament">❀</div>
+            @if($coverSrc)
+            <img src="{{ $coverSrc }}" alt="foto sampul"
+                 style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.6);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.2)">
+            @endif
             <h1>The Wedding</h1>
-            <div class="couple">Bride & Groom</div>
+            <div class="couple">{{ $femaleName }} &amp; {{ $maleName }}</div>
             <div class="divider"></div>
-            <div class="date">15 . JUNI . 2024</div>
+            <div class="date">{{ \Carbon\Carbon::parse($weddingDate)->format('d . m . Y') }}</div>
+            @if($other['guest'])<p style="color:rgba(255,255,255,.8);font-size:.85rem;margin-top:.5rem">Kepada: {{ $other['guest']['name'] ?? '' }}</p>@endif
         </div>
-        <div class="scroll-indicator">
-            <div>↓</div>
-            <div style="font-size: 0.8rem; margin-top: 0.5rem;">Scroll Down</div>
-        </div>
+        <div class="scroll-indicator"><div>↓</div><div style="font-size:.8rem;margin-top:.5rem">Scroll Down</div></div>
     </section>
 
     <!-- Welcome -->
@@ -608,9 +612,8 @@
         <h2>Welcome to Our Wedding</h2>
         <div class="divider"></div>
         <div class="welcome-text">
-            <p>Dengan memohon rahmat dan ridho Allah SWT, kami mengundang Bapak/Ibu/Saudara/i 
-            untuk hadir di acara pernikahan kami. Merupakan suatu kehormatan dan kebahagiaan bagi kami 
-            apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.</p>
+            <p>{{ $coverBottom ?: 'Dengan penuh kebahagiaan, kami mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu.' }}</p>
+            @if($quoteContent)<p style="margin-top:1rem;font-style:italic;color:var(--sage-green)">"{{ $quoteContent }}"</p>@endif
         </div>
     </section>
 
@@ -618,153 +621,89 @@
     <section class="couple-section">
         <div class="couple-container">
             <div class="couple-card">
-                <div class="couple-photo">
-                    <img src="https://via.placeholder.com/200" alt="Bride">
+                <div class="couple-photo" style="position:relative">
+                    @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
+                    @else<img src="https://via.placeholder.com/200/8ba888/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
+                    @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
-                <h3>Bride Name</h3>
-                <p class="parents">Putri dari<br>Bapak & Ibu</p>
-                <p class="bio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                Sed do eiusmod tempor incididunt ut labore.</p>
+                <h3>{{ $femaleName }}</h3>
+                @if($showParent)<p class="parents">Putri ke-{{ $femaleChildhood }} dari<br>Bapak {{ $femaleFather }} &amp; Ibu {{ $femaleMother }}</p>@endif
+                @if($showIg && $femaleIg)<p style="font-size:.8rem;color:var(--sage-green);margin-top:.5rem">@{{ $femaleIg }}</p>@endif
             </div>
             <div class="couple-card">
-                <div class="couple-photo">
-                    <img src="https://via.placeholder.com/200" alt="Groom">
+                <div class="couple-photo" style="position:relative">
+                    @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
+                    @else<img src="https://via.placeholder.com/200/8ba888/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
+                    @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
-                <h3>Groom Name</h3>
-                <p class="parents">Putra dari<br>Bapak & Ibu</p>
-                <p class="bio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                Sed do eiusmod tempor incididunt ut labore.</p>
+                <h3>{{ $maleName }}</h3>
+                @if($showParent)<p class="parents">Putra ke-{{ $maleChildhood }} dari<br>Bapak {{ $maleFather }} &amp; Ibu {{ $maleMother }}</p>@endif
+                @if($showIg && $maleIg)<p style="font-size:.8rem;color:var(--sage-green);margin-top:.5rem">@{{ $maleIg }}</p>@endif
             </div>
         </div>
     </section>
 
     <!-- Love Story -->
+    @if(count($other['story'] ?? []) > 0)
     <section class="love-story">
         <h2>Our Love Story</h2>
         <div class="divider"></div>
         <div class="story-timeline">
+            @foreach($other['story'] as $i => $st)
             <div class="story-item">
-                <div class="story-year">2020</div>
+                <div class="story-year">{{ \Carbon\Carbon::parse($st->created_at)->format('Y') }}</div>
                 <div class="story-content">
-                    <h4>First Meet</h4>
-                    <p>Pertemuan pertama kami yang tak terduga di sebuah kafe kecil di kota.</p>
+                    <h4>{{ $st->title }}</h4>
+                    <p>{{ $st->content }}</p>
                 </div>
             </div>
-            <div class="story-item">
-                <div class="story-year">2021</div>
-                <div class="story-content">
-                    <h4>First Date</h4>
-                    <p>Kencan pertama yang romantis di taman bunga yang indah.</p>
-                </div>
-            </div>
-            <div class="story-item">
-                <div class="story-year">2023</div>
-                <div class="story-content">
-                    <h4>Proposal</h4>
-                    <p>Lamaran yang penuh kejutan di tempat pertemuan pertama kami.</p>
-                </div>
-            </div>
-            <div class="story-item">
-                <div class="story-year">2024</div>
-                <div class="story-content">
-                    <h4>Wedding Day</h4>
-                    <p>Hari yang kami tunggu untuk memulai hidup baru bersama.</p>
-                </div>
-            </div>
+            @endforeach
         </div>
     </section>
+    @endif
 
     <!-- Events -->
+    @if(count($other['event'] ?? []) > 0)
     <section class="events">
         <h2>Event Details</h2>
         <div class="events-grid">
+            @foreach($other['event'] as $ev)
+            @php $ep = json_decode($ev->content); @endphp
+            @if($ep)
             <div class="event-card">
                 <div class="event-icon">💒</div>
-                <h3>Akad Nikah</h3>
-                <div class="event-time">Sabtu, 15 Juni 2024<br>08:00 - 10:00 WIB</div>
-                <div class="event-location">
-                    <strong>Masjid Al-Ikhlas</strong><br>
-                    Jl. Contoh No. 123<br>
-                    Jakarta Selatan
-                </div>
-                <a href="#" class="map-button">📍 Lihat Lokasi</a>
+                <h3>{{ $ev->title }}</h3>
+                <div class="event-time">{{ $weddingDateFormatted }}<br>{{ date('H:i',strtotime($ep->time->start)) }} - {{ ($ep->time->done??false) ? 'selesai' : date('H:i',strtotime($ep->time->end)) }} {{ $weddingTz }}</div>
+                @if(!empty($ep->location->address??''))<div class="event-location"><strong>{{ $ep->location->address }}</strong></div>@endif
+                @if(!empty($ep->location->map??''))<a href="{{ $ep->location->map }}" target="_blank" class="map-button">📍 Lihat Lokasi</a>@endif
             </div>
-            <div class="event-card">
-                <div class="event-icon">🎉</div>
-                <h3>Resepsi</h3>
-                <div class="event-time">Sabtu, 15 Juni 2024<br>11:00 - 14:00 WIB</div>
-                <div class="event-location">
-                    <strong>Gedung Serbaguna</strong><br>
-                    Jl. Contoh No. 456<br>
-                    Jakarta Selatan
-                </div>
-                <a href="#" class="map-button">📍 Lihat Lokasi</a>
-            </div>
+            @endif
+            @endforeach
         </div>
     </section>
+    @endif
 
     <!-- Gallery -->
+    @if(count($galleryFiles) > 0)
     <section class="gallery">
-        <h2>Our Gallery</h2>
+        <h2>{{ $galleryTitle }}</h2>
         <div class="divider"></div>
         <div class="gallery-grid">
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 1">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 2">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 3">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 4">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 5">
-            </div>
-            <div class="gallery-item">
-                <img src="https://via.placeholder.com/400" alt="Gallery 6">
-            </div>
+            @foreach($galleryFiles as $i => $gf)
+            <div class="gallery-item"><img src="{{ url('storage/'.$gf) }}" alt="galeri {{ $i+1 }}" loading="lazy"></div>
+            @endforeach
         </div>
     </section>
+    @endif
 
-    <!-- RSVP -->
-    <section class="rsvp">
-        <h2>Konfirmasi Kehadiran</h2>
-        <div class="divider"></div>
-        <div class="rsvp-container">
-            <form>
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input type="text" required>
-                </div>
-                <div class="form-group">
-                    <label>Kehadiran</label>
-                    <select required>
-                        <option value="">Pilih</option>
-                        <option value="hadir">Hadir</option>
-                        <option value="tidak">Tidak Hadir</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Jumlah Tamu</label>
-                    <input type="number" min="1" max="5" value="1">
-                </div>
-                <div class="form-group">
-                    <label>Ucapan & Doa</label>
-                    <textarea rows="4"></textarea>
-                </div>
-                <button type="submit" class="submit-button">Kirim Konfirmasi</button>
-            </form>
-        </div>
-    </section>
+    @include('template.partials.rsvp-wishes')
 
     <!-- Footer -->
     <footer>
         <div class="ornament">❀</div>
-        <p>Made with <span class="heart">♥</span> by Risa Digital Invitation</p>
-        <p>&copy; 2024 All Rights Reserved</p>
+        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
+        <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>
 </body>
 </html>

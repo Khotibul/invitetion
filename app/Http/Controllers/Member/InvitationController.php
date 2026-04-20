@@ -184,44 +184,419 @@ class InvitationController extends Controller
 	public function main(): Response|RedirectResponse
 	{
 		$menu = $this->menu;
-        $pack_content = $this->activation->pack ? json_decode($this->activation->pack->content, true) : [];
+		$pack_content    = $this->activation->pack ? json_decode($this->activation->pack->content, true) : [];
 		$conditional_menu = $pack_content;
 
 		$templateLimit = $pack_content['template'] ?? ['basic'];
 		if (!is_array($templateLimit) || empty($templateLimit)) {
 			$templateLimit = ['basic'];
 		}
+
 		$bagpack = [
-			'name' => Auth::user()->inv ? Auth::user()->inv->title : json_encode(['-', '-']),
-			'date' => (Auth::user()->inv && Auth::user()->inv->preset) ? json_decode(Auth::user()->inv->preset)->detail->calendar : null,
+			'name'      => Auth::user()->inv ? Auth::user()->inv->title : json_encode(['-', '-']),
+			'date'      => (Auth::user()->inv && Auth::user()->inv->preset)
+				? json_decode(Auth::user()->inv->preset)->detail->calendar ?? null
+				: null,
 			'subdomain' => Auth::user()->inv ? Auth::user()->inv->slug : '',
-			'template' => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
-            'templates' => [
-                'basic' => in_array('basic', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'basic')->publish()->latest()->get()
-					: null,
-                'premium' => in_array('premium', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'premium')->publish()->latest()->get()
-					: null,
-                'exclusive' => in_array('exclusive', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file', 'grade')->where('grade', 'exclusive')->publish()->latest()->get()
-					: null,
-            ],
+			'template'  => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
+			// Tampilkan SEMUA template — grade lock ditangani di view
+			'templates' => [
+				'basic'     => Template::select('id','title','slug','file','grade')->where('grade','basic')->publish()->latest()->get(),
+				'premium'   => Template::select('id','title','slug','file','grade')->where('grade','premium')->publish()->latest()->get(),
+				'exclusive' => Template::select('id','title','slug','file','grade')->where('grade','exclusive')->publish()->latest()->get(),
+			],
+			'templateLimit' => $templateLimit, // kirim limit ke view untuk badge
 		];
-		$bagpack['name'] = implode(' & ', json_decode($bagpack['name'], true) ?? ['-', '-']);
+
+		$rawTitle   = json_decode($bagpack['name'], true) ?? ['-', '-'];
+		$namePria   = $rawTitle[0] ?? '-';
+		$nameWanita = $rawTitle[1] ?? '-';
+		$bagpack['name'] = ($namePria === $nameWanita) ? $namePria : $namePria.' & '.$nameWanita;
+
 		$data = json_decode(json_encode($bagpack));
 		$conditional = [
 			'e-invitation' => $conditional_menu['e-invitation'] ?? false,
-			'story' => $conditional_menu['story'] ?? false,
-			'event' => $conditional_menu['event'] ?? false
+			'story'        => $conditional_menu['story']        ?? false,
+			'event'        => $conditional_menu['event']        ?? false,
 		];
 
 		return response()->view('member.dashboard', compact('menu', 'data', 'conditional'));
 	}
 
+	/**
+	 * Preview undangan member dengan data nyata — bypass cek publish & expired.
+	 * Diakses via iframe di dashboard.
+	 */
+	public function preview_invitation(): Response
+	{
+		$inv = Auth::user()->inv;
+
+		// Placeholder HTML jika belum ada undangan
+		$placeholder = fn(string $msg, string $icon = 'bx-file-blank') =>
+			response('<!DOCTYPE html><html><head><meta charset="UTF-8">
+			<link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+			<style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;
+			font-family:sans-serif;background:#f8faf9;color:#aaa;flex-direction:column;gap:12px;text-align:center;padding:2rem}
+			i{font-size:3rem;color:#2d7a4f}.msg{font-size:.9rem;max-width:260px;line-height:1.5}
+			.btn{margin-top:.5rem;padding:.5rem 1.2rem;background:#2d7a4f;color:#fff;border:none;border-radius:4px;font-size:.8rem;cursor:pointer;text-decoration:none;display:inline-block}
+			</style></head><body>
+			<i class="bx '.$icon.'"></i><p class="msg">'.$msg.'</p>
+			</body></html>', 200, ['Content-Type' => 'text/html']);
+
+		if (!$inv) {
+			return $placeholder('Undangan belum dibuat.<br>Silakan buat undangan terlebih dahulu.');
+		}
+
+		if (!$inv->preset) {
+			return $placeholder('Data undangan belum lengkap.<br>Silakan isi profil undangan.', 'bx-edit');
+		}
+
+		// Decode preset dengan aman
+		$data = json_decode($inv->preset);
+		if (!$data) {
+			return $placeholder('Format data undangan tidak valid.', 'bx-error');
+		}
+
+		// Pastikan semua key preset ada (fallback jika belum diisi)
+		$data = $this->ensurePresetDefaults($data, $inv);
+
+		// Tentukan template URL
+		$templateUrl = $inv->temp?->url ?? 'default';
+		if (!\Illuminate\Support\Facades\View::exists('template.'.$templateUrl)) {
+			$templateUrl = 'default';
+		}
+
+		// Nama pasangan
+		$rawTitle = json_decode($inv->title, true) ?? ['-', '-'];
+		$titleStr = ($rawTitle[0] === ($rawTitle[1] ?? ''))
+			? $rawTitle[0]
+			: implode(' & ', $rawTitle);
+
+		// Ambil data relasi
+		$photo = InvitationGallery::where('type', 'photo')->where('invitation_id', $inv->id)->first();
+		$video = InvitationGallery::where('type', 'video')->where('invitation_id', $inv->id)->first();
+
+		if ($photo) $photo->prop = json_decode($photo->content);
+		if ($video) $video->prop = json_decode($video->content);
+
+		$other = [
+			'video'    => $video,
+			'photo'    => $photo,
+			'protocol' => null,
+			'event'    => InvitationEvent::where('invitation_id', $inv->id)->get(),
+			'story'    => InvitationStory::where('invitation_id', $inv->id)->get(),
+			'guest'    => null,
+		];
+
+		$invitation = (object)[
+			'id'    => $inv->id,
+			'title' => $titleStr,
+			'file'  => $inv->file,
+			'temp'  => $inv->temp,
+			'slug'  => $inv->slug,
+		];
+
+		return response()->view('template.'.$templateUrl, compact('invitation', 'data', 'other'));
+	}
+
+	/**
+	 * Pastikan semua key preset ada dengan nilai default yang aman.
+	 */
+	private function ensurePresetDefaults(object $data, $inv): object
+	{
+		$rawTitle = json_decode($inv->title, true) ?? ['-', '-'];
+		$maleName   = $rawTitle[0] ?? '-';
+		$femaleName = $rawTitle[1] ?? $maleName;
+
+		// cover
+		if (!isset($data->cover)) {
+			$data->cover = (object)[];
+		}
+		if (!isset($data->cover->name)) {
+			$data->cover->name = (object)['male' => $maleName, 'female' => $femaleName, 'size' => '48', 'style' => 'default'];
+		}
+		if (!isset($data->cover->content))     $data->cover->content = 'Undangan Pernikahan';
+		if (!isset($data->cover->button))      $data->cover->button  = 'Buka Undangan';
+		if (!isset($data->cover->description)) {
+			$data->cover->description = (object)[
+				'top'    => '',
+				'bottom' => '',
+				'image'  => (object)['method' => 'none', 'image' => ''],
+			];
+		}
+
+		// profile
+		if (!isset($data->profile)) {
+			$data->profile = (object)[];
+		}
+		if (!isset($data->profile->name)) {
+			$data->profile->name = (object)['male' => $maleName, 'female' => $femaleName];
+		}
+		if (!isset($data->profile->photo)) {
+			$data->profile->photo = (object)[
+				'male'   => (object)['method' => 'none', 'image' => '', 'frame' => ''],
+				'female' => (object)['method' => 'none', 'image' => '', 'frame' => ''],
+			];
+		}
+		if (!isset($data->profile->instagram)) {
+			$data->profile->instagram = (object)['male' => '', 'female' => '', 'show' => false];
+		}
+		if (!isset($data->profile->parent)) {
+			$data->profile->parent = (object)[
+				'show'   => false,
+				'male'   => (object)['father' => '', 'mother' => '', 'childhood' => '1'],
+				'female' => (object)['father' => '', 'mother' => '', 'childhood' => '1'],
+			];
+		}
+
+		// detail
+		if (!isset($data->detail)) {
+			$data->detail = (object)[];
+		}
+		if (!isset($data->detail->calendar)) {
+			$data->detail->calendar = (object)[
+				'date'     => now()->addMonths(3)->format('Y-m-d'),
+				'time'     => '09:00',
+				'timezone' => 'wib',
+				'save'     => (object)['show' => false, 'content' => 'Simpan Tanggal'],
+			];
+		}
+		if (!isset($data->detail->countdown)) {
+			$data->detail->countdown = (object)['show' => true, 'style' => 'default'];
+		}
+		if (!isset($data->detail->location)) {
+			$data->detail->location = (object)['address' => '', 'map' => ''];
+		}
+		if (!isset($data->detail->additional)) {
+			$data->detail->additional = (object)['show' => false, 'closing' => '', 'special' => []];
+		}
+
+		// quote
+		if (!isset($data->quote)) {
+			$data->quote = (object)['content' => '', 'decoration' => ''];
+		}
+
+		// music
+		if (!isset($data->music)) {
+			$data->music = (object)['show' => false, 'title' => '', 'url' => ''];
+		}
+
+		// rsvp
+		if (!isset($data->rsvp)) {
+			$data->rsvp = (object)[
+				'title'   => 'Konfirmasi Kehadiran',
+				'content' => 'Mohon konfirmasi kehadiran Anda',
+				'date'    => '',
+				'yes'     => (object)['option' => 'Hadir', 'content' => 'Terima kasih'],
+				'no'      => (object)['option' => 'Tidak Hadir', 'content' => 'Terima kasih'],
+			];
+		}
+
+		// gift
+		if (!isset($data->gift)) {
+			$data->gift = (object)[
+				'show'    => false,
+				'title'   => 'Amplop Digital',
+				'content' => '',
+				'bank'    => (object)['name' => '', 'code' => '', 'option' => 'bca'],
+			];
+		}
+
+		// wishes
+		if (!isset($data->wishes)) {
+			$data->wishes = (object)['title' => 'Ucapan & Doa', 'content' => '', 'public' => true];
+		}
+
+		// additional
+		if (!isset($data->additional)) {
+			$data->additional = (object)[
+				'live'     => (object)['show' => false, 'app' => '', 'link' => '', 'content' => ''],
+				'protocol' => (object)['show' => false, 'code' => [], 'title' => '', 'content' => ''],
+			];
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Ambil preset sebagai ARRAY dengan semua key default — dipakai di save_setting.
+	 */
+	private function safePresetArray(array $raw): array
+	{
+		$inv   = Auth::user()->inv;
+		$title = json_decode($inv->title ?? '["",""]', true) ?? ['', ''];
+		$male  = $title[0] ?? '';
+		$female = $title[1] ?? $male;
+
+		$defaults = [
+			'design' => [
+				'template'   => $inv->template_id ?? null,
+				'title'      => ['color' => '#000000', 'font' => 'Arial'],
+				'content'    => ['color' => '#333333', 'font' => 'Arial'],
+				'background' => '#ffffff',
+				'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
+			],
+			'cover' => [
+				'name'        => ['male' => $male, 'female' => $female, 'size' => '48', 'style' => 'default'],
+				'content'     => 'Undangan Pernikahan',
+				'button'      => 'Buka Undangan',
+				'description' => [
+					'top'    => '',
+					'bottom' => '',
+					'image'  => ['method' => 'none', 'image' => ''],
+				],
+			],
+			'profile' => [
+				'name'      => ['male' => $male, 'female' => $female],
+				'photo'     => [
+					'male'   => ['method' => 'none', 'image' => '', 'frame' => ''],
+					'female' => ['method' => 'none', 'image' => '', 'frame' => ''],
+				],
+				'instagram' => ['male' => '', 'female' => '', 'show' => false],
+				'parent'    => [
+					'show'   => false,
+					'male'   => ['father' => '', 'mother' => '', 'childhood' => '1'],
+					'female' => ['father' => '', 'mother' => '', 'childhood' => '1'],
+				],
+			],
+			'detail' => [
+				'calendar'   => [
+					'date'     => '',
+					'time'     => '09:00',
+					'timezone' => 'wib',
+					'save'     => ['show' => false, 'content' => 'Simpan Tanggal'],
+				],
+				'countdown'  => ['show' => true, 'style' => 'deafult'],
+				'location'   => ['address' => '', 'map' => ''],
+				'additional' => ['show' => false, 'closing' => '', 'special' => []],
+			],
+			'quote'      => ['content' => '', 'decoration' => ''],
+			'music'      => ['show' => false, 'title' => '', 'url' => ''],
+			'rsvp'       => [
+				'title'   => 'Konfirmasi Kehadiran',
+				'content' => '',
+				'date'    => '',
+				'yes'     => ['option' => 'Hadir', 'content' => 'Terima kasih'],
+				'no'      => ['option' => 'Tidak Hadir', 'content' => 'Terima kasih'],
+			],
+			'additional' => [
+				'live'     => ['show' => false, 'app' => '', 'link' => '', 'content' => ''],
+				'protocol' => ['show' => false, 'code' => [], 'title' => '', 'content' => ''],
+			],
+			'gift' => [
+				'show'    => false,
+				'title'   => 'Amplop Digital',
+				'content' => '',
+				'bank'    => ['name' => '', 'code' => '', 'option' => 'bca'],
+			],
+			'wishes' => ['title' => 'Ucapan & Doa', 'content' => '', 'public' => true],
+		];
+
+		return array_replace_recursive($defaults, $raw);
+	}
+
+	/**
+	 * Ambil preset undangan dengan nilai default yang aman untuk semua key.
+	 */
+	private function safePreset(): object
+	{
+		$inv  = Auth::user()->inv;
+		$raw  = json_decode($inv->preset ?? '{}') ?? (object)[];
+		$title = json_decode($inv->title ?? '["",""]', true) ?? ['', ''];
+		$male   = $title[0] ?? '';
+		$female = $title[1] ?? $male;
+
+		// design
+		if (!isset($raw->design)) $raw->design = (object)[];
+		$d = $raw->design;
+		if (!isset($d->template))   $d->template   = $inv->template_id ?? null;
+		if (!isset($d->title))      $d->title       = (object)['color'=>'#000000','font'=>'Arial'];
+		if (!isset($d->content))    $d->content     = (object)['color'=>'#333333','font'=>'Arial'];
+		if (!isset($d->background)) $d->background  = '#ffffff';
+		if (!isset($d->button))     $d->button      = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
+
+		// cover
+		if (!isset($raw->cover)) $raw->cover = (object)[];
+		$c = $raw->cover;
+		if (!isset($c->name))        $c->name        = (object)['male'=>$male,'female'=>$female,'size'=>'48','style'=>'default'];
+		if (!isset($c->content))     $c->content     = 'Undangan Pernikahan';
+		if (!isset($c->button))      $c->button      = 'Buka Undangan';
+		if (!isset($c->description)) $c->description = (object)['top'=>'','bottom'=>'','image'=>(object)['method'=>'none','image'=>'']];
+		if (!isset($c->description->image)) $c->description->image = (object)['method'=>'none','image'=>''];
+		if (!isset($c->description->top))   $c->description->top   = '';
+		if (!isset($c->description->bottom)) $c->description->bottom = '';
+
+		// profile
+		if (!isset($raw->profile)) $raw->profile = (object)[];
+		$p = $raw->profile;
+		if (!isset($p->name))      $p->name      = (object)['male'=>$male,'female'=>$female];
+		if (!isset($p->photo))     $p->photo     = (object)['male'=>(object)['method'=>'none','image'=>'','frame'=>''],'female'=>(object)['method'=>'none','image'=>'','frame'=>'']];
+		if (!isset($p->photo->male))   $p->photo->male   = (object)['method'=>'none','image'=>'','frame'=>''];
+		if (!isset($p->photo->female)) $p->photo->female = (object)['method'=>'none','image'=>'','frame'=>''];
+		if (!isset($p->instagram)) $p->instagram = (object)['male'=>'','female'=>'','show'=>false];
+		if (!isset($p->parent))    $p->parent    = (object)['show'=>false,'male'=>(object)['father'=>'','mother'=>'','childhood'=>'1'],'female'=>(object)['father'=>'','mother'=>'','childhood'=>'1']];
+
+		// detail
+		if (!isset($raw->detail)) $raw->detail = (object)[];
+		$dt = $raw->detail;
+		if (!isset($dt->calendar))  $dt->calendar  = (object)['date'=>'','time'=>'09:00','timezone'=>'wib','save'=>(object)['show'=>false,'content'=>'Simpan Tanggal']];
+		if (!isset($dt->calendar->save)) $dt->calendar->save = (object)['show'=>false,'content'=>'Simpan Tanggal'];
+		if (!isset($dt->calendar->date))     $dt->calendar->date     = '';
+		if (!isset($dt->calendar->time))     $dt->calendar->time     = '09:00';
+		if (!isset($dt->calendar->timezone)) $dt->calendar->timezone = 'wib';
+		if (!isset($dt->countdown)) $dt->countdown = (object)['show'=>true,'style'=>'deafult'];
+		if (!isset($dt->location))  $dt->location  = (object)['address'=>'','map'=>''];
+		if (!isset($dt->additional)) $dt->additional = (object)['show'=>false,'closing'=>'','special'=>[]];
+		if (!isset($dt->additional->special)) $dt->additional->special = [];
+
+		// quote
+		if (!isset($raw->quote)) $raw->quote = (object)['content'=>'','decoration'=>''];
+		if (!isset($raw->quote->content))    $raw->quote->content    = '';
+		if (!isset($raw->quote->decoration)) $raw->quote->decoration = '';
+
+		// music
+		if (!isset($raw->music)) $raw->music = (object)['show'=>false,'title'=>'','url'=>''];
+		if (!isset($raw->music->show))  $raw->music->show  = false;
+		if (!isset($raw->music->title)) $raw->music->title = '';
+		if (!isset($raw->music->url))   $raw->music->url   = '';
+
+		// rsvp
+		if (!isset($raw->rsvp)) $raw->rsvp = (object)[];
+		$r = $raw->rsvp;
+		if (!isset($r->title))   $r->title   = 'Konfirmasi Kehadiran';
+		if (!isset($r->content)) $r->content = 'Mohon konfirmasi kehadiran Anda';
+		if (!isset($r->date))    $r->date    = '';
+		if (!isset($r->yes))     $r->yes     = (object)['option'=>'Hadir','content'=>'Terima kasih'];
+		if (!isset($r->no))      $r->no      = (object)['option'=>'Tidak Hadir','content'=>'Terima kasih'];
+
+		// additional
+		if (!isset($raw->additional)) $raw->additional = (object)[];
+		$a = $raw->additional;
+		if (!isset($a->live))     $a->live     = (object)['show'=>false,'app'=>'','link'=>'','content'=>''];
+		if (!isset($a->protocol)) $a->protocol = (object)['show'=>false,'code'=>[],'title'=>'','content'=>''];
+
+		// gift
+		if (!isset($raw->gift)) $raw->gift = (object)[];
+		$g = $raw->gift;
+		if (!isset($g->show))    $g->show    = false;
+		if (!isset($g->title))   $g->title   = 'Amplop Digital';
+		if (!isset($g->content)) $g->content = '';
+		if (!isset($g->bank))    $g->bank    = (object)['name'=>'','code'=>'','option'=>'bca'];
+
+		// wishes
+		if (!isset($raw->wishes)) $raw->wishes = (object)[];
+		$w = $raw->wishes;
+		if (!isset($w->title))   $w->title   = 'Ucapan & Doa';
+		if (!isset($w->content)) $w->content = '';
+		if (!isset($w->public))  $w->public  = true;
+
+		return $raw;
+	}
+
 	public function m_design(): Response
 	{
-		$menu = $this->menu['design'];
+		$menu  = $this->menu['design'];
+		$preset = $this->safePreset();
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$templateLimit = ['basic'];
 		if ($access && $access->pack && $access->pack->content) {
@@ -233,88 +608,76 @@ class InvitationController extends Controller
 		}
 		$bagpack = [
 			'template' => [
-				'basic' => in_array('basic', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'basic')->publish()->latest()->get()
-					: null,
-				'premium' => in_array('premium', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'premium')->publish()->latest()->get()
-					: null,
-				'exclusive' => in_array('exclusive', $templateLimit, true)
-					? Template::select('id', 'title', 'slug', 'file')->where('grade', 'exclusive')->publish()->latest()->get()
-					: null,
+				'basic'     => in_array('basic', $templateLimit, true)     ? Template::select('id','title','slug','file')->where('grade','basic')->publish()->latest()->get()     : collect(),
+				'premium'   => in_array('premium', $templateLimit, true)   ? Template::select('id','title','slug','file')->where('grade','premium')->publish()->latest()->get()   : collect(),
+				'exclusive' => in_array('exclusive', $templateLimit, true) ? Template::select('id','title','slug','file')->where('grade','exclusive')->publish()->latest()->get() : collect(),
 			],
-			'limit' => $templateLimit,
-			'font' => TemplateAssets::select('title', 'content')->where('type', 'font')->publish()->get(),
-			'preset' => json_decode(Auth::user()->inv->preset)->design,// Preset
+			'limit'  => $templateLimit,
+			'font'   => TemplateAssets::select('title','content')->where('type','font')->publish()->get(),
+			'preset' => $preset->design,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-design', compact('menu', 'data'));
 	}
 
 	public function m_cover(): Response
 	{
-		$menu = $this->menu['cover'];
+		$menu   = $this->menu['cover'];
+		$preset = $this->safePreset();
 		$bagpack = [
-			'avatar' => [
-				'none' => TemplateAssets::select('title', 'content')->where('type', 'avatar')->get(),
-			],
-			'style' => [
-				'default' => 'Bawaan',
-				'stack' => 'Bertumpuk',
-			],
-			'preset' => json_decode(Auth::user()->inv->preset)->cover,// Preset
+			'avatar' => ['none' => TemplateAssets::select('title','content')->where('type','avatar')->get()],
+			'style'  => ['default' => 'Bawaan', 'stack' => 'Bertumpuk'],
+			'preset' => $preset->cover,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-cover', compact('menu', 'data'));
 	}
 
 	public function m_profile(): Response
 	{
-		$menu = $this->menu['profile'];
+		$menu   = $this->menu['profile'];
+		$preset = $this->safePreset();
 		$bagpack = [
 			'avatar' => [
-				'male' => TemplateAssets::select('title', 'content')->where('type', 'avatar male')->get(),
-				'female' => TemplateAssets::select('title', 'content')->where('type', 'avatar female')->get(),
+				'male'   => TemplateAssets::select('title','content')->where('type','avatar male')->get(),
+				'female' => TemplateAssets::select('title','content')->where('type','avatar female')->get(),
 			],
-			'frame' => TemplateAssets::select('title', 'content')->where('type', 'frame')->latest()->get(),
-			'preset' => json_decode(Auth::user()->inv->preset)->profile,// Preset
+			'frame'  => TemplateAssets::select('title','content')->where('type','frame')->latest()->get(),
+			'preset' => $preset->profile,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-profile', compact('menu', 'data'));
 	}
 
 	public function m_detail(): Response
 	{
-		$menu = $this->menu['detail'];
+		$menu   = $this->menu['detail'];
+		$preset = $this->safePreset();
 		$bagpack = [
-			'timezone'  => ['wib' => 'WIB', 'wita' => 'WITA', 'wit' => 'WIT', 'none' => 'Kosongkan'],
-			'style'  => ['deafult' => 'Bawaan', 'stack' => 'Bertumpuk'],
-			'preset' => json_decode(Auth::user()->inv->preset)->detail,// Preset
+			'timezone' => ['wib'=>'WIB','wita'=>'WITA','wit'=>'WIT','none'=>'Kosongkan'],
+			'style'    => ['deafult'=>'Bawaan','stack'=>'Bertumpuk'],
+			'preset'   => $preset->detail,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-detail', compact('menu', 'data'));
 	}
 
 	public function m_quote(): Response
 	{
-		$menu = $this->menu['quote'];
+		$menu   = $this->menu['quote'];
+		$preset = $this->safePreset();
 		$bagpack = [
-			'quote' => TemplateAssets::select('title', 'content')->where('type', 'quote')->latest()->get(),
-			'decoration' => TemplateAssets::select('title', 'content')->where('type', 'decoration')->latest()->get(),
-			'preset' => json_decode(Auth::user()->inv->preset)->quote,// Preset
+			'quote'      => TemplateAssets::select('title','content')->where('type','quote')->latest()->get(),
+			'decoration' => TemplateAssets::select('title','content')->where('type','decoration')->latest()->get(),
+			'preset'     => $preset->quote,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-quote', compact('menu', 'data'));
 	}
 
 	public function m_event(): Response|RedirectResponse
 	{
-		if (json_decode($this->activation->pack->content, true)['event']) :
+		if (json_decode($this->activation->pack->content, true)['event'] ?? false) :
 			$menu = $this->menu['event'];
 			$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 			$bagpack = [
@@ -439,7 +802,7 @@ class InvitationController extends Controller
 
 	public function m_story(): Response|RedirectResponse
 	{
-		if (json_decode($this->activation->pack->content, true)['story']) :
+		if (json_decode($this->activation->pack->content, true)['story'] ?? false) :
 			$menu = $this->menu['story'];
 			$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 			$bagpack = [
@@ -594,16 +957,16 @@ class InvitationController extends Controller
 	
 	public function m_music(): Response
 	{
-		$menu = $this->menu['music'];
+		$menu   = $this->menu['music'];
+		$preset = $this->safePreset();
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
-			'music'    => TemplateAssets::select('title', 'content')->where('type', 'music')->whereHas('user', fn($q) => $q->where('role', 'admin'))->publish()->get(),
-			'my_music' => TemplateAssets::select('title', 'content')->where('type', 'music')->where('user_id', Auth::user()->id)->publish()->first(),
-			'custom'   => json_decode($access->pack->content)->{'music'},
-			'preset'   => json_decode(Auth::user()->inv->preset)->music,
+			'music'    => TemplateAssets::select('title','content')->where('type','music')->whereHas('user', fn($q) => $q->where('role','admin'))->publish()->get(),
+			'my_music' => TemplateAssets::select('title','content')->where('type','music')->where('user_id', Auth::user()->id)->publish()->first(),
+			'custom'   => json_decode($access->pack->content)->{'music'} ?? 'template',
+			'preset'   => $preset->music,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-music', compact('menu', 'data'));
 	}
 
@@ -642,85 +1005,84 @@ class InvitationController extends Controller
 	
 	public function m_rsvp(): Response
 	{
-		$menu = $this->menu['rsvp'];
-		$bagpack = [
-			'preset' => json_decode(Auth::user()->inv->preset)->rsvp,// Preset
-		];
+		$menu   = $this->menu['rsvp'];
+		$preset = $this->safePreset();
+		$bagpack = ['preset' => $preset->rsvp];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-rsvp', compact('menu', 'data'));
 	}
-	
+
 	public function m_additional(): Response
 	{
-		$menu = $this->menu['additional-info'];
+		$menu   = $this->menu['additional-info'];
+		$preset = $this->safePreset();
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
-			'protocol' => TemplateAssets::select('id', 'title', 'content')->where('type', 'protocol')->publish()->get(),
-			'liveAccess' => json_decode($access->pack->content)->{'live-stream'},
-			'preset' => json_decode(Auth::user()->inv->preset)->additional,// Preset
+			'protocol'   => TemplateAssets::select('id','title','content')->where('type','protocol')->publish()->get(),
+			'liveAccess' => json_decode($access->pack->content)->{'live-stream'} ?? false,
+			'preset'     => $preset->additional,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-additional', compact('menu', 'data'));
 	}
 	
 	public function m_einvitation(): Response|RedirectResponse
 	{
-		if (json_decode(Auth::user()->invoice[0]->pack->content)->{'e-invitation'}===true) :
-			$menu = $this->menu['e-invitation'];
+		$packContent = Auth::user()->invoice[0]->pack->content ?? null;
+		if ($packContent && json_decode($packContent)->{'e-invitation'} === true) :
+			$menu   = $this->menu['e-invitation'];
+			$preset = $this->safePreset();
 			$bagpack = [
-				'preset' => json_decode(Auth::user()->inv->preset)->design,// Preset
-				'date' => json_decode(Auth::user()->inv->preset)->detail->calendar->date,
+				'preset' => $preset->design,
+				'date'   => $preset->detail->calendar->date ?? '',
 			];
 			$data = json_decode(json_encode($bagpack));
-
 			return response()->view('member.m-einvitation', compact('menu', 'data'));
-		elseif (Auth::user()->acc->guestbook==0) :
+		else :
 			return redirect()->route('packages');
 		endif;
 	}
 
 	public function m_einvitation_edit(Request $request): JsonResponse|RedirectResponse
 	{
-		if (json_decode(Auth::user()->invoice[0]->pack->content)->{'e-invitation'}===true) :
-			list($type, $data) = explode(';', $request->base64data);
-			list(, $data)      = explode(',', $data);
-			$data = base64_decode($data);
-			$image_name = "meta_".Auth::user()->id.clean_str(implode('-', json_decode(Auth::user()->inv->title, true))).".webp";
-			if (Storage::disk('public')->exists($image_name)) :
+		$packContent = Auth::user()->invoice[0]->pack->content ?? null;
+		if ($packContent && json_decode($packContent)->{'e-invitation'} === true) :
+			list($type, $imgData) = explode(';', $request->base64data);
+			list(, $imgData)      = explode(',', $imgData);
+			$imgData = base64_decode($imgData);
+			$image_name = 'meta_'.Auth::user()->id.clean_str(implode('-', json_decode(Auth::user()->inv->title, true))).'.webp';
+			if (Storage::disk('public')->exists($image_name)) {
 				Storage::disk('public')->delete($image_name);
-			endif;
-			Storage::disk('public')->put($image_name, $data);
-			Invitation::find(Auth::user()->inv->id)->update(['file'=>$image_name]);
-
-			return response()->json(['toast'=>['icon'=>'success', 'title'=>'Gambar telah dibuat', 'text'=>'Gambar baru telah disimpan.']]);
-		elseif (Auth::user()->acc->guestbook==0) :
+			}
+			Storage::disk('public')->put($image_name, $imgData);
+			Invitation::find(Auth::user()->inv->id)->update(['file' => $image_name]);
+			return response()->json(['toast'=>['icon'=>'success','title'=>'Gambar telah dibuat','text'=>'Gambar baru telah disimpan.']]);
+		else :
 			return redirect()->route('packages');
 		endif;
 	}
 	
 	public function m_gift(): Response
 	{
-		$menu = $this->menu['gift'];
+		$menu   = $this->menu['gift'];
+		$preset = $this->safePreset();
 		$bagpack = [
-			'gift' => Feedback::select('content', 'created_at')->where('type', 'gift')->where('invitation_id', Auth::user()->inv->id)->get(),
-			'preset' => json_decode(Auth::user()->inv->preset)->gift,// Preset
+			'gift'   => Feedback::select('content','created_at')->where('type','gift')->where('invitation_id', Auth::user()->inv->id)->get(),
+			'preset' => $preset->gift,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-gift', compact('menu', 'data'));
 	}
-	
+
 	public function m_wishes(): Response
 	{
-		$menu = $this->menu['wishes'];
+		$menu   = $this->menu['wishes'];
+		$preset = $this->safePreset();
 		$bagpack = [
-			'wishes' => Feedback::select('content', 'created_at')->where('type', 'wishes')->where('invitation_id', Auth::user()->inv->id)->get(),
-			'preset' => json_decode(Auth::user()->inv->preset)->wishes,// Preset
+			'wishes' => Feedback::select('content','created_at')->where('type','wishes')->where('invitation_id', Auth::user()->inv->id)->get(),
+			'preset' => $preset->wishes,
 		];
 		$data = json_decode(json_encode($bagpack));
-
 		return response()->view('member.m-wishes', compact('menu', 'data'));
 	}
 	
@@ -794,10 +1156,11 @@ class InvitationController extends Controller
 		$recent_inv = Invitation::select('id', 'preset')->whereId(Auth::user()->inv->id)->firstOrFail();
 		$save_inv_column = [];
 		$column = [];
-		$preset = json_decode($recent_inv->preset, true);
-		if (!isset($preset['design']['template'])) :
-			$preset['design']['template'] = Auth::user()->inv->template_id;
-		endif;
+
+		// Decode preset sebagai array, merge dengan default agar semua key ada
+		$raw = json_decode($recent_inv->preset ?? '{}', true) ?? [];
+		$preset = $this->safePresetArray($raw);
+
 		if ($menu=='design') :
 			// validation
 			$column['design_template'] = 'required';
@@ -837,45 +1200,70 @@ class InvitationController extends Controller
 			$preset['design']['title']['font'] = $request->input('design_title_font');
 			$preset['design']['content']['font'] = $request->input('design_content_font');
 		elseif ($menu=='cover') :
-			// validation
 			$column['cover_name_female'] = 'required';
-			$column['cover_name_male'] = 'required';
-			$column['cover_name_size'] = 'required';
-			$column['cover_name_style'] = 'required';
-			$column['cover_content'] = 'required';
-			$column['cover_button'] = 'required';
-			$column['cover_description_top'] = 'required';
+			$column['cover_name_male']   = 'required';
+			$column['cover_name_size']   = 'required';
+			$column['cover_name_style']  = 'required';
+			$column['cover_content']     = 'required';
+			$column['cover_button']      = 'required';
+			$column['cover_description_top']    = 'required';
 			$column['cover_description_bottom'] = 'required';
-			// $column['cover_description_image'] = 'required';
-			// new preset
+
+			// Validasi dulu sebelum proses file
+			$this->validate($request, $column);
+
 			$preset['cover']['name']['female'] = $request->input('cover_name_female');
-			$preset['cover']['name']['male'] = $request->input('cover_name_male');
-			$preset['cover']['name']['size'] = $request->input('cover_name_size');
-			$preset['cover']['name']['style'] = $request->input('cover_name_style');
-			$preset['cover']['content'] = $request->input('cover_content');
-			$preset['cover']['button'] = $request->input('cover_button');
-			$preset['cover']['description']['top'] = $request->input('cover_description_top');
+			$preset['cover']['name']['male']   = $request->input('cover_name_male');
+			$preset['cover']['name']['size']   = $request->input('cover_name_size');
+			$preset['cover']['name']['style']  = $request->input('cover_name_style');
+			$preset['cover']['content']        = $request->input('cover_content');
+			$preset['cover']['button']         = $request->input('cover_button');
+			$preset['cover']['description']['top']    = $request->input('cover_description_top');
 			$preset['cover']['description']['bottom'] = $request->input('cover_description_bottom');
-			// $preset['cover']['description']['image'] = $request->input('');
-			if ($request->cover_description_image__method=='upload') :
-				$column['cover_description_image'] = 'required|mimes:jpg,jpeg,png';
-				// new preset
-				if (!empty($request->cover_description_image)) :
-					$image_name = $request->file('cover_description_image')->hashName();
-					Storage::disk('public')->put($image_name, file_get_contents($request->file('cover_description_image')));
-					image_reducer(file_get_contents($request->file('cover_description_image')), $image_name);
+
+			$imgMethod = $request->input('cover_description_image__method', 'none');
+
+			if ($imgMethod === 'upload') :
+				// Validasi file terpisah
+				$this->validate($request, ['cover_description_image' => 'required|file|mimes:jpg,jpeg,png|max:5120']);
+				if ($request->hasFile('cover_description_image') && $request->file('cover_description_image')->isValid()) :
+					$file       = $request->file('cover_description_image');
+					$image_name = $file->hashName();
+					Storage::disk('public')->put($image_name, file_get_contents($file));
+					image_reducer(file_get_contents($file), $image_name);
 					$preset['cover']['description']['image']['method'] = 'storage';
-					$preset['cover']['description']['image']['image'] = $image_name;
-					// strbox
-					Strbox::create(['title' => $request->cover_description_image, 'file' => $image_name, 'file_type' => 'image', 'user_id' => Auth::user()->id, 'ip_addr' => $_SERVER['REMOTE_ADDR']]);
+					$preset['cover']['description']['image']['image']  = $image_name;
+					Strbox::create([
+						'title'     => $request->input('cover_name_female', 'cover'),
+						'file'      => $image_name,
+						'file_type' => 'image',
+						'user_id'   => Auth::user()->id,
+						'ip_addr'   => $_SERVER['REMOTE_ADDR'],
+					]);
 				endif;
-			elseif ($request->cover_description_image__method=='avatar' || $request->cover_description_image__method=='storage') :
-				$column['cover_description_image__filename'] = 'required';
-				// new preset
-				$preset['cover']['description']['image']['method'] = $request->input('cover_description_image__method');
-				$preset['cover']['description']['image']['image'] = $request->input('cover_description_image__filename');
+			elseif ($imgMethod === 'avatar' || $imgMethod === 'storage') :
+				$filename = $request->input('cover_description_image__filename', '');
+				if ($filename) :
+					$preset['cover']['description']['image']['method'] = $imgMethod;
+					$preset['cover']['description']['image']['image']  = $filename;
+				endif;
+			elseif ($imgMethod === 'none' || empty($imgMethod)) :
+				$preset['cover']['description']['image']['method'] = 'none';
+				$preset['cover']['description']['image']['image']  = '';
 			endif;
-			$save_inv_column['title'] = json_encode([$request->input('cover_name_male'), $request->input('cover_name_female')]);
+
+			$save_inv_column['title'] = json_encode([
+				$request->input('cover_name_male'),
+				$request->input('cover_name_female'),
+			]);
+
+			// Simpan langsung — skip validate di bawah karena sudah divalidasi
+			$save_inv_column['preset'] = json_encode($preset);
+			$recent_inv->update($save_inv_column);
+			return response()->json([
+				'toast' => ['icon' => 'success', 'title' => 'Disimpan!', 'text' => 'Sampul undangan berhasil disimpan.'],
+				'page'  => 'idle',
+			]);
 		elseif ($menu=='profile') :
 			$column['profile_name_male'] = 'required';
 			$column['profile_name_female'] = 'required';
@@ -1052,9 +1440,21 @@ class InvitationController extends Controller
 			$preset['wishes']['public'] = ($request->input('wishes_public')=='on') ? true : false;
 		endif;
 		$this->validate($request, $column);
+
+		// Update slug jika menu additional
+		if ($menu === 'additional' && $request->filled('slug')) {
+			$newSlug = clean_str($request->input('slug'));
+			$slugExists = Invitation::where('slug', $newSlug)
+				->where('id', '!=', Auth::user()->inv->id)
+				->exists();
+			if (!$slugExists) {
+				$save_inv_column['slug'] = $newSlug;
+			}
+		}
+
 		$save_inv_column['preset'] = json_encode($preset);
-		$save_inv = $recent_inv->update($save_inv_column);
-		$response = ['toast'=>['icon'=>'success', 'title'=>'Disimpan!', 'text'=>'Perubahan telah disimpan.'], 'page' => 'idle'];
+		$recent_inv->update($save_inv_column);
+		$response = ['toast'=>['icon'=>'success','title'=>'Disimpan!','text'=>'Perubahan telah disimpan.'],'page'=>'idle'];
 
 		return response()->json($response);
 	}

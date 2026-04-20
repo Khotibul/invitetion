@@ -145,14 +145,13 @@
                             <input type="text" name="detail_additional_specialguest" id="detail_additional_specialguest" class="form-control add-tag" placeholder="Turut mengundang">
                         </div>
                         <div class="py-2 set_detail_additional_specialguest">
-                            @forelse ($data->preset->additional->special as $key => $guest)
+                            @forelse ($data->preset->additional->special ?? [] as $key => $guest)
                             <div id="tamu-{{ $key }}" class="badge bg-creasik-primary p-2 mb-1">
                                 {{ $guest }}
                                 <input type="hidden" name="detail_additional_special[]" value="{{ $guest }}">
                                 <a href="#" class="text-white ms-1 remove-text" data-target="tamu-{{ $key }}">&times;</a>
                             </div>
                             @empty
-                            
                             @endforelse
                         </div>
                     </div>

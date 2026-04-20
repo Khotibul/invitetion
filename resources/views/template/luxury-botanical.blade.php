@@ -414,148 +414,119 @@
         }
     </style>
 </head>
+@include('template.partials.helpers')
 <body>
     <div class="botanical-bg"></div>
 
     <!-- Opening -->
     <section class="opening">
         <div class="opening-content">
-            <h1>{{ $data->cover->description->top }}</h1>
+            @if($coverSrc)
+            <img src="{{ $coverSrc }}" alt="foto sampul"
+                 style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid var(--gold);margin-bottom:1.2rem;box-shadow:0 0 0 6px rgba(212,175,55,.15)">
+            @endif
+            <h1>{{ $coverTop ?: 'The Wedding Of' }}</h1>
             <div class="divider"></div>
             <div class="names">
-                <span>{{ $data->cover->name->female }}</span>
-                <span class="and">&</span>
-                <span>{{ $data->cover->name->male }}</span>
+                <span>{{ $femaleName }}</span>
+                <span class="and">&amp;</span>
+                <span>{{ $maleName }}</span>
             </div>
-            <p style="font-size: 1.2rem; color: var(--gold);">{{ Carbon::parse($data->detail->calendar->date)->format('d F Y') }}</p>
+            <p style="font-size:1.1rem;color:var(--gold)">{{ $weddingDateFormatted }}</p>
+            @if($other['guest'])<p style="font-size:.85rem;color:var(--charcoal);margin-top:.5rem">Kepada: {{ $other['guest']['name'] ?? '' }}</p>@endif
         </div>
     </section>
 
     <!-- Countdown -->
+    @if($showCountdown)
     <section class="countdown">
         <h2>Counting Down to Our Big Day</h2>
         <div class="countdown-timer">
-            <!-- Countdown Logic to be implemented with JS -->
-            <div class="countdown-item">
-                <div class="number">{{ Carbon::parse($data->detail->calendar->date)->diffInDays(now()) }}</div>
-                <div class="label">Days</div>
-            </div>
+            <div class="countdown-item"><div class="number" id="cd-d">00</div><div class="label">Hari</div></div>
+            <div class="countdown-item"><div class="number" id="cd-h">00</div><div class="label">Jam</div></div>
+            <div class="countdown-item"><div class="number" id="cd-m">00</div><div class="label">Menit</div></div>
+            <div class="countdown-item"><div class="number" id="cd-s">00</div><div class="label">Detik</div></div>
         </div>
     </section>
+    @endif
 
     <!-- Couple -->
     <section class="couple">
         <div class="couple-container">
             <div class="couple-card">
-                <div class="couple-photo">
-                    <img src="{{ $data->profile->photo->female->image ? url('storage/avatar/'.$data->profile->photo->female->image) : 'https://via.placeholder.com/250' }}" alt="Bride">
+                <div class="couple-photo" style="position:relative">
+                    @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
+                    @else<img src="https://via.placeholder.com/250/2d7a4f/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
+                    @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
-                <h3>{{ $data->profile->name->female }}</h3>
-                <p class="subtitle">Putri dari Bapak {{ $data->profile->parent->female->father }} & Ibu {{ $data->profile->parent->female->mother }}</p>
+                <h3>{{ $femaleName }}</h3>
+                @if($showParent)<p class="subtitle">Putri ke-{{ $femaleChildhood }} dari Bapak {{ $femaleFather }} &amp; Ibu {{ $femaleMother }}</p>@endif
+                @if($showIg && $femaleIg)<p style="font-size:.8rem;color:var(--gold);margin-top:.4rem">@{{ $femaleIg }}</p>@endif
             </div>
             <div class="couple-card">
-                <div class="couple-photo">
-                    <img src="{{ $data->profile->photo->male->image ? url('storage/avatar/'.$data->profile->photo->male->image) : 'https://via.placeholder.com/250' }}" alt="Groom">
+                <div class="couple-photo" style="position:relative">
+                    @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
+                    @else<img src="https://via.placeholder.com/250/2d7a4f/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
+                    @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
-                <h3>{{ $data->profile->name->male }}</h3>
-                <p class="subtitle">Putra dari Bapak {{ $data->profile->parent->male->father }} & Ibu {{ $data->profile->parent->male->mother }}</p>
+                <h3>{{ $maleName }}</h3>
+                @if($showParent)<p class="subtitle">Putra ke-{{ $maleChildhood }} dari Bapak {{ $maleFather }} &amp; Ibu {{ $maleMother }}</p>@endif
+                @if($showIg && $maleIg)<p style="font-size:.8rem;color:var(--gold);margin-top:.4rem">@{{ $maleIg }}</p>@endif
             </div>
         </div>
     </section>
 
     <!-- Events -->
+    @if(count($other['event'] ?? []) > 0)
     <section class="events">
         <h2>Event Details</h2>
         <div class="events-grid">
-            @foreach ($other['event'] as $item)
-            @php $item->prop = json_decode($item->content); @endphp
+            @foreach($other['event'] as $ev)
+            @php $ep = json_decode($ev->content); @endphp
+            @if($ep)
             <div class="event-card">
-                <h3>{{ $item->title }}</h3>
-                <p class="date-time">{{ Carbon::parse($data->detail->calendar->date)->format('l, d F Y') }} | {{ date('H:i', strtotime($item->prop->time->start)) }} - {{ ($item->prop->time->done===true) ? 'Selesai' : date('H:i', strtotime($item->prop->time->end)) }} WIB</p>
-                <div class="location">
-                    <p><strong>{{ $item->prop->location->address }}</strong></p>
-                </div>
-                <a href="{{ $item->prop->location->map }}" class="map-btn" target="_blank">Lihat Lokasi</a>
+                <h3>{{ $ev->title }}</h3>
+                <p class="date-time">{{ $weddingDateFormatted }} | {{ date('H:i',strtotime($ep->time->start)) }} - {{ ($ep->time->done??false)?'Selesai':date('H:i',strtotime($ep->time->end)) }} {{ $weddingTz }}</p>
+                @if(!empty($ep->location->address??''))<div class="location"><p><strong>{{ $ep->location->address }}</strong></p></div>@endif
+                @if(!empty($ep->location->map??''))<a href="{{ $ep->location->map }}" class="map-btn" target="_blank">Lihat Lokasi</a>@endif
             </div>
-            @endforeach
-        </div>
-    </section>
-
-    <!-- Gallery -->
-    @if ($other['photo'])
-    <section class="gallery">
-        <h2>{{ $other['photo']->title }}</h2>
-        <div class="gallery-masonry">
-            @foreach ($other['photo']->prop->file as $key => $file)
-            <div class="gallery-item">
-                <img src="{{ url('storage/'.$file) }}" alt="Gallery {{ $key }}">
-            </div>
+            @endif
             @endforeach
         </div>
     </section>
     @endif
 
-    <!-- RSVP -->
-    <section class="rsvp">
-        <h2>{{ $data->rsvp->title }}</h2>
-        <div class="rsvp-form">
-            <p>{{ $data->rsvp->content }}</p>
-            <form action="{{ route('invitation.present', request()->slug) }}" class="sender" method="post">
-                @csrf
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Kehadiran</label>
-                    <select name="option" required>
-                        <option value="">Pilih</option>
-                        <option value="yes">{{ $data->rsvp->yes->option }}</option>
-                        <option value="no">{{ $data->rsvp->no->option }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Jumlah Tamu</label>
-                    <input type="number" name="amount" min="1" max="5" value="1">
-                </div>
-                <button type="submit" class="submit-btn">Kirim Konfirmasi</button>
-            </form>
+    <!-- Gallery -->
+    @if(count($galleryFiles) > 0)
+    <section class="gallery">
+        <h2>{{ $galleryTitle }}</h2>
+        <div class="gallery-masonry">
+            @foreach($galleryFiles as $i => $gf)
+            <div class="gallery-item"><img src="{{ url('storage/'.$gf) }}" alt="galeri {{ $i+1 }}" loading="lazy"></div>
+            @endforeach
         </div>
     </section>
+    @endif
+
+    @include('template.partials.rsvp-wishes')
 
     <!-- Footer -->
     <footer>
-        <p>Made with ❤️ by <span class="gold">Risa Digital Invitation</span></p>
-        <p>&copy; {{ date('Y') }} All Rights Reserved</p>
+        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
+        <p style="font-size:.7rem;margin-top:.5rem"><span class="gold">Risa Digital Invitation</span></p>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script>
-        $(".sender").on('submit', function(e) {
-            e.preventDefault();
-            let action = $(this).attr('action'),
-                submit = $(this).find('button[type=submit]');
-            $.ajax({
-                type: 'post',
-                url : action,
-                dataType: 'json',
-                data: $(this).serialize(),
-                error: function(q,w,e) {
-                    submit.text('Coba Lagi');
-                    submit.prop('disabled', false);
-                },
-                beforeSend: function() {
-                    submit.prop('disabled', true);
-                    submit.text('Memeriksa data...');
-                },
-                success: function(response) {
-                    submit.prop('disabled', false);
-                    submit.text('Terkirim');
-                    $(".sender")[0].reset();
-                    alert(response.message);
-                }
-            });
-        });
+    (function(){
+        var t=new Date('{{ $weddingDate }}T{{ $weddingTime }}:00');
+        function run(){var diff=t-new Date();if(diff<=0)return;var pad=function(n){return String(Math.floor(n)).padStart(2,'0');};
+        document.getElementById('cd-d').textContent=pad(diff/86400000);
+        document.getElementById('cd-h').textContent=pad((diff%86400000)/3600000);
+        document.getElementById('cd-m').textContent=pad((diff%3600000)/60000);
+        document.getElementById('cd-s').textContent=pad((diff%60000)/1000);}
+        run();setInterval(run,1000);
+    })();
     </script>
 </body>
 </html>

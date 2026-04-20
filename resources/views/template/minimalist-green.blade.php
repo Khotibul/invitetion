@@ -158,35 +158,44 @@
         }
     </style>
 </head>
+@include('template.partials.helpers')
 <body>
     <section class="cover">
         <div>
-            <h1>{{ $data->cover->name->male }} & {{ $data->cover->name->female }}</h1>
-            <div class="date">{{ Carbon::parse($data->detail->calendar->date)->format('d . m . Y') }}</div>
+            @if($coverSrc)
+            <img src="{{ $coverSrc }}" alt="foto sampul"
+                 style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.6);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.2)">
+            @endif
+            <h1>{{ $femaleName }} &amp; {{ $maleName }}</h1>
+            <div class="date">{{ \Carbon\Carbon::parse($weddingDate)->format('d . m . Y') }}</div>
+            @if($other['guest'])<p style="font-size:.85rem;opacity:.8;margin-top:.5rem">Kepada: {{ $other['guest']['name'] ?? '' }}</p>@endif
         </div>
     </section>
 
     <section class="story">
         <div class="container">
-            <h2>{{ $data->quote->show ? 'Our Quote' : 'Our Story' }}</h2>
+            <h2>{{ $quoteContent ? 'Our Quote' : 'Our Story' }}</h2>
             <div class="story-content">
-                <p>{{ $data->quote->show ? $data->quote->content : $data->cover->description->bottom }}</p>
+                <p>{{ $quoteContent ?: $coverBottom ?: 'Dengan penuh kebahagiaan kami mengundang kehadiran Anda.' }}</p>
             </div>
         </div>
     </section>
 
+    @if(count($other['event'] ?? []) > 0)
     <section class="timeline">
         <div class="container">
             <h2>Event Timeline</h2>
             <div class="timeline-items">
-                @foreach ($other['event'] as $item)
-                @php $item->prop = json_decode($item->content); @endphp
-                @if($item->prop)
+                @foreach($other['event'] as $ev)
+                @php $ep = json_decode($ev->content); @endphp
+                @if($ep)
                 <div class="timeline-item">
-                    <div class="timeline-time">{{ date('H:i', strtotime($item->prop->time->start)) }}</div>
+                    <div class="timeline-time">{{ date('H:i',strtotime($ep->time->start)) }}</div>
                     <div class="timeline-content">
-                        <h3>{{ $item->title }}</h3>
-                        <p>{{ $item->prop->location->address }}</p>
+                        <h3>{{ $ev->title }}</h3>
+                        <p>{{ $weddingDateFormatted }}</p>
+                        @if(!empty($ep->location->address??''))<p>{{ $ep->location->address }}</p>@endif
+                        @if(!empty($ep->location->map??''))<a href="{{ $ep->location->map }}" target="_blank" style="color:var(--gold);font-size:.85rem">📍 Lihat Peta</a>@endif
                     </div>
                 </div>
                 @endif
@@ -194,25 +203,27 @@
             </div>
         </div>
     </section>
+    @endif
 
-    @if ($data->gift->show)
+    @if($showGift && $giftCode)
     <section class="gift">
         <div class="container">
-            <h2>{{ $data->gift->title }}</h2>
+            <h2>{{ $giftTitle }}</h2>
             <div class="gift-box">
-                <p>{{ $data->gift->content }}</p>
-                <p style="margin-top: 1rem; font-weight: 600;">
-                    {{ $data->gift->bank->option }}: {{ $data->gift->bank->code }}<br>
-                    a.n. {{ $data->gift->bank->name }}
-                </p>
+                <p>{{ $giftContent }}</p>
+                <p style="margin-top:1rem;font-weight:600">{{ strtoupper($giftBank) }}: {{ $giftCode }}<br>a.n. {{ $giftName }}</p>
+                <button onclick="navigator.clipboard.writeText('{{ $giftCode }}').then(()=>{this.textContent='✓ Tersalin!';setTimeout(()=>this.textContent='Salin',2000)})" style="margin-top:.8rem;padding:.5rem 1.2rem;background:var(--forest-green);color:#fff;border:none;border-radius:6px;cursor:pointer">Salin</button>
             </div>
         </div>
     </section>
     @endif
 
+    @include('template.partials.rsvp-wishes')
+
     <footer>
-        <p>Made with ❤️ by Risa Digital Invitation</p>
-        <p>&copy; {{ date('Y') }}</p>
+        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
+        <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>
 </body>
 </html>
