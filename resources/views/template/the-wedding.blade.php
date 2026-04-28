@@ -705,7 +705,7 @@
 
 			<div class="row animate-box">
 				<div class="col-md-8 col-md-offset-2">
-					<form action="{{ $invitation->slug ? route('invitation.wish', $invitation->slug) : '#' }}" class="sender" method="post">
+					<form action="{{ isset($invitation->slug) ? route('invitation.wish', $invitation->slug) : '#' }}">
 						@csrf
 						<div class="form-group">
 							<label for="wishper-name">Nama <var dir="name"></var></label>
