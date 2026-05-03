@@ -72,6 +72,73 @@ class TemplateController extends Controller
 		return response()->json($get_json_data);
 	}
 
+	/**
+	 * Halaman pengaturan harga template per grade.
+	 */
+	public function pricing(): Response
+	{
+		$templates = Template::select('id', 'title', 'slug', 'grade', 'price', 'publish', 'file', 'file_type')
+			->orderBy('grade')
+			->orderBy('title')
+			->get()
+			->groupBy('grade');
+
+		$gradeMeta = [
+			'basic'     => ['label' => 'Basic',     'color' => 'secondary', 'icon' => 'bx-star-o',    'desc' => 'Template gratis atau harga terjangkau'],
+			'premium'   => ['label' => 'Premium',   'color' => 'info',      'icon' => 'bx-star-half', 'desc' => 'Template dengan fitur lengkap'],
+			'exclusive' => ['label' => 'Exclusive', 'color' => 'warning',   'icon' => 'bxs-star',     'desc' => 'Template eksklusif premium'],
+		];
+
+		$data = ['title' => 'Harga Template'];
+
+		return response()->view('panel.template.pricing', compact('data', 'templates', 'gradeMeta'));
+	}
+
+	/**
+	 * Simpan harga per template (satu per satu atau massal via JSON).
+	 */
+	public function pricing_update(Request $request): JsonResponse
+	{
+		$request->validate([
+			'updates'         => 'required|array',
+			'updates.*.id'    => 'required|integer|exists:templates,id',
+			'updates.*.price' => 'required|integer|min:0',
+			'updates.*.grade' => 'required|in:basic,premium,exclusive',
+		]);
+
+		$updated = 0;
+		foreach ($request->updates as $item) {
+			Template::where('id', $item['id'])->update([
+				'price' => (int) $item['price'],
+				'grade' => $item['grade'],
+			]);
+			$updated++;
+		}
+
+		return response()->json([
+			'toast'    => ['icon' => 'success', 'title' => 'Tersimpan', 'html' => "<b>{$updated}</b> template berhasil diperbarui"],
+			'redirect' => ['type' => 'none'],
+		]);
+	}
+
+	/**
+	 * Terapkan harga seragam ke semua template dalam satu grade.
+	 */
+	public function pricing_bulk(Request $request): JsonResponse
+	{
+		$request->validate([
+			'grade' => 'required|in:basic,premium,exclusive',
+			'price' => 'required|integer|min:0',
+		]);
+
+		$count = Template::where('grade', $request->grade)->update(['price' => (int) $request->price]);
+
+		return response()->json([
+			'toast'    => ['icon' => 'success', 'title' => 'Tersimpan', 'html' => "<b>{$count}</b> template grade <b>" . ucfirst($request->grade) . "</b> diperbarui"],
+			'redirect' => ['type' => 'reload'],
+		]);
+	}
+
 	public function component(string $slug = 'avatar'): Response
 	{
 		$data = [

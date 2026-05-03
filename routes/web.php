@@ -18,6 +18,7 @@ use App\Http\Controllers\Guest\GuestController as Guestbook;
 use App\Http\Controllers\Guest\GuestSouvenirController as GuestbookSouvenir;
 use App\Http\Controllers\HomeController as HomePublic;
 use App\Http\Controllers\Panel\AuthController as PanelAuth;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -192,6 +193,17 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::get('component/{slug}/collection', [TemplateController::class, 'component'])->name('template.component');
 	Route::post('component/{slug}/store', [TemplateController::class, 'component_store'])->name('template.component.store');
 	Route::delete('component/{slug}/destroy', [TemplateController::class, 'component_destroy'])->name('template.component.destroy');
+	Route::get('template-pricing', [TemplateController::class, 'pricing'])->name('template.pricing');
+	Route::post('template-pricing/update', [TemplateController::class, 'pricing_update'])->name('template.pricing.update');
+	Route::post('template-pricing/bulk', [TemplateController::class, 'pricing_bulk'])->name('template.pricing.bulk');
+	// User Management
+	Route::get('users', [UserController::class, 'index'])->name('user-management.index');
+	Route::post('users/list', [UserController::class, 'list'])->name('user-management.list');
+	Route::get('users/create', [UserController::class, 'create'])->name('user-management.create');
+	Route::post('users/store', [UserController::class, 'store'])->name('user-management.store');
+	Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('user-management.edit');
+	Route::put('users/{id}/update', [UserController::class, 'update'])->name('user-management.update');
+	Route::delete('users/{id}/destroy', [UserController::class, 'destroy'])->name('user-management.destroy');
 	// Artisan
 	Route::get('public-link', function (){
 		\Illuminate\Support\Facades\Artisan::call('storage:link');

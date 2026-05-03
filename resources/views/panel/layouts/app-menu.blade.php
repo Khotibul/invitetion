@@ -42,6 +42,13 @@
 					'sub'	=> []
 				],
 				[
+					'id'	=> ['template.pricing'],
+					'title'	=> 'Harga Template',
+					'url'	=> route('template.pricing'),
+					'icon'	=> 'bx bx-purchase-tag-alt',
+					'sub'	=> []
+				],
+				[
 					'id'	=> ['template.component'],
 					'title'	=> 'Komponen',
 					'url'	=> route('template.component', 'avatar'),
@@ -123,6 +130,29 @@
 					'icon'	=> 'bx bx-box',
 					'sub'	=> []
                 ]
+            ]
+        ],
+        [
+			'title'	=> 'Pengguna',
+			'menu'	=> [
+				[
+					'id'	=> ['user-management.index', 'user-management.create', 'user-management.edit'],
+					'title'	=> 'User & Role',
+					'url'	=> route('user-management.index'),
+					'icon'	=> 'bx bx-group',
+					'sub'	=> [
+						[
+							'id'	=> ['user-management.index'],
+							'title'	=> 'Semua User',
+							'url'	=> route('user-management.index')
+						],
+						[
+							'id'	=> ['user-management.create'],
+							'title'	=> 'Tambah User',
+							'url'	=> route('user-management.create')
+						],
+					]
+				],
             ]
         ]
     ];
