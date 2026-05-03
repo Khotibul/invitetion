@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 @php
@@ -284,7 +284,7 @@ section{padding:5.25rem 1.25rem}
 }
 .music-fab:hover{transform:translateY(-1px);background:var(--gold);color:#fff}
 .music-fab.playing{animation:pulse 2s infinite}
-@keyframes pulse{
+{{ '@' }}keyframes pulse{
     0%{box-shadow:0 0 0 0 rgba(184,135,70,.45),0 10px 25px rgba(47,38,34,.12)}
     70%{box-shadow:0 0 0 14px rgba(184,135,70,0),0 10px 25px rgba(47,38,34,.12)}
     100%{box-shadow:0 0 0 0 rgba(184,135,70,0),0 10px 25px rgba(47,38,34,.12)}
@@ -635,18 +635,18 @@ textarea.f-input{min-height:120px;resize:vertical}
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s ease, transform .75s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
-@media (prefers-reduced-motion: reduce){
+{{ '@' }}media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto}
     .reveal{transition:none}
     .btn-open,.btn-send,.dock a,.music-fab,.rsvp-option,.btn-map,.btn-copy{transition:none}
 }
 
-@media(max-width:900px){
+{{ '@' }}media(max-width:900px){
     .couple-grid{grid-template-columns:1fr}
     .gallery-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
     .countdown-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
 }
-@media(max-width:520px){
+{{ '@' }}media(max-width:520px){
     section{padding:4.4rem 1rem}
     .hero-inner{padding:2.3rem 1.25rem}
     .dock{gap:.35rem;padding:.45rem}

@@ -1,13 +1,15 @@
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @php
-        use Carbon\Carbon;
-    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $invitation->title }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta name="theme-color" content="#2d7a4f">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -20,6 +22,14 @@
             --gold: #d4af37;
             --ivory: #fffff0;
             --charcoal: #2c3e50;
+
+            /* Shared vars for template.partials.rsvp-wishes */
+            --color-primary: var(--emerald);
+            --color-muted: rgba(44, 62, 80, 0.65);
+            --section-bg: #ffffff;
+            --card-bg: #ffffff;
+            --rsvp-bg: #f3faf6;
+            --font-heading: 'Cinzel', serif;
         }
 
         body {
@@ -74,7 +84,7 @@
             animation: fadeInScale 1.5s ease;
         }
 
-        @keyframes fadeInScale {
+        {{ '@' }}keyframes fadeInScale {
             from {
                 opacity: 0;
                 transform: scale(0.9);
@@ -186,6 +196,20 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .couple-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.25), rgba(45, 122, 79, 0.65));
+            color: #fff;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 4rem;
+            letter-spacing: 2px;
         }
 
         .couple-card h3 {
@@ -384,7 +408,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        {{ '@' }}media (max-width: 768px) {
             .opening h1 {
                 font-size: 2.5rem;
             }
@@ -407,14 +431,13 @@
             }
         }
 
-        @media (max-width: 480px) {
+        {{ '@' }}media (max-width: 480px) {
             .gallery-masonry {
                 columns: 1;
             }
         }
     </style>
 </head>
-@include('template.partials.helpers')
 <body>
     <div class="botanical-bg"></div>
 
@@ -453,22 +476,22 @@
     <!-- Couple -->
     <section class="couple">
         <div class="couple-container">
-            <div class="couple-card">
-                <div class="couple-photo" style="position:relative">
-                    @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
-                    @else<img src="https://via.placeholder.com/250/2d7a4f/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
-                    @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
-                </div>
+                <div class="couple-card">
+                    <div class="couple-photo" style="position:relative">
+                        @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
+                    @else<div class="couple-placeholder" aria-label="{{ $femaleName }}">{{ $femaleInitial }}</div>@endif
+                        @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
+                    </div>
                 <h3>{{ $femaleName }}</h3>
                 @if($showParent)<p class="subtitle">Putri ke-{{ $femaleChildhood }} dari Bapak {{ $femaleFather }} &amp; Ibu {{ $femaleMother }}</p>@endif
                 @if($showIg && $femaleIg)<p style="font-size:.8rem;color:var(--gold);margin-top:.4rem">@{{ $femaleIg }}</p>@endif
             </div>
-            <div class="couple-card">
-                <div class="couple-photo" style="position:relative">
-                    @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
-                    @else<img src="https://via.placeholder.com/250/2d7a4f/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
-                    @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
-                </div>
+                <div class="couple-card">
+                    <div class="couple-photo" style="position:relative">
+                        @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
+                    @else<div class="couple-placeholder" aria-label="{{ $maleName }}">{{ $maleInitial }}</div>@endif
+                        @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
+                    </div>
                 <h3>{{ $maleName }}</h3>
                 @if($showParent)<p class="subtitle">Putra ke-{{ $maleChildhood }} dari Bapak {{ $maleFather }} &amp; Ibu {{ $maleMother }}</p>@endif
                 @if($showIg && $maleIg)<p style="font-size:.8rem;color:var(--gold);margin-top:.4rem">@{{ $maleIg }}</p>@endif

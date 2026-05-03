@@ -2057,6 +2057,7 @@ class ComposerStaticInit61e4024e4e1116cd11e45bff46485107
         'Database\\Seeders\\ElegantGoldTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/ElegantGoldTemplateSeeder.php',
         'Database\\Seeders\\FixTemplateCompatibilitySeeder' => __DIR__ . '/../..' . '/database/seeders/FixTemplateCompatibilitySeeder.php',
         'Database\\Seeders\\FixTheWeddingPreviewSeeder' => __DIR__ . '/../..' . '/database/seeders/FixTheWeddingPreviewSeeder.php',
+        'Database\\Seeders\\FourTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/FourTemplateSeeder.php',
         'Database\\Seeders\\InfoSeeder' => __DIR__ . '/../..' . '/database/seeders/InfoSeeder.php',
         'Database\\Seeders\\IslamiGoldTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/IslamiGoldTemplateSeeder.php',
         'Database\\Seeders\\LinkExSeeder' => __DIR__ . '/../..' . '/database/seeders/LinkExSeeder.php',

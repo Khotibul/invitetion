@@ -1,12 +1,18 @@
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $invitation->title }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta name="theme-color" content="#00a86b">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         
         :root {
             --tropical-green: #00a86b;
@@ -14,6 +20,14 @@
             --sand: #f4e4c1;
             --coral: #ff6b6b;
             --white: #ffffff;
+
+            /* Shared vars for template.partials.rsvp-wishes */
+            --color-primary: var(--tropical-green);
+            --color-muted: rgba(0, 0, 0, 0.6);
+            --section-bg: #ffffff;
+            --card-bg: #ffffff;
+            --rsvp-bg: #eaf7f0;
+            --font-heading: 'Pacifico', cursive;
         }
 
         body {
@@ -45,7 +59,7 @@
             animation: sway 10s infinite ease-in-out;
         }
 
-        @keyframes sway {
+        {{ '@' }}keyframes sway {
             0%, 100% { transform: rotate(-5deg); }
             50% { transform: rotate(5deg); }
         }
@@ -122,6 +136,19 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .couple-photo .couple-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 3.5rem;
+            letter-spacing: 2px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), rgba(0, 119, 190, 0.75));
         }
 
         /* Event Cards */
@@ -227,13 +254,12 @@
             padding: 2rem;
         }
 
-        @media (max-width: 768px) {
+        {{ '@' }}media (max-width: 768px) {
             .hero-content h1 { font-size: 2.5rem; }
             .hero-content .names { font-size: 1.8rem; }
         }
     </style>
 </head>
-@include('template.partials.helpers')
 <body>
     <section class="hero-beach">
         <div class="hero-content">
@@ -256,7 +282,7 @@
                 <div class="couple-card">
                     <div class="couple-photo" style="position:relative">
                         @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
-                        @else<img src="https://via.placeholder.com/180/00a86b/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
+                        @else<div class="couple-placeholder" aria-label="{{ $femaleName }}">{{ $femaleInitial }}</div>@endif
                         @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                     </div>
                     <h3 style="color:var(--tropical-green);font-size:1.8rem">{{ $femaleName }}</h3>
@@ -266,7 +292,7 @@
                 <div class="couple-card">
                     <div class="couple-photo" style="position:relative">
                         @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
-                        @else<img src="https://via.placeholder.com/180/0077be/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
+                        @else<div class="couple-placeholder" aria-label="{{ $maleName }}">{{ $maleInitial }}</div>@endif
                         @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                     </div>
                     <h3 style="color:var(--ocean-blue);font-size:1.8rem">{{ $maleName }}</h3>

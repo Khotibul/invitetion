@@ -1,10 +1,13 @@
-@include('template.partials.helpers')
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $invitation->title }} | Risa Digital Invitation</title>
+    <title>{{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta name="theme-color" content="#8b7355">
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,6 +18,14 @@
             --dark-brown: #5d4e37;
             --gold: #d4af37;
             --white: #ffffff;
+
+            /* Shared vars for template.partials.rsvp-wishes */
+            --color-primary: var(--vintage-brown);
+            --color-muted: rgba(93, 78, 55, 0.7);
+            --section-bg: #ffffff;
+            --card-bg: #ffffff;
+            --rsvp-bg: #fff7ea;
+            --font-heading: 'Crimson Text', serif;
         }
 
         body {
@@ -181,6 +192,19 @@
             filter: sepia(20%);
         }
 
+        .couple-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 700;
+            font-size: 4rem;
+            letter-spacing: 2px;
+            background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.25), rgba(93, 78, 55, 0.78));
+        }
+
         .couple-card h3 {
             font-size: 2.5rem;
             color: var(--vintage-brown);
@@ -343,7 +367,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        {{ '@' }}media (max-width: 768px) {
             .hero-content h1 { font-size: 3rem; }
             .hero-content .names { font-size: 2rem; }
             .section-title { font-size: 2.5rem; }
@@ -362,18 +386,20 @@
             <img src="{{ $coverSrc }}" alt="foto sampul"
                  style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.5);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.25)">
             @endif
-            <h1>{{ $data->cover->description->top }}</h1>
-            <div class="names">{{ $data->cover->name->female }} & {{ $data->cover->name->male }}</div>
-            <div class="date">{{ Carbon::parse($data->detail->calendar->date)->format('d F Y') }}</div>
+            <h1>{{ $coverTop ?: 'The Wedding' }}</h1>
+            <div class="names">{{ $femaleName }} &amp; {{ $maleName }}</div>
+            <div class="date">{{ $weddingDateFormatted }}</div>
         </div>
     </section>
 
     <!-- Quote -->
+    @if($quoteContent)
     <section class="quote-section">
         <div class="container">
-            <p class="quote-text">"{{ $data->quote->content }}"</p>
+            <p class="quote-text">"{{ $quoteContent }}"</p>
         </div>
     </section>
+    @endif
 
     <!-- Couple -->
     <section class="couple-section">
@@ -382,23 +408,32 @@
             <div class="couple-grid">
                 <div class="couple-card">
                     <div class="couple-photo">
-                        <img src="{{ $data->profile->photo->female->image ? url('storage/avatar/'.$data->profile->photo->female->image) : 'https://via.placeholder.com/220' }}" alt="Bride">
+                        @if($femaleSrc)
+                        <img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
+                        @else
+                        <div class="couple-placeholder" aria-label="{{ $femaleName }}">{{ $femaleInitial }}</div>
+                        @endif
                     </div>
-                    <h3>{{ $data->profile->name->female }}</h3>
-                    <p class="parents">Putri dari<br>Bapak {{ $data->profile->parent->female->father }} & Ibu {{ $data->profile->parent->female->mother }}</p>
+                    <h3>{{ $femaleName }}</h3>
+                    @if($showParent)<p class="parents">Putri ke-{{ $femaleChildhood }} dari<br>Bapak {{ $femaleFather }} &amp; Ibu {{ $femaleMother }}</p>@endif
                 </div>
                 <div class="couple-card">
                     <div class="couple-photo">
-                        <img src="{{ $data->profile->photo->male->image ? url('storage/avatar/'.$data->profile->photo->male->image) : 'https://via.placeholder.com/220' }}" alt="Groom">
+                        @if($maleSrc)
+                        <img src="{{ $maleSrc }}" alt="{{ $maleName }}">
+                        @else
+                        <div class="couple-placeholder" aria-label="{{ $maleName }}">{{ $maleInitial }}</div>
+                        @endif
                     </div>
-                    <h3>{{ $data->profile->name->male }}</h3>
-                    <p class="parents">Putra dari<br>Bapak {{ $data->profile->parent->male->father }} & Ibu {{ $data->profile->parent->male->mother }}</p>
+                    <h3>{{ $maleName }}</h3>
+                    @if($showParent)<p class="parents">Putra ke-{{ $maleChildhood }} dari<br>Bapak {{ $maleFather }} &amp; Ibu {{ $maleMother }}</p>@endif
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Events -->
+    @if(count($other['event'] ?? []) > 0)
     <section class="event-section">
         <div class="container">
             <h2 class="section-title">Event Details</h2>
@@ -408,17 +443,18 @@
                 @if($item->prop)
                 <div class="event-card">
                     <h3>{{ $item->title }}</h3>
-                    <div class="event-time">{{ Carbon::parse($data->detail->calendar->date)->format('l, d F Y') }}<br>{{ date('H:i', strtotime($item->prop->time->start)) }} - {{ ($item->prop->time->done===true) ? 'Selesai' : date('H:i', strtotime($item->prop->time->end)) }} WIB</div>
+                    <div class="event-time">{{ $weddingDateFormatted }}<br>{{ date('H:i', strtotime($item->prop->time->start)) }} - {{ ($item->prop->time->done===true) ? 'Selesai' : date('H:i', strtotime($item->prop->time->end)) }} {{ $weddingTz }}</div>
                     <div class="event-location">
-                        <strong>{{ $item->prop->location->address }}</strong>
+                        @if(!empty($item->prop->location->address ?? ''))<strong>{{ $item->prop->location->address }}</strong>@endif
                     </div>
-                    <a href="{{ $item->prop->location->map }}" target="_blank" class="btn-submit" style="display:inline-block; width:auto; margin-top:1rem; text-decoration:none;">Lihat Lokasi</a>
+                    @if(!empty($item->prop->location->map ?? ''))<a href="{{ $item->prop->location->map }}" target="_blank" class="btn-submit" style="display:inline-block; width:auto; margin-top:1rem; text-decoration:none;">Lihat Lokasi</a>@endif
                 </div>
                 @endif
                 @endforeach
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Gallery -->
     @if ($other['photo'])
@@ -436,67 +472,14 @@
     </section>
     @endif
 
-    <!-- RSVP -->
-    <section class="rsvp-section">
-        <div class="container">
-            <h2 class="section-title">{{ $data->rsvp->title }}</h2>
-            <form action="{{ route('invitation.present', request()->slug) }}" class="rsvp-form sender" method="post">
-                @csrf
-                <p style="text-align:center; margin-bottom:2rem;">{{ $data->rsvp->content }}</p>
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Kehadiran</label>
-                    <select name="option" required>
-                        <option value="">Pilih</option>
-                        <option value="yes">{{ $data->rsvp->yes->option }}</option>
-                        <option value="no">{{ $data->rsvp->no->option }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Jumlah Tamu</label>
-                    <input type="number" name="amount" min="1" max="5" value="1">
-                </div>
-                <button type="submit" class="btn-submit">Kirim Konfirmasi</button>
-            </form>
-        </div>
-    </section>
+    @include('template.partials.rsvp-wishes')
 
     <!-- Footer -->
     <footer>
         <div class="ornament">❦</div>
-        <p>Made with ♥ by Risa Digital Invitation</p>
-        <p>&copy; {{ date('Y') }} All Rights Reserved</p>
+        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
+        <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
-    <script>
-        $(".sender").on('submit', function(e) {
-            e.preventDefault();
-            let action = $(this).attr('action'),
-                submit = $(this).find('button[type=submit]');
-            $.ajax({
-                type: 'post',
-                url : action,
-                dataType: 'json',
-                data: $(this).serialize(),
-                error: function(q,w,e) {
-                    submit.text('Coba Lagi');
-                    submit.prop('disabled', false);
-                },
-                beforeSend: function() {
-                    submit.prop('disabled', true);
-                    submit.text('Memeriksa data...');
-                },
-                success: function(response) {
-                    submit.prop('disabled', false);
-                    submit.text('Terkirim');
-                    $(".sender")[0].reset();
-                    alert(response.message);
-                }
-            });
-        });
-    </script>
+</body>
 </html>

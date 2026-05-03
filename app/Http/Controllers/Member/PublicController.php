@@ -26,7 +26,8 @@ class PublicController extends Controller
 			return abort(404);
 		}
 
-		$invitation = Invitation::select('id', 'title', 'file', 'preset', 'publish', 'user_id', 'template_id')
+		$invitation = Invitation::select('id', 'title', 'slug', 'file', 'preset', 'publish', 'user_id', 'template_id')
+			->with('temp')
 			->where('slug', $slug)
 			->first();
 
@@ -124,7 +125,9 @@ class PublicController extends Controller
 			$templateUrl = 'default';
 		}
 
-		return response()->view('template.'.$templateUrl, compact('invitation', 'data', 'other'));
+		$helpers = $this->resolveHelperVars($data, $invitation, $other);
+
+		return response()->view('template.'.$templateUrl, array_merge(compact('invitation', 'data', 'other'), $helpers));
 	}
 
 	public function invitation_present(Request $request, string $slug): JsonResponse
@@ -211,7 +214,14 @@ class PublicController extends Controller
 			->publish()
 			->firstOrFail();
 
-		$data  = json_decode($template->preset);
+		$data = json_decode($template->preset);
+		if (!is_object($data)) $data = (object)[];
+
+		// Isi default untuk semua key yang mungkin kosong agar semua template aman saat preview (tanpa login).
+		$male   = (string)($data->cover->name->male   ?? $data->profile->name->male   ?? 'Mempelai Pria');
+		$female = (string)($data->cover->name->female ?? $data->profile->name->female ?? 'Mempelai Wanita');
+		$data   = $this->fillPresetDefaultsWithNames($data, $male, $female);
+
 		$other = [
 			'event'    => [],
 			'story'    => [],
@@ -223,11 +233,14 @@ class PublicController extends Controller
 
 		$invitation = (object)[
 			'title' => 'Preview Template',
-			'file'  => null,
+			'file'  => $template->file,
+			'slug'  => $slug,
 			'temp'  => $template,
 		];
 
-		return response()->view('template.'.$template->url, compact('data', 'invitation', 'other'));
+		$helpers = $this->resolveHelperVars($data, $invitation, $other);
+
+		return response()->view('template.'.$template->url, array_merge(compact('data', 'invitation', 'other'), $helpers));
 	}
 
 	// Preview undangan member — bypass middleware InvitationController
@@ -291,7 +304,9 @@ class PublicController extends Controller
 			'slug'  => $inv->slug,
 		];
 
-		return response()->view('template.'.$templateUrl, compact('invitation', 'data', 'other'));
+		$helpers = $this->resolveHelperVars($data, $invitation, $other);
+
+		return response()->view('template.'.$templateUrl, array_merge(compact('invitation', 'data', 'other'), $helpers));
 	}
 
 	private function fillPresetDefaults(object $data, $inv): object
@@ -300,6 +315,19 @@ class PublicController extends Controller
 		$male   = $raw[0] ?? '-';
 		$female = $raw[1] ?? $male;
 
+		return $this->fillPresetDefaultsWithNames($data, (string)$male, (string)$female);
+	}
+
+	private function fillPresetDefaultsWithNames(object $data, string $male, string $female): object
+	{
+		// design (beberapa template akses langsung tanpa null-coalescing)
+		if (!isset($data->design)) $data->design = (object)[];
+		$d = $data->design;
+		if (!isset($d->title))      $d->title      = (object)['color'=>'#000000','font'=>'Arial'];
+		if (!isset($d->content))    $d->content    = (object)['color'=>'#333333','font'=>'Arial'];
+		if (!isset($d->background)) $d->background = '#ffffff';
+		if (!isset($d->button))     $d->button     = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
+
 		// cover
 		if (!isset($data->cover))                       $data->cover = (object)[];
 		if (!isset($data->cover->name))                 $data->cover->name = (object)['male'=>$male,'female'=>$female,'size'=>'48','style'=>'default'];
@@ -307,6 +335,8 @@ class PublicController extends Controller
 		if (!isset($data->cover->button))               $data->cover->button  = 'Buka Undangan';
 		if (!isset($data->cover->description))          $data->cover->description = (object)['top'=>'','bottom'=>'','image'=>(object)['method'=>'none','image'=>'']];
 		if (!isset($data->cover->description->image))   $data->cover->description->image = (object)['method'=>'none','image'=>''];
+		if (!isset($data->cover->description->top))     $data->cover->description->top = '';
+		if (!isset($data->cover->description->bottom))  $data->cover->description->bottom = '';
 
 		// profile
 		if (!isset($data->profile))                     $data->profile = (object)[];
@@ -321,6 +351,9 @@ class PublicController extends Controller
 		if (!isset($data->detail))                      $data->detail = (object)[];
 		if (!isset($data->detail->calendar))            $data->detail->calendar = (object)['date'=>now()->addMonths(3)->format('Y-m-d'),'time'=>'09:00','timezone'=>'wib','save'=>(object)['show'=>false,'content'=>'Simpan Tanggal']];
 		if (!isset($data->detail->calendar->save))      $data->detail->calendar->save = (object)['show'=>false,'content'=>'Simpan Tanggal'];
+		if (!isset($data->detail->calendar->date))      $data->detail->calendar->date = now()->addMonths(3)->format('Y-m-d');
+		if (!isset($data->detail->calendar->time))      $data->detail->calendar->time = '09:00';
+		if (!isset($data->detail->calendar->timezone))  $data->detail->calendar->timezone = 'wib';
 		if (!isset($data->detail->countdown))           $data->detail->countdown = (object)['show'=>true,'style'=>'default'];
 		if (!isset($data->detail->location))            $data->detail->location = (object)['address'=>'','map'=>''];
 		if (!isset($data->detail->additional))          $data->detail->additional = (object)['show'=>false,'closing'=>'','special'=>[]];
@@ -334,5 +367,143 @@ class PublicController extends Controller
 		if (!isset($data->additional)) $data->additional = (object)['live'=>(object)['show'=>false,'app'=>'','link'=>'','content'=>''],'protocol'=>(object)['show'=>false,'code'=>[],'title'=>'','content'=>'']];
 
 		return $data;
+	}
+
+	/**
+	 * Compute all helper variables that helpers.blade.php provides.
+	 * Passing them directly from the controller guarantees they are
+	 * available in the view regardless of Blade @php scope quirks.
+	 */
+	private function resolveHelperVars(object $data, object $invitation, array $other): array
+	{
+		// ── Nama pasangan
+		$maleName   = (string)($data->profile->name->male   ?? $data->cover->name->male   ?? 'Mempelai Pria');
+		$femaleName = (string)($data->profile->name->female ?? $data->cover->name->female ?? 'Mempelai Wanita');
+		$maleInitial   = strtoupper(substr(trim($maleName),   0, 1)) ?: 'M';
+		$femaleInitial = strtoupper(substr(trim($femaleName), 0, 1)) ?: 'W';
+
+		// ── Tanggal & waktu
+		$weddingDate          = $data->detail->calendar->date     ?? now()->addMonths(3)->format('Y-m-d');
+		$weddingTime          = $data->detail->calendar->time     ?? '09:00';
+		$weddingTz            = strtoupper($data->detail->calendar->timezone ?? 'WIB');
+		$weddingDateFormatted = Carbon::parse($weddingDate)->locale('id')->translatedFormat('l, d F Y');
+		$weddingDateShort     = Carbon::parse($weddingDate)->locale('id')->translatedFormat('d F Y');
+
+		// ── Foto pasangan
+		$maleMethod   = $data->profile->photo->male->method   ?? 'none';
+		$maleImg      = $data->profile->photo->male->image     ?? '';
+		$maleFrame    = $data->profile->photo->male->frame     ?? '';
+		$femaleMethod = $data->profile->photo->female->method  ?? 'none';
+		$femaleImg    = $data->profile->photo->female->image   ?? '';
+		$femaleFrame  = $data->profile->photo->female->frame   ?? '';
+
+		$maleSrc   = (!empty($maleImg)   && $maleMethod   !== 'none')
+			? ($maleMethod   === 'storage' ? url('storage/sm/'.$maleImg)   : url('storage/avatar/'.$maleImg))
+			: null;
+		$femaleSrc = (!empty($femaleImg) && $femaleMethod !== 'none')
+			? ($femaleMethod === 'storage' ? url('storage/sm/'.$femaleImg) : url('storage/avatar/'.$femaleImg))
+			: null;
+
+		// ── Foto sampul
+		$coverObj = $data->cover->description->image ?? null;
+		$coverSrc = null;
+		if ($coverObj && !empty($coverObj->image ?? '')) {
+			$method = $coverObj->method ?? '';
+			if ($method === 'asset')        $coverSrc = asset($coverObj->image);
+			elseif ($method === 'storage')  $coverSrc = url('storage/sm/'.$coverObj->image);
+			elseif ($method === 'avatar')   $coverSrc = url('storage/avatar/'.$coverObj->image);
+			else                            $coverSrc = url('storage/'.$coverObj->image);
+		}
+
+		// ── OG image
+		$invFile = \Illuminate\Support\Str::startsWith($invitation->file ?? '', 'template/')
+			? asset($invitation->file)
+			: url('storage/'.($invitation->file ?? ''));
+		$ogImage = $coverSrc ?? $invFile;
+
+		// ── Lokasi
+		$locationAddress = $data->detail->location->address ?? '';
+		$locationMap     = $data->detail->location->map     ?? '';
+
+		// ── Quote
+		$quoteContent = $data->quote->content ?? '';
+
+		// ── Teks cover
+		$coverContent = $data->cover->content ?? 'Undangan Pernikahan';
+		$coverButton  = $data->cover->button  ?? 'Buka Undangan';
+		$coverTop     = $data->cover->description->top    ?? '';
+		$coverBottom  = $data->cover->description->bottom ?? '';
+
+		// ── Orang tua
+		$showParent      = ($data->profile->parent->show ?? false) === true;
+		$maleFather      = $data->profile->parent->male->father      ?? '';
+		$maleMother      = $data->profile->parent->male->mother      ?? '';
+		$maleChildhood   = $data->profile->parent->male->childhood   ?? '1';
+		$femaleFather    = $data->profile->parent->female->father    ?? '';
+		$femaleMother    = $data->profile->parent->female->mother    ?? '';
+		$femaleChildhood = $data->profile->parent->female->childhood ?? '1';
+
+		// ── Instagram
+		$showIg   = ($data->profile->instagram->show ?? false) === true;
+		$maleIg   = $data->profile->instagram->male   ?? '';
+		$femaleIg = $data->profile->instagram->female ?? '';
+
+		// ── RSVP
+		$rsvpTitle   = $data->rsvp->title        ?? 'Konfirmasi Kehadiran';
+		$rsvpContent = $data->rsvp->content       ?? '';
+		$rsvpYes     = $data->rsvp->yes->option   ?? 'Hadir';
+		$rsvpNo      = $data->rsvp->no->option    ?? 'Tidak Hadir';
+		$rsvpYesMsg  = $data->rsvp->yes->content  ?? 'Terima kasih';
+		$rsvpNoMsg   = $data->rsvp->no->content   ?? 'Terima kasih';
+
+		// ── Wishes
+		$showWishes    = ($data->wishes->public ?? false) === true;
+		$wishesTitle   = $data->wishes->title   ?? 'Ucapan & Doa';
+		$wishesContent = $data->wishes->content ?? '';
+
+		// ── Gift
+		$showGift    = ($data->gift->show ?? false) === true;
+		$giftTitle   = $data->gift->title        ?? 'Amplop Digital';
+		$giftContent = $data->gift->content      ?? '';
+		$giftBank    = $data->gift->bank->option ?? '';
+		$giftCode    = $data->gift->bank->code   ?? '';
+		$giftName    = $data->gift->bank->name   ?? '';
+
+		// ── Countdown & penutup
+		$showCountdown = ($data->detail->countdown->show ?? true) === true;
+		$showClosing   = ($data->detail->additional->show ?? false) === true;
+		$closingText   = $data->detail->additional->closing ?? '';
+
+		// ── Musik
+		$showMusic = ($data->music->show ?? false) === true;
+		$musicUrl  = $data->music->url   ?? '';
+
+		// ── Galeri
+		$galleryFiles = (!empty($other['photo']) && !empty($other['photo']->prop->file ?? []))
+			? $other['photo']->prop->file
+			: [];
+		$galleryTitle = $other['photo']->title ?? 'Galeri Foto';
+
+		// ── Slug untuk route
+		$invSlug = $invitation->slug ?? request()->route('slug') ?? '';
+
+		return compact(
+			'maleName', 'femaleName', 'maleInitial', 'femaleInitial',
+			'weddingDate', 'weddingTime', 'weddingTz', 'weddingDateFormatted', 'weddingDateShort',
+			'maleMethod', 'maleImg', 'maleFrame', 'femaleMethod', 'femaleImg', 'femaleFrame',
+			'maleSrc', 'femaleSrc', 'coverSrc', 'ogImage',
+			'locationAddress', 'locationMap',
+			'quoteContent', 'coverContent', 'coverButton', 'coverTop', 'coverBottom',
+			'showParent', 'maleFather', 'maleMother', 'maleChildhood',
+			'femaleFather', 'femaleMother', 'femaleChildhood',
+			'showIg', 'maleIg', 'femaleIg',
+			'rsvpTitle', 'rsvpContent', 'rsvpYes', 'rsvpNo', 'rsvpYesMsg', 'rsvpNoMsg',
+			'showWishes', 'wishesTitle', 'wishesContent',
+			'showGift', 'giftTitle', 'giftContent', 'giftBank', 'giftCode', 'giftName',
+			'showCountdown', 'showClosing', 'closingText',
+			'showMusic', 'musicUrl',
+			'galleryFiles', 'galleryTitle',
+			'invSlug'
+		);
 	}
 }

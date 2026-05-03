@@ -1,10 +1,15 @@
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $invitation->title }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta name="theme-color" content="#2d7a4f">
     <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -19,6 +24,14 @@
             --cream: #faf8f3;
             --gold: #c9a961;
             --dark-green: #4a6741;
+
+            /* Shared vars for template.partials.rsvp-wishes */
+            --color-primary: var(--rose-pink);
+            --color-muted: rgba(74, 103, 65, 0.7);
+            --section-bg: #ffffff;
+            --card-bg: #ffffff;
+            --rsvp-bg: #f3f7f2;
+            --font-heading: 'Alex Brush', cursive;
         }
 
         body {
@@ -79,7 +92,7 @@
             animation: float 20s infinite ease-in-out reverse;
         }
 
-        @keyframes float {
+        {{ '@' }}keyframes float {
             0%, 100% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(30px, -30px) scale(1.1); }
         }
@@ -98,7 +111,7 @@
             animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
+        {{ '@' }}keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.1); }
         }
@@ -129,7 +142,7 @@
             animation: bounce 2s infinite;
         }
 
-        @keyframes bounce {
+        {{ '@' }}keyframes bounce {
             0%, 100% { transform: translateX(-50%) translateY(0); }
             50% { transform: translateX(-50%) translateY(-10px); }
         }
@@ -223,6 +236,20 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .couple-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 169, 97, 0.25), rgba(139, 168, 136, 0.75));
+            color: #fff;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 600;
+            font-size: 4rem;
+            letter-spacing: 1px;
         }
 
         .couple-card h3 {
@@ -535,13 +562,13 @@
             animation: heartbeat 1.5s infinite;
         }
 
-        @keyframes heartbeat {
+        {{ '@' }}keyframes heartbeat {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.2); }
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        {{ '@' }}media (max-width: 768px) {
             .opening-content h1 {
                 font-size: 3rem;
             }
@@ -573,7 +600,7 @@
             }
         }
 
-        @keyframes fadeInUp {
+        {{ '@' }}keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
@@ -587,10 +614,6 @@
 </head>
 <body>
     <div class="floral-bg"></div>
-
-@include('template.partials.helpers')
-
-    <!-- Opening Cover -->
     <section class="opening-cover">
         <div class="opening-content">
             <div class="ornament">❀</div>
@@ -623,7 +646,7 @@
             <div class="couple-card">
                 <div class="couple-photo" style="position:relative">
                     @if($femaleSrc)<img src="{{ $femaleSrc }}" alt="{{ $femaleName }}">
-                    @else<img src="https://via.placeholder.com/200/8ba888/fff?text={{ urlencode($femaleName) }}" alt="{{ $femaleName }}">@endif
+                    @else<div class="couple-placeholder" aria-label="{{ $femaleName }}">{{ $femaleInitial }}</div>@endif
                     @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
                 <h3>{{ $femaleName }}</h3>
@@ -633,7 +656,7 @@
             <div class="couple-card">
                 <div class="couple-photo" style="position:relative">
                     @if($maleSrc)<img src="{{ $maleSrc }}" alt="{{ $maleName }}">
-                    @else<img src="https://via.placeholder.com/200/8ba888/fff?text={{ urlencode($maleName) }}" alt="{{ $maleName }}">@endif
+                    @else<div class="couple-placeholder" aria-label="{{ $maleName }}">{{ $maleInitial }}</div>@endif
                     @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none">@endif
                 </div>
                 <h3>{{ $maleName }}</h3>

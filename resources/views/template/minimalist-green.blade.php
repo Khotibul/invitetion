@@ -1,12 +1,11 @@
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @php
-        use Carbon\Carbon;
-    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $invitation->title }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <meta property="og:image" content="{{ $ogImage }}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         * {
@@ -20,12 +19,22 @@
             --forest-green: #2d5016;
             --cream: #f5f1e8;
             --gold: #c9a961;
+
+            /* Shared vars for template.partials.rsvp-wishes */
+            --color-primary: var(--forest-green);
+            --color-muted: rgba(45, 80, 22, 0.65);
+            --section-bg: #ffffff;
+            --card-bg: #ffffff;
+            --rsvp-bg: #f3f7ef;
+            --font-heading: 'Cormorant Garamond', serif;
         }
 
         body {
             font-family: 'Montserrat', sans-serif;
             background: var(--cream);
             color: var(--forest-green);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
         h1, h2, h3 {
@@ -45,8 +54,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(rgba(156, 175, 136, 0.9), rgba(45, 80, 22, 0.9)),
-                        url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1200') center/cover;
+            background: linear-gradient(rgba(156, 175, 136, 0.92), rgba(45, 80, 22, 0.92));
             color: white;
             text-align: center;
         }
@@ -106,6 +114,7 @@
             padding: 2rem;
             background: var(--cream);
             border-left: 4px solid var(--sage-green);
+            border-radius: 14px;
         }
 
         .timeline-time {
@@ -147,7 +156,7 @@
             padding: 3rem 0;
         }
 
-        @media (max-width: 768px) {
+        {{ '@' }}media (max-width: 768px) {
             .cover h1 {
                 font-size: 2.5rem;
             }
@@ -158,9 +167,8 @@
         }
     </style>
 </head>
-@include('template.partials.helpers')
 <body>
-    <section class="cover">
+    <section class="cover" @if($coverSrc) style="background-image: linear-gradient(rgba(156, 175, 136, 0.92), rgba(45, 80, 22, 0.92)), url('{{ $coverSrc }}');background-size:cover;background-position:center" @endif>
         <div>
             @if($coverSrc)
             <img src="{{ $coverSrc }}" alt="foto sampul"

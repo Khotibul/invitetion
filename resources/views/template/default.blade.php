@@ -1,6 +1,7 @@
 @php
     use Carbon\Carbon;
     setlocale(LC_ALL, 'IND');
+    $__slug = request()->route('slug') ?? request()->slug ?? '';
     $set = [
         'title' => "Wedding of ".$invitation->title." | Risa Digital Invitation",
         'file' => url('storage/'.$invitation->file),
@@ -321,7 +322,7 @@
             <div class="wishes-fill" data-aos="fade">
                 <h4>{{ $data->wishes->title }}</h4>
                 <blockquote>{{ $data->wishes->content }}</blockquote>
-                <form action="{{ route('invitation.wish', request()->slug) }}" class="sender" method="post">
+                <form action="{{ $__slug ? route('invitation.wish', $__slug) : '#' }}" class="sender" method="post">
                     <div>
                         @csrf
                         <label for="wishper-message">Harapan/Pesan/Ucapan <var dir="message"></var></label>
@@ -413,7 +414,7 @@
     <div id="present-field" class="modal">
 		<h3>{{ $data->rsvp->title }}</h3>
         <p>{{ $data->rsvp->content }}</p>
-        <form action="{{ route('invitation.present', request()->slug) }}" class="sender" method="post">
+        <form action="{{ $__slug ? route('invitation.present', $__slug) : '#' }}" class="sender" method="post">
             @csrf
             <div>
                 <input type="text" name="name" id="present-name" placeholder="Nama lengkap kamu">

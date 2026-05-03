@@ -195,42 +195,107 @@
 
         .templates-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 3rem;
         }
 
         .template-card {
-            border-radius: 15px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+            position: relative;
         }
 
         .template-card:hover {
-            transform: scale(1.05);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(45,122,79,0.2);
         }
 
         .template-image {
             width: 100%;
-            height: 300px;
-            background: linear-gradient(135deg, var(--primary-green), #3d9a6f);
+            height: 260px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .template-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .template-card:hover .template-image img {
+            transform: scale(1.08);
+        }
+
+        .template-image-placeholder {
+            width: 100%;
+            height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 2rem;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .template-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--accent-gold);
+            color: white;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: .3rem .8rem;
+            border-radius: 50px;
         }
 
         .template-info {
             padding: 1.5rem;
             background: white;
+            border-top: 3px solid var(--primary-light);
         }
 
         .template-info h4 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--primary-green);
-            margin-bottom: 0.5rem;
+            margin-bottom: .3rem;
+        }
+
+        .template-info .template-grade {
+            font-size: .75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+        }
+
+        .template-info .btn-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.4rem;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            border-radius: 50px;
+            font-size: .8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .3s ease;
+        }
+
+        .template-info .btn-preview:hover {
+            background: var(--primary-green);
+            color: white;
         }
 
         /* Pricing */
@@ -565,12 +630,36 @@
                 @foreach ($data['templates'] as $item)
                 <div class="template-card">
                     <div class="template-image">
-                        <img src="{{ url('storage/'.$item->file) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        @if($item->file && \Illuminate\Support\Str::startsWith($item->file, 'template/'))
+                        <img src="{{ asset($item->file) }}" alt="{{ $item->title }}">
+                        @elseif($item->file)
+                        <img src="{{ url('storage/'.$item->file) }}" alt="{{ $item->title }}">
+                        @else
+                        @php
+                            $gradients = [
+                                'linear-gradient(135deg,#2d7a4f,#3d9a6f)',
+                                'linear-gradient(135deg,#8b7355,#5d4e37)',
+                                'linear-gradient(135deg,#8ba888,#4a6741)',
+                                'linear-gradient(135deg,#00a86b,#0077be)',
+                                'linear-gradient(135deg,#2c2c2c,#555)',
+                                'linear-gradient(135deg,#9caf88,#2d5016)',
+                            ];
+                            static $gi = 0;
+                            $grad = $gradients[$gi % count($gradients)]; $gi++;
+                        @endphp
+                        <div class="template-image-placeholder" style="background:{{ $grad }}">
+                            <span style="font-size:2.5rem;margin-bottom:.5rem">💍</span>
+                            <span>{{ $item->title }}</span>
+                        </div>
+                        @endif
+                        <span class="template-badge">{{ ucfirst($item->grade ?? 'free') }}</span>
                     </div>
                     <div class="template-info">
                         <h4>{{ $item->title }}</h4>
-                        <p class="text-capitalize">{{ $item->grade }}</p>
-                        <a href="{{ route('preview-template.index', $item->slug) }}" class="btn btn-sm btn-outline" style="color: var(--primary-green); border-color: var(--primary-green); margin-top: 10px;">Preview</a>
+                        <p class="template-grade">{{ ucfirst($item->grade ?? 'free') }}</p>
+                        <a href="{{ route('preview-template.index', $item->slug) }}" class="btn-preview">
+                            👁 Preview Template
+                        </a>
                     </div>
                 </div>
                 @endforeach

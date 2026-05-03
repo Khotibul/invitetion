@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="no-js"> <!--<![endif]-->
+﻿<!DOCTYPE html><html class="no-js"> <!--<![endif]-->
 <head>
 	@php
 		use Carbon\Carbon;
@@ -115,7 +115,7 @@
 		width: 220px;
 		height: 220px;
 	}
-	@media screen and (max-width: 480px) {
+	{{ '@' }}media screen and (max-width: 480px) {
 		#fh5co-header .couple-main { width: 160px; height: 160px; }
 		#overlay .content .couple-main { width: 160px; height: 160px; }
 	}
@@ -158,7 +158,7 @@
 	/* Desktop: foto kiri, teks kanan (bawaan template) */
 	/* Mobile: foto atas, teks bawah, tidak tumpang tindih */
 
-	@media screen and (max-width: 767px) {
+	{{ '@' }}media screen and (max-width: 767px) {
 
 		/* Wrap pasangan jadi kolom vertikal */
 		.couple-wrap {
@@ -238,7 +238,7 @@
 	}
 
 	/* Tablet */
-	@media screen and (min-width: 768px) and (max-width: 991px) {
+	{{ '@' }}media screen and (min-width: 768px) and (max-width: 991px) {
 		.couple-half {
 			width: 45% !important;
 		}

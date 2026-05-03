@@ -171,7 +171,7 @@ section{padding:4.5rem 1.5rem}
     animation:bob 2s infinite;
 }
 .scroll-down i{color:var(--gold);font-size:1rem}
-@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+{{ '@' }}keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
 
 /* ── OPENING ── */
 .opening-sec{background:var(--cream);text-align:center}
@@ -435,14 +435,14 @@ textarea.f-input{resize:vertical;min-height:90px}
 }
 .music-fab:hover{background:var(--gold);color:var(--green-dark)}
 .music-fab.playing{animation:pulse 2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}70%{box-shadow:0 0 0 12px rgba(201,168,76,0)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}}
+{{ '@' }}keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}70%{box-shadow:0 0 0 12px rgba(201,168,76,0)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}}
 
 /* ── REVEAL ── */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 
 /* ── RESPONSIVE ── */
-@media(max-width:700px){
+{{ '@' }}media(max-width:700px){
     .couple-wrap{grid-template-columns:1fr;gap:1.5rem}
     .couple-sep{flex-direction:row;justify-content:center}
     .couple-sep .vline{width:50px;height:1px}
@@ -450,7 +450,7 @@ textarea.f-input{resize:vertical;min-height:90px}
     .g-item.tall{grid-row:span 1;aspect-ratio:1}
     .rsvp-opts{flex-direction:column}
 }
-@media(max-width:420px){
+{{ '@' }}media(max-width:420px){
     section{padding:3rem 1rem}
     .gallery-grid{grid-template-columns:1fr}
 }

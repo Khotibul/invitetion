@@ -7,12 +7,16 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Wedding of {{ $maleName }} & {{ $femaleName }} | Risa Digital Invitation</title>
 <meta property="og:image" content="{{ $ogImage }}">
+<meta property="og:title" content="Wedding of {{ $maleName }} & {{ $femaleName }}">
+<meta name="theme-color" content="#2d7a4f">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 :root{--color-primary:#2d7a4f;--color-light:#e8f5ee;--color-gold:#d4af37;--color-dark:#1d5a3f;--color-muted:#6b7280;--font-heading:'Playfair Display',serif;--section-bg:#fff;--card-bg:#f9f9f9;--rsvp-bg:#f0f9f4}
 *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
 body{font-family:'Poppins',sans-serif;color:var(--color-dark);overflow-x:hidden}
+a{color:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid rgba(212,175,55,.35);outline-offset:2px}
 h1,h2,h3{font-family:var(--font-heading)}
 /* Cover */
 #cover{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,var(--color-light),#f0f9f4);display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;transition:opacity .8s,visibility .8s}
@@ -33,7 +37,7 @@ h1,h2,h3{font-family:var(--font-heading)}
 /* Hero */
 .hero{min-height:100vh;background:linear-gradient(135deg,var(--color-light),#f0f9f4);display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(45,122,79,.1),transparent 70%);animation:float 20s infinite ease-in-out}
-@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}
+{{ '@' }}keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}
 .hero-content{position:relative;z-index:1;max-width:700px}
 .hero h1{font-size:clamp(2rem,6vw,3.5rem);color:var(--color-primary);margin-bottom:.5rem}
 .hero .couple-names{font-size:clamp(1.5rem,5vw,2.5rem);color:var(--color-dark);margin:1.5rem 0}
@@ -108,8 +112,8 @@ h1,h2,h3{font-family:var(--font-heading)}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
 .reveal.in{opacity:1;transform:none}
 /* Responsive */
-@media(max-width:768px){.couple-grid{grid-template-columns:1fr;gap:1.5rem}.couple-sep{flex-direction:row;justify-content:center}.couple-sep .line{width:50px;height:1px}.gallery-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid .g-item.wide{grid-column:span 2;aspect-ratio:1}}
-@media(max-width:480px){.gallery-grid{grid-template-columns:1fr}.gallery-grid .g-item.wide{grid-column:span 1;aspect-ratio:1}}
+{{ '@' }}media(max-width:768px){.couple-grid{grid-template-columns:1fr;gap:1.5rem}.couple-sep{flex-direction:row;justify-content:center}.couple-sep .line{width:50px;height:1px}.gallery-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid .g-item.wide{grid-column:span 2;aspect-ratio:1}}
+{{ '@' }}media(max-width:480px){.gallery-grid{grid-template-columns:1fr}.gallery-grid .g-item.wide{grid-column:span 1;aspect-ratio:1}}
 </style>
 </head>
 <body>
@@ -206,7 +210,7 @@ h1,h2,h3{font-family:var(--font-heading)}
         @if($ep)
         <div class="event-card reveal">
             <h3>{{ $ev->title }}</h3>
-            <div class="event-row"><i class="fa-regular fa-clock"></i>{{ date('H:i',strtotime($ep->time->start)) }}@if(!($ep->time->done??false)) – {{ date('H:i',strtotime($ep->time->end)) }}@else – selesai@endif {{ $weddingTz }}</div>
+            <div class="event-row"><i class="fa-regular fa-clock"></i>{{ date('H:i', strtotime($ep->time->start)) }} @if(!($ep->time->done ?? false))– {{ date('H:i', strtotime($ep->time->end)) }} @else – selesai @endif {{ $weddingTz }}</div>
             <div class="event-row"><i class="fa-regular fa-calendar"></i>{{ $weddingDateFormatted }}</div>
             @if(!empty($ep->location->address??''))<div class="event-row"><i class="fa-solid fa-location-dot"></i>{{ $ep->location->address }}</div>@endif
             @if(!empty($ep->location->map??''))<a href="{{ $ep->location->map }}" target="_blank" class="event-map"><i class="fa-solid fa-map"></i> Lihat Peta</a>@endif
