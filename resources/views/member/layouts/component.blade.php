@@ -7,7 +7,7 @@
         </a>
     </div>
     <h3>
-        <img src="{{ url('images/icons/'.$menu['icon']) }}" alt="{{ $menu['title'] }}">
+        <i class="{{ $menu['icon'] }} fs-4 me-1"></i>
         <span>{{ Str::upper($menu['title']) }}</span>
     </h3>
 </div>

@@ -9,9 +9,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords" content="">
     <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
-    {{-- jQuery harus dimuat SEBELUM Vite bundle agar $ tersedia --}}
-    <script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
-	@vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
+    {{-- CSS only — no JS in head --}}
+    @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss'])
     @stack('style')
 </head>
 <body>
@@ -22,12 +21,9 @@
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
 		@csrf
 	</form>
+    {{-- jQuery + member-script dimuat di akhir body agar DOM sudah siap --}}
+    <script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
+    @vite(['resources/js/member-script.js'])
     @stack('script')
-    <script>
-        $(".logout-form").on('click', function(e) {
-            e.preventDefault();
-            $("#logout-form").submit();
-        });
-    </script>
 </body>
 </html>

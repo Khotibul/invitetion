@@ -4,368 +4,364 @@ import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import CircleProgress from 'js-circle-progress';
 
-// Expose jQuery globally agar script inline di blade bisa pakai $
+// Expose jQuery & Swal globally agar script inline di blade bisa pakai $ dan Swal
 window.$ = window.jQuery = $;
+window.Swal = Swal;
 
-// swal
+// Toast mixin — expose ke window agar blade inline scripts bisa pakai Toast.fire()
 const Toast = Swal.mixin({
 	toast: true,
-	position: 'bottom',
+	position: 'top-end',
 	showConfirmButton: false,
-	timer: 5000,
+	timer: 4000,
 	timerProgressBar: true,
 	didOpen: (toast) => {
-		toast.addEventListener('mouseenter', Swal.stopTimer)
-		toast.addEventListener('mouseleave', Swal.resumeTimer)
+		toast.addEventListener('mouseenter', Swal.stopTimer);
+		toast.addEventListener('mouseleave', Swal.resumeTimer);
 	}
 });
+window.Toast = Toast;
 
-if ($(".copy-text").length > 0) {
-	$(".copy-text").on('click', function(e) {
+// ── Semua DOM-dependent code dibungkus dalam document.ready ──────────────────
+$(function () {
+
+	// ── Copy text ──────────────────────────────────────────────────────────────
+	$(document).on('click', '.copy-text', function (e) {
 		e.preventDefault();
 		var text = $(this).data('text');
-		$("body").append('<textarea name="selected-text"></textarea>');
-		$("textarea[name=selected-text]").css('position', 'absolute').css('transform', 'scale(0,0)').val(text).select();
+		$('body').append('<textarea name="selected-text"></textarea>');
+		$('textarea[name=selected-text]')
+			.css('position', 'absolute')
+			.css('transform', 'scale(0,0)')
+			.val(text)
+			.select();
 		if (document.execCommand('copy')) {
-			new Toast({icon:'info',title:'Disalin',text:'Disalin ke papan klip.'});
-			$("textarea[name=selected-text]").remove();
+			Toast.fire({ icon: 'info', title: 'Disalin', text: 'Disalin ke papan klip.' });
+			$('textarea[name=selected-text]').remove();
 		}
 	});
-}
 
-// Progress
-if ($(".progress").length > 0) {
-	var set_max = $(".progress").data('max'),
-		set_val = $(".progress").data('value');
-	const cp = new CircleProgress('.progress', {
-		value: set_val,
-		max: set_max
-	});
-}
-
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-  return new bootstrap.Tooltip(tooltipTriggerEl)
-})
-
-if ($(".dataTables").length > 0) {
-	let columnsMode = $(".dataTables").data('columns'),
-		action = $(".dataTables").data('list'),
-		csrf = $("meta[name=csrf-token]").attr('content');
-	let columns = [
-		{ data: "image", name: "image" },
-		{ data: "title", name: "title" },
-		{ data: "info", name: "info" },
-	];
-	if (columnsMode === 'transaction') {
-		columns = [
-			{ data: "invoice", name: "invoice" },
-			{ data: "package", name: "package" },
-			{ data: "amount", name: "amount" },
-			{ data: "method", name: "method" },
-			{ data: "status", name: "status" },
-			{ data: "date", name: "date" },
-			{ data: "action", name: "action" },
-		];
+	// ── Circle Progress ────────────────────────────────────────────────────────
+	if ($('.progress').length > 0) {
+		var set_max = $('.progress').data('max'),
+			set_val = $('.progress').data('value');
+		new CircleProgress('.progress', { value: set_val, max: set_max });
 	}
-	var dataTables = $(".dataTables").DataTable({
-		responsive: true,
-		ordering: false,
-		lengthChange: false,
-		lengthMenu: false,
-		autoWidth: false,
-		language: {
-			search: "_INPUT_",
-			searchPlaceholder: "Cari",
-			searchClass: "form-control",
-			zeroRecords: "Kosong",
-			info: "Data total: _TOTAL_",
-			infoEmpty: "",
-			paginate: {
-				previous: "<i class=\"bx bx-chevron-left\"></i>",
-				next: "<i class=\"bx bx-chevron-right\"></i>",
-			},
-			infoFiltered: "/ _MAX_"
-		},
-		serverSide: true,
-		ajax: {
-			url: action,
-			type: 'post',
-			dataType: 'json',
-			data: {
-				_token: csrf
-			},
-			error: function(q,w,e) {
-				console.log(q, w, e);
-			}
-		},
-		columns,
-	});
-	$(".dataTables_filter").css('float', 'unset');
-	$(".dataTables_filter").children('label').addClass('d-block pb-1');
-	$(".dataTables_filter").children('label').children('input').addClass('form-control form-control-sm m-0');
-	$(".dataTables_info").addClass('small');
-	$(".dataTables_paginate").addClass('small');
-}
 
-if ($(".btn_upload").length > 0) {
-	var btnUpload = $(".btn_upload").children('input[type=file'),
-		btnOuter = $(".button_outer");
-	btnUpload.on('change', function(e){
-		var ext = btnUpload.val().split('.').pop().toLowerCase();
-		if ($.inArray(ext, ['png','jpg','jpeg']) == -1) {
-			$(".error_msg").text(null);
-		} else {
-			$(".error_msg").text(null);
-			btnOuter.addClass('file_uploading');
-			setTimeout(function(){
-				btnOuter.addClass('file_uploaded');
-			}, 2900);
-			var uploadedFile = URL.createObjectURL(e.target.files[0]);
-			setTimeout(function(){
-				$("#uploaded_view").append('<img src="'+uploadedFile+'" />').addClass('show');
-			}, 3000);
+	// ── Bootstrap Tooltips ─────────────────────────────────────────────────────
+	var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+	tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+
+	// ── DataTables ─────────────────────────────────────────────────────────────
+	var dataTables;
+	if ($('.dataTables').length > 0) {
+		let columnsMode = $('.dataTables').data('columns'),
+			action      = $('.dataTables').data('list'),
+			csrf        = $('meta[name=csrf-token]').attr('content');
+
+		let columns = [
+			{ data: 'image', name: 'image' },
+			{ data: 'title', name: 'title' },
+			{ data: 'info',  name: 'info'  },
+		];
+		if (columnsMode === 'transaction') {
+			columns = [
+				{ data: 'invoice', name: 'invoice' },
+				{ data: 'package', name: 'package' },
+				{ data: 'amount',  name: 'amount'  },
+				{ data: 'method',  name: 'method'  },
+				{ data: 'status',  name: 'status'  },
+				{ data: 'date',    name: 'date'    },
+				{ data: 'action',  name: 'action'  },
+			];
 		}
-	});
-	$(".file_remove").on('click', function(e) {
-		$("#uploaded_view").removeClass('show');
-		$("#uploaded_view").find('img').remove();
-		btnOuter.removeClass('file_uploading');
-		btnOuter.removeClass('file_uploaded');
-	});
-}
 
-if ($(".strbox-store").length > 0) {
-	$(".strbox-store").on('submit', function(e) {
-		e.preventDefault();
-		let action = $(this).attr('action'),
-			submit = $(this).find('button[type=submit]');
-		$.ajax({
-			type: 'post',
-			url : action,
-			dataType: 'json',
-			data: new FormData(this),
-			contentType: false,
-			cache: false,
-			processData:false,
-			error: function(q,w,e) {
-				submit.children('span').text('Coba lagi');
-				submit.prop('disabled', false);
-				let message = "<ol style=padding:10px>";
-				$.each(q.responseJSON.errors, function(index, value) {
-					message += `<li>${value}</li>`;
-				});
-				message += "</ol>";
-				console.log(q,w,e);
+		dataTables = $('.dataTables').DataTable({
+			responsive:   true,
+			ordering:     false,
+			lengthChange: false,
+			lengthMenu:   false,
+			autoWidth:    false,
+			language: {
+				search:            '_INPUT_',
+				searchPlaceholder: 'Cari',
+				searchClass:       'form-control',
+				zeroRecords:       'Kosong',
+				info:              'Data total: _TOTAL_',
+				infoEmpty:         '',
+				paginate: {
+					previous: '<i class="bx bx-chevron-left"></i>',
+					next:     '<i class="bx bx-chevron-right"></i>',
+				},
+				infoFiltered: '/ _MAX_',
 			},
-			beforeSend: function() {
-				submit.prop('disabled', true);
-				submit.children('span').text('Mengunggah...');
+			serverSide: true,
+			ajax: {
+				url:      action,
+				type:     'post',
+				dataType: 'json',
+				data:     { _token: csrf },
+				error:    function (q, w, e) { console.log(q, w, e); },
 			},
-			success: function(response) {
-				console.log(response);
-				dataTables.ajax.reload();
-				$(".strbox-store")[0].reset();
-				submit.children('span').text('Unggah');
-				submit.prop('disabled', false);
+			columns,
+		});
+
+		$('.dataTables_filter').css('float', 'unset');
+		$('.dataTables_filter').children('label').addClass('d-block pb-1');
+		$('.dataTables_filter').children('label').children('input').addClass('form-control form-control-sm m-0');
+		$('.dataTables_info').addClass('small');
+		$('.dataTables_paginate').addClass('small');
+	}
+
+	// ── File upload button ─────────────────────────────────────────────────────
+	if ($('.btn_upload').length > 0) {
+		var btnUpload = $('.btn_upload').children('input[type=file]'),
+			btnOuter  = $('.button_outer');
+
+		btnUpload.on('change', function (e) {
+			var ext = btnUpload.val().split('.').pop().toLowerCase();
+			if ($.inArray(ext, ['png', 'jpg', 'jpeg']) === -1) {
+				$('.error_msg').text(null);
+			} else {
+				$('.error_msg').text(null);
+				btnOuter.addClass('file_uploading');
+				setTimeout(function () { btnOuter.addClass('file_uploaded'); }, 2900);
+				var uploadedFile = URL.createObjectURL(e.target.files[0]);
+				setTimeout(function () {
+					$('#uploaded_view').append('<img src="' + uploadedFile + '" />').addClass('show');
+				}, 3000);
 			}
 		});
-	});
 
-	$(document).on('click', '.unuse-image', function(e) {
-		e.preventDefault();
-		let target = $(this).data('target');
-		$(`#${target}`).remove();
-	})
-}
+		$('.file_remove').on('click', function () {
+			$('#uploaded_view').removeClass('show').find('img').remove();
+			btnOuter.removeClass('file_uploading file_uploaded');
+		});
+	}
 
-$(".delete-event").on('click', function(e) {
-	e.preventDefault();
-	let action = $(this).data('url'),
-		token = $("meta[name=csrf-token]").attr('content');
-	Swal.fire({
-		icon: 'question',
-		title: 'Hapus acara?',
-		showCancelButton: true,
-		confirmButtonColor: '#d33',
-		confirmButtonText: 'Hapus',
-		cancelButtonText: 'Batal'
-	}).then((result) => {
-		if (result.isConfirmed) {
+	// ── Strbox store ───────────────────────────────────────────────────────────
+	if ($('.strbox-store').length > 0) {
+		$('.strbox-store').on('submit', function (e) {
+			e.preventDefault();
+			let action = $(this).attr('action'),
+				submit = $(this).find('button[type=submit]');
 			$.ajax({
-				type: 'post',
-				url : action,
-				dataType: 'json',
-				data: {
-					_method: 'DELETE', _token: token
+				type:        'post',
+				url:         action,
+				dataType:    'json',
+				data:        new FormData(this),
+				contentType: false,
+				cache:       false,
+				processData: false,
+				error: function (q, w, e) {
+					submit.children('span').text('Coba lagi');
+					submit.prop('disabled', false);
+					console.log(q, w, e);
 				},
-				beforeSend: function() {
-					console.log('loading');
+				beforeSend: function () {
+					submit.prop('disabled', true);
+					submit.children('span').text('Mengunggah...');
 				},
-				error: function(q,w,e) {
-					console.log(q,w,e);
+				success: function (response) {
+					if (dataTables) dataTables.ajax.reload();
+					$('.strbox-store')[0].reset();
+					submit.children('span').text('Unggah');
+					submit.prop('disabled', false);
 				},
-				success: function(response) {
-					location.reload();
-				}
-			})
-		}
-	});
-});
-
-$(".delete-story").on('click', function(e) {
-	e.preventDefault();
-	let action = $(this).data('url'),
-		token = $("meta[name=csrf-token]").attr('content');
-	Swal.fire({
-		icon: 'question',
-		title: 'Hapus cerita?',
-		showCancelButton: true,
-		confirmButtonColor: '#d33',
-		confirmButtonText: 'Hapus',
-		cancelButtonText: 'Batal'
-	}).then((result) => {
-		if (result.isConfirmed) {
-			$.ajax({
-				type: 'post',
-				url : action,
-				dataType: 'json',
-				data: {
-					_method: 'DELETE', _token: token
-				},
-				beforeSend: function() {
-					console.log('loading');
-				},
-				error: function(q,w,e) {
-					console.log(q,w,e);
-				},
-				success: function(response) {
-					location.reload();
-				}
-			})
-		}
-	});
-});
-
-$(".delete-souvenir").on('click', function(e) {
-	e.preventDefault();
-	let action = $(this).data('url'),
-		token = $("meta[name=csrf-token]").attr('content');
-	Swal.fire({
-		icon: 'question',
-		title: 'Hapus souvenir?',
-		showCancelButton: true,
-		confirmButtonColor: '#d33',
-		confirmButtonText: 'Hapus',
-		cancelButtonText: 'Batal'
-	}).then((result) => {
-		if (result.isConfirmed) {
-			$.ajax({
-				type: 'post',
-				url : action,
-				dataType: 'json',
-				data: {
-					_method: 'DELETE', _token: token
-				},
-				beforeSend: function() {
-					console.log('loading');
-				},
-				error: function(q,w,e) {
-					console.log(q,w,e);
-				},
-				success: function(response) {
-					location.reload();
-				}
-			})
-		}
-	});
-});
-
-if ($(".figure-catcher").length > 0) {
-	$(".figure-catcher").on('click', function(e) {
-		e.preventDefault();
-		var action = $(this).data('url'),
-			button = $(".figure-catcher"),
-			csrf = $("meta[name=csrf-token]").attr('content');
-		html2canvas(document.querySelector(".figure-image")).then(canvas => {
-			var imgData = canvas.toDataURL('image/webp');
-			$.ajax({
-				type: 'post',
-				url : action,
-				dataType: 'json',
-				headers: {
-				},
-				data: {
-					_token: csrf, _method: 'PUT', base64data: imgData
-				},
-				error: function(q,w,e) {
-					button.prop('disabled', false);
-					console.log(q,w,e);
-				},
-				beforeSend: function() {
-					button.prop('disabled', true);
-				},
-				success: function(response) {
-					button.prop('disabled', false);
-					Toast.fire(response.toast);
-				}
 			});
 		});
-	})
-}
 
-if ($(".save-menu").length > 0) {
-	document.addEventListener('keydown', function(event) {
-		if (event.ctrlKey && event.key === 's') {
-			event.preventDefault();
-			$(".save-menu").submit();
-		}
-	});
+		$(document).on('click', '.unuse-image', function (e) {
+			e.preventDefault();
+			$('#' + $(this).data('target')).remove();
+		});
+	}
 
-	$(".save-menu").on('submit', function(e) {
+	// ── Delete event ───────────────────────────────────────────────────────────
+	$(document).on('click', '.delete-event', function (e) {
 		e.preventDefault();
-		let action = $(this).attr('action'),
-			submit = $(this).find('button[type=submit]');
-		$.ajax({
-			type: 'post',
-			url : action,
-			dataType: 'json',
-			data: new FormData(this),
-			contentType: false,
-			cache: false,
-			processData:false,
-			error: function(q,w,e) {
-				console.log(q,w,e);
-				submit.children('i').removeClass('bx-loader bx-spin').addClass('bx-save');
-				submit.children('span').text('Coba Lagi');
-				submit.prop('disabled', false);
-				$.each(q.responseJSON.errors, function(index, value) {
-					$(`var[dir=${index}]`).after(`<sup role="alert" data-bs-toggle="tooltip" data-bs-placement="right" title="${value}">!</sup>`);
+		let action = $(this).data('url'),
+			token  = $('meta[name=csrf-token]').attr('content');
+		Swal.fire({
+			icon: 'question', title: 'Hapus acara?',
+			showCancelButton: true, confirmButtonColor: '#d33',
+			confirmButtonText: 'Hapus', cancelButtonText: 'Batal',
+		}).then(function (result) {
+			if (result.isConfirmed) {
+				$.ajax({
+					type: 'post', url: action, dataType: 'json',
+					data: { _method: 'DELETE', _token: token },
+					success: function () { location.reload(); },
+					error:   function (q, w, e) { console.log(q, w, e); },
 				});
-				Swal.fire({
-					icon: 'warning',
-					text: "Lengkapi "
-				});
-			},
-			beforeSend: function() {
-				$("sup[role=alert]").remove();
-				Toast.fire({
-					icon: 'info',
-					title: 'Proses dimulai..'
-				});
-				submit.children('i').addClass('bx-loader bx-spin').removeClass('bx-save');
-				submit.prop('disabled', true);
-				submit.children('span').text('Memeriksa data...');
-			},
-			success: function(response) {
-				submit.children('i').removeClass('bx-loader bx-spin').addClass('bx-save');
-				submit.prop('disabled', false);
-				submit.children('span').text('Simpan');
-				Toast.fire(response.toast);
-				if (response.page=='reload') {
-					location.reload();
-				}
 			}
 		});
 	});
-}
+
+	// ── Delete story ───────────────────────────────────────────────────────────
+	$(document).on('click', '.delete-story', function (e) {
+		e.preventDefault();
+		let action = $(this).data('url'),
+			token  = $('meta[name=csrf-token]').attr('content');
+		Swal.fire({
+			icon: 'question', title: 'Hapus cerita?',
+			showCancelButton: true, confirmButtonColor: '#d33',
+			confirmButtonText: 'Hapus', cancelButtonText: 'Batal',
+		}).then(function (result) {
+			if (result.isConfirmed) {
+				$.ajax({
+					type: 'post', url: action, dataType: 'json',
+					data: { _method: 'DELETE', _token: token },
+					success: function () { location.reload(); },
+					error:   function (q, w, e) { console.log(q, w, e); },
+				});
+			}
+		});
+	});
+
+	// ── Delete souvenir ────────────────────────────────────────────────────────
+	$(document).on('click', '.delete-souvenir', function (e) {
+		e.preventDefault();
+		let action = $(this).data('url'),
+			token  = $('meta[name=csrf-token]').attr('content');
+		Swal.fire({
+			icon: 'question', title: 'Hapus souvenir?',
+			showCancelButton: true, confirmButtonColor: '#d33',
+			confirmButtonText: 'Hapus', cancelButtonText: 'Batal',
+		}).then(function (result) {
+			if (result.isConfirmed) {
+				$.ajax({
+					type: 'post', url: action, dataType: 'json',
+					data: { _method: 'DELETE', _token: token },
+					success: function () { location.reload(); },
+					error:   function (q, w, e) { console.log(q, w, e); },
+				});
+			}
+		});
+	});
+
+	// ── Figure catcher (e-invitation screenshot) ───────────────────────────────
+	$(document).on('click', '.figure-catcher', function (e) {
+		e.preventDefault();
+		var action = $(this).data('url'),
+			button = $('.figure-catcher'),
+			csrf   = $('meta[name=csrf-token]').attr('content');
+		html2canvas(document.querySelector('.figure-image')).then(function (canvas) {
+			var imgData = canvas.toDataURL('image/webp');
+			$.ajax({
+				type: 'post', url: action, dataType: 'json',
+				data: { _token: csrf, _method: 'PUT', base64data: imgData },
+				beforeSend: function () { button.prop('disabled', true); },
+				success: function (response) {
+					button.prop('disabled', false);
+					if (response.toast) Toast.fire(response.toast);
+				},
+				error: function (q, w, e) {
+					button.prop('disabled', false);
+					console.log(q, w, e);
+				},
+			});
+		});
+	});
+
+	// ── Save menu (profile, cover, detail, rsvp, dll) ─────────────────────────
+	// Ctrl+S shortcut
+	document.addEventListener('keydown', function (event) {
+		if (event.ctrlKey && event.key === 's') {
+			event.preventDefault();
+			var $form = $('.save-menu').first();
+			if ($form.length) $form.submit();
+		}
+	});
+
+	// AJAX submit untuk semua form .save-menu
+	$(document).on('submit', '.save-menu', function (e) {
+		e.preventDefault();
+
+		var $form    = $(this),
+			action   = $form.attr('action'),
+			$submit  = $form.find('button[type=submit]'),
+			origIcon = 'bx-save',
+			origText = $submit.find('span').text().trim() || 'simpan';
+
+		$.ajax({
+			type:        'post',
+			url:         action,
+			dataType:    'json',
+			data:        new FormData(this),
+			contentType: false,
+			cache:       false,
+			processData: false,
+
+			beforeSend: function () {
+				$('sup[role=alert]').remove();
+				// Tampilkan info toast saat mulai
+				Toast.fire({ icon: 'info', title: 'Menyimpan...' });
+				// Ubah tombol ke loading state
+				$submit.find('i').removeClass(origIcon).addClass('bx-loader bx-spin');
+				$submit.find('span').text('Menyimpan...');
+				$submit.prop('disabled', true);
+			},
+
+			success: function (response) {
+				// Reset tombol
+				$submit.find('i').removeClass('bx-loader bx-spin').addClass('bx-check');
+				$submit.find('span').text('Tersimpan!');
+				$submit.prop('disabled', false);
+
+				// Tampilkan toast sukses
+				var toastData = response.toast || { icon: 'success', title: 'Disimpan!' };
+				Toast.fire({
+					icon:  toastData.icon  || 'success',
+					title: toastData.title || 'Disimpan!',
+					text:  toastData.text  || '',
+				});
+
+				// Kembalikan tombol ke semula setelah 2 detik
+				setTimeout(function () {
+					$submit.find('i').removeClass('bx-check').addClass(origIcon);
+					$submit.find('span').text(origText);
+				}, 2000);
+
+				// Reload jika diminta
+				if (response.page === 'reload') {
+					setTimeout(function () { location.reload(); }, 900);
+				}
+			},
+
+			error: function (xhr) {
+				// Reset tombol
+				$submit.find('i').removeClass('bx-loader bx-spin').addClass(origIcon);
+				$submit.find('span').text(origText);
+				$submit.prop('disabled', false);
+
+				// Tampilkan error di field
+				$('sup[role=alert]').remove();
+				if (xhr.responseJSON && xhr.responseJSON.errors) {
+					$.each(xhr.responseJSON.errors, function (field, messages) {
+						var msg = Array.isArray(messages) ? messages[0] : messages;
+						$('var[dir=' + field + ']').after(
+							'<sup role="alert" data-bs-toggle="tooltip" data-bs-placement="right" title="' + msg + '">!</sup>'
+						);
+					});
+				}
+
+				// Tampilkan Swal error
+				Swal.fire({
+					icon:               'warning',
+					title:              'Periksa kembali',
+					text:               'Lengkapi semua field yang diperlukan.',
+					confirmButtonColor: '#2d7a4f',
+					confirmButtonText:  'OK',
+				});
+			},
+		});
+	});
+
+	// ── Logout form ────────────────────────────────────────────────────────────
+	$(document).on('click', '.logout-form', function (e) {
+		e.preventDefault();
+		$('#logout-form').submit();
+	});
+
+}); // end $(function)

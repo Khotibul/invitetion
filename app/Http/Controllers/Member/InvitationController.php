@@ -27,133 +27,133 @@ class InvitationController extends Controller
 	private $menu = [
 		'design' => [
 			'id'	=> 'design',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-palette',
 			'title'	=> 'ubah desain',
 			'notif'	=> 0,
 			'url'	=> 'menu.design'
 		],
 		'cover' => [
 			'id'	=> 'cover',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-image-alt',
 			'title'	=> 'sampul undangan',
 			'notif'	=> 0,
 			'url'	=> 'menu.cover',
 		],
 		'profile' => [
 			'id'	=> 'profile',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-user-heart',
 			'title'	=> 'profil pasangan',
 			'notif'	=> 0,
 			'url'	=> 'menu.profile',
 		],
 		'detail' => [
 			'id'	=> 'detail',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-calendar-event',
 			'title'	=> 'detail undangan',
 			'notif'	=> 0,
 			'url'	=> 'menu.detail',
 		],
 		'quote' => [
 			'id'	=> 'quote',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-message-square-dots',
 			'title'	=> 'quote',
 			'notif'	=> 0,
 			'url'	=> 'menu.quote',
 		],
 		'event' => [
 			'id'	=> 'event',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-calendar-check',
 			'title'	=> 'sesi acara',
 			'notif'	=> 0,
 			'url'	=> 'menu.event',
 		],
 		'story' => [
 			'id'	=> 'story',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-heart',
 			'title'	=> 'kisah cinta',
 			'notif'	=> 0,
 			'url'	=> 'menu.story',
 		],
 		'gallery' => [
 			'id'	=> 'gallery',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-images',
 			'title'	=> 'galeri',
 			'notif'	=> 0,
 			'url'	=> 'menu.gallery',
 		],
 		'music' => [
 			'id'	=> 'music',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-music',
 			'title'	=> 'musik',
 			'notif'	=> 0,
 			'url'	=> 'menu.music',
 		],
 		'rsvp' => [
 			'id'	=> 'rsvp',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-check-square',
 			'title'	=> 'rsvp',
 			'notif'	=> 0,
 			'url'	=> 'menu.rsvp',
 		],
 		'additional-info' => [
 			'id'	=> 'additional-info',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-info-circle',
 			'title'	=> 'info tambahan',
 			'notif'	=> 0,
 			'url'	=> 'menu.additional',
 		],
 		'gift' => [
 			'id'	=> 'gift',
-			'icon'	=> 'social-media_2065064.png',
-			'title'	=> 'Amlop Digital',
+			'icon'	=> 'bx bx-gift',
+			'title'	=> 'Amplop Digital',
 			'notif'	=> 0,
 			'url'	=> 'menu.gift',
 		],
 		'wishes' => [
 			'id'	=> 'wishes',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-message-rounded-dots',
 			'title'	=> 'Ucapan',
 			'notif'	=> 0,
 			'url'	=> 'menu.wishes',
 		],
 		'presenting' => [
 			'id'	=> 'presenting',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-user-check',
 			'title'	=> 'Konfirmasi Kehadiran',
 			'notif'	=> 0,
 			'url'	=> 'menu.presenting',
 		],
 		'share' => [
 			'id'	=> 'share',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-share-alt',
 			'title'	=> 'Bagikan',
 			'notif'	=> 0,
 			'url'	=> 'menu.share',
 		],
 		'reservation' => [
 			'id'	=> 'reservation',
-			'icon'	=> 'receptionist-icon.png',
+			'icon'	=> 'bx bx-id-card',
 			'title'	=> 'penerima tamu',
 			'notif'	=> 0,
 			'url'	=> 'menu.reservation',
 		],
 		'table-management' => [
 			'id'	=> 'table-management',
-			'icon'	=> 'table-icon.svg',
+			'icon'	=> 'bx bx-table',
 			'title'	=> 'kelola meja',
 			'notif'	=> 0,
 			'url'	=> 'menu.management',
 		],
 		'souvenir' => [
 			'id'	=> 'souvenir',
-			'icon'	=> 'souvenir-icon.png',
+			'icon'	=> 'bx bx-gift',
 			'title'	=> 'souvenir',
 			'notif'	=> 0,
 			'url'	=> 'menu.souvenir',
 		],
 		'e-invitation' => [
 			'id'	=> 'e-invitation',
-			'icon'	=> 'social-media_2065064.png',
+			'icon'	=> 'bx bx-envelope',
 			'title'	=> 'e-invitation',
 			'notif'	=> 0,
 			'url'	=> 'menu.einvitation',
@@ -1335,6 +1335,17 @@ class InvitationController extends Controller
 			$preset['profile']['photo']['female']['frame'] = $request->input('profile_photo_female_frame') ?? '';
 			$preset['profile']['instagram']['show'] = ($request->input('profile_instagram_show') === 'on') ? false : true;
 			$preset['profile']['parent']['show'] = ($request->input('profile_parent_show') === 'on') ? false : true;
+
+			// Validasi field wajib profil
+			$this->validate($request, $column);
+
+			// Simpan dan return langsung — sama seperti cover
+			$save_inv_column['preset'] = json_encode($preset);
+			$recent_inv->update($save_inv_column);
+			return response()->json([
+				'toast' => ['icon' => 'success', 'title' => 'Disimpan!', 'text' => 'Profil pasangan berhasil disimpan.'],
+				'page'  => 'idle',
+			]);
 		elseif ($menu=='detail') :
 			$column['detail_calendar_date'] = 'required';
 			$column['detail_calendar_time'] = 'required';

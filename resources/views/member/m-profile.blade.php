@@ -396,6 +396,68 @@ $(function() {
 		});
 		$("#storage").modal('hide');
 	});
+
+	// ── AJAX submit — cegah form submit normal, tampilkan toast seperti menu lain ──
+	$("form.save-menu").off('submit').on('submit', function(e) {
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		var $form  = $(this),
+			action = $form.attr('action'),
+			$btn   = $form.find('button[type=submit]'),
+			csrf   = $('meta[name=csrf-token]').attr('content');
+
+		// Loading state
+		$btn.prop('disabled', true);
+		$btn.find('i').removeClass('bx-save').addClass('bx-loader bx-spin');
+		$btn.find('span').text('Menyimpan...');
+		$('sup[role=alert]').remove();
+
+		$.ajax({
+			type:        'POST',
+			url:         action,
+			data:        new FormData(this),
+			contentType: false,
+			processData: false,
+			cache:       false,
+			headers:     { 'X-CSRF-TOKEN': csrf },
+			success: function(res) {
+				$btn.prop('disabled', false);
+				$btn.find('i').removeClass('bx-loader bx-spin').addClass('bx-check');
+				$btn.find('span').text('Tersimpan!');
+				setTimeout(function() {
+					$btn.find('i').removeClass('bx-check').addClass('bx-save');
+					$btn.find('span').text('simpan');
+				}, 2500);
+				// Tampilkan toast sukses
+				if (typeof Swal !== 'undefined') {
+					Swal.mixin({
+						toast: true, position: 'top-end',
+						showConfirmButton: false, timer: 3500, timerProgressBar: true
+					}).fire({
+						icon:  (res.toast && res.toast.icon)  ? res.toast.icon  : 'success',
+						title: (res.toast && res.toast.title) ? res.toast.title : 'Disimpan!',
+						text:  (res.toast && res.toast.text)  ? res.toast.text  : 'Profil pasangan berhasil disimpan.'
+					});
+				}
+			},
+			error: function(xhr) {
+				$btn.prop('disabled', false);
+				$btn.find('i').removeClass('bx-loader bx-spin').addClass('bx-save');
+				$btn.find('span').text('simpan');
+				$('sup[role=alert]').remove();
+				if (xhr.responseJSON && xhr.responseJSON.errors) {
+					$.each(xhr.responseJSON.errors, function(field, msg) {
+						$('var[dir=' + field + ']').after(
+							'<sup role="alert" style="color:red;margin-left:4px" title="' + (Array.isArray(msg) ? msg[0] : msg) + '">!</sup>'
+						);
+					});
+				}
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({ icon: 'warning', title: 'Periksa kembali', text: 'Lengkapi semua field yang diperlukan.', confirmButtonColor: '#2d7a4f' });
+				}
+			}
+		});
+	});
 });
 </script>
 @endpush

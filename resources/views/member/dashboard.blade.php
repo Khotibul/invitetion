@@ -304,7 +304,7 @@
         // **
         @endphp
         <a href="{{ route($item['url']) }}" @class(['shadow-sm', 'rounded', 'p-3', 'lock' => $lock[$item['id']]])>
-            <img src="{{ url('images/icons/'.$item['icon']) }}" alt="{{ $item['title'] }}">
+            <i class="{{ $item['icon'] }}"></i>
             <span>{{ Str::upper($item['title']) }}</span>
         </a>
         @endforeach
