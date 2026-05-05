@@ -20,6 +20,18 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show py-2">
+        <i class="bx bx-error-circle me-1"></i>
+        <ul class="mb-0 ps-3">
+            @foreach($errors->all() as $err)
+            <li class="small">{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <div class="row g-3">
         {{-- Info Transaksi --}}
         <div class="col-lg-4">
@@ -30,22 +42,47 @@
                 <div class="card-body px-3 py-2">
                     <table class="table table-sm mb-0">
                         <tr>
-                            <td class="text-muted small">No. Invoice</td>
-                            <td class="fw-semibold small text-primary">{{ $invoice->content->invoice_number ?? '-' }}:{{ $invoice->payment_code }}</td>
+                            <td class="text-muted small" style="width:40%">No. Invoice</td>
+                            <td class="fw-semibold small text-primary">
+                                {{ $invoice->content->invoice_number ?? '-' }}:{{ $invoice->payment_code }}
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-muted small">User</td>
-                            <td class="small">{{ $invoice->user->name }}<br><span class="text-muted">{{ $invoice->user->email }}</span></td>
+                            <td class="small">
+                                {{ $invoice->user->name ?? '-' }}
+                                <br><span class="text-muted">{{ $invoice->user->email ?? '' }}</span>
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-muted small">Metode</td>
-                            <td class="small">{{ $invoice->payment_link === '#manual' ? 'Transfer Manual' : 'Otomatis' }}</td>
+                            <td class="small">
+                                {{ $invoice->payment_link === '#manual' ? 'Transfer Manual' : 'Otomatis (Xendit)' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Status saat ini</td>
+                            <td class="small">
+                                @if($invoice->status === 'CONFIRMED')
+                                    <span class="badge bg-success">Confirmed</span>
+                                @else
+                                    <span class="badge bg-warning">Pending</span>
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-muted small">Dibuat</td>
-                            <td class="small">{{ Carbon::parse($invoice->created_at)->locale('id')->translatedFormat('d F Y') }}</td>
+                            <td class="small">
+                                {{ Carbon::parse($invoice->created_at)->locale('id')->translatedFormat('d F Y') }}
+                            </td>
                         </tr>
                     </table>
+                </div>
+                <div class="card-footer border-0 px-3 py-2">
+                    <a href="{{ route('invoice-transaction.show', $invoice->id) }}"
+                       class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bx bx-show me-1"></i> Lihat Detail
+                    </a>
                 </div>
             </div>
         </div>
@@ -59,7 +96,7 @@
                 <div class="card-body px-3 py-3">
                     <form method="POST" action="{{ route('invoice-transaction.update', $invoice->id) }}">
                         @csrf
-                        @method('PUT')
+                        @method('PATCH')
 
                         <div class="row g-3">
                             {{-- Status --}}
@@ -67,20 +104,24 @@
                                 <label class="form-label fw-semibold small">
                                     Status <span class="text-danger">*</span>
                                 </label>
-                                <select name="status" class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="PENDING"    {{ $invoice->status === 'PENDING'    ? 'selected' : '' }}>
-                                        Pending (Menunggu)
+                                <select name="status"
+                                        class="form-select @error('status') is-invalid @enderror"
+                                        required>
+                                    <option value="PENDING"
+                                        {{ old('status', $invoice->status) === 'PENDING' ? 'selected' : '' }}>
+                                        Pending — Menunggu
                                     </option>
-                                    <option value="CONFIRMED"  {{ $invoice->status === 'CONFIRMED'  ? 'selected' : '' }}>
-                                        Confirmed (Selesai)
+                                    <option value="CONFIRMED"
+                                        {{ old('status', $invoice->status) === 'CONFIRMED' ? 'selected' : '' }}>
+                                        Confirmed — Selesai
                                     </option>
                                 </select>
                                 @error('status')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">
+                                <small class="text-muted d-block mt-1">
                                     <i class="bx bx-info-circle me-1"></i>
-                                    Mengubah ke CONFIRMED akan mengaktifkan paket user.
+                                    Status CONFIRMED akan mengaktifkan paket user.
                                 </small>
                             </div>
 
@@ -91,7 +132,8 @@
                                 </label>
                                 <input type="date" name="date"
                                        class="form-control @error('date') is-invalid @enderror"
-                                       value="{{ old('date', $invoice->date) }}" required>
+                                       value="{{ old('date', $invoice->date) }}"
+                                       required>
                                 @error('date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -102,12 +144,14 @@
                                 <label class="form-label fw-semibold small">
                                     Paket <span class="text-danger">*</span>
                                 </label>
-                                <select name="package_id" class="form-select @error('package_id') is-invalid @enderror" required>
+                                <select name="package_id"
+                                        class="form-select @error('package_id') is-invalid @enderror"
+                                        required>
                                     <option value="">-- Pilih Paket --</option>
                                     @foreach($packages as $pkg)
                                     <option value="{{ $pkg->id }}"
                                         {{ old('package_id', $invoice->package_id) == $pkg->id ? 'selected' : '' }}>
-                                        {{ $pkg->title }} — {{ number_format($pkg->price, 0, ',', '.') }}
+                                        {{ $pkg->title }} — Rp {{ number_format($pkg->price, 0, ',', '.') }}
                                     </option>
                                     @endforeach
                                 </select>
@@ -119,14 +163,14 @@
                             {{-- Jumlah Bayar --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small">
-                                    Jumlah Bayar (Rp) <span class="text-danger">*</span>
+                                    Jumlah Bayar <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
                                     <input type="number" name="amount"
                                            class="form-control @error('amount') is-invalid @enderror"
                                            value="{{ old('amount', $invoice->amount) }}"
-                                           min="0" required>
+                                           min="0" step="1000" required>
                                 </div>
                                 @error('amount')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -140,7 +184,8 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="bx bx-save me-1"></i> Simpan Perubahan
                             </button>
-                            <a href="{{ route('invoice-transaction.show', $invoice->id) }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('invoice-transaction.show', $invoice->id) }}"
+                               class="btn btn-outline-secondary">
                                 Batal
                             </a>
                         </div>

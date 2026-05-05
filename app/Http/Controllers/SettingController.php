@@ -46,39 +46,45 @@ class SettingController extends Controller
 			$greating .= "Selamat siang";
 		elseif ($hour >= 15 && $hour < 18) :
 			$greating .= "Selamat sore";
-		elseif ($hour >= 18 && $hour < 00) :
+		elseif ($hour >= 18 && $hour < 24) :
 			$greating .= "Selamat Malam";
 		else :
 			$greating .= "Masih dini hari, gunakan waktu sebaik mungkin untuk istirahat";
 		endif;
 		$greating .= "</span>.";
+
+		// Cache stats 2 menit — cukup fresh untuk dashboard admin
+		$pendingCount    = \Illuminate\Support\Facades\Cache::remember('admin_pending_count', 120, fn() => AccountInvoice::whereStatus('PENDING')->count());
+		$invitationCount = \Illuminate\Support\Facades\Cache::remember('admin_invitation_count', 120, fn() => Invitation::count());
+		$templateCount   = \Illuminate\Support\Facades\Cache::remember('admin_template_count', 300, fn() => Template::count());
+
 		$transaction = [
 			[
-				'icon'	=> 'bx bx-user-circle',
-				'title'	=> 'menunggu pembayaran',
-				'url'	=> route('invoice-transaction.index'),
-				'data'	=> AccountInvoice::whereStatus('PENDING')->count()
+				'icon'  => 'bx bx-credit-card',
+				'title' => 'menunggu pembayaran',
+				'url'   => route('invoice-transaction.index'),
+				'data'  => $pendingCount,
 			],
 			[
-				'icon'	=> 'bx bx-box',
-				'title'	=> 'menunggu konfirmasi',
-				'url'	=> route('invoice-transaction.index'),
-				'data'	=> AccountInvoice::whereStatus('PENDING')->count()
-			]
+				'icon'  => 'bx bx-time',
+				'title' => 'menunggu konfirmasi',
+				'url'   => route('invoice-transaction.index'),
+				'data'  => $pendingCount,
+			],
 		];
 		$dashboard = [
 			[
-				'icon'	=> 'bx bx-user-circle',
-				'title'	=> 'undangan',
-				'url'	=> route('member.index'),
-				'data'	=> Invitation::count()
+				'icon'  => 'bx bx-user-circle',
+				'title' => 'undangan',
+				'url'   => route('member.index'),
+				'data'  => $invitationCount,
 			],
 			[
-				'icon'	=> 'bx bx-box',
-				'title'	=> 'template',
-				'url'	=> route('template.index'),
-				'data'	=> Template::count()
-			]
+				'icon'  => 'bx bx-layer',
+				'title' => 'template',
+				'url'   => route('template.index'),
+				'data'  => $templateCount,
+			],
 		];
 		$data = ['title' => 'Dasbor'];
 
@@ -174,7 +180,11 @@ class SettingController extends Controller
 		$ids = explode(',', $request->id);
 		$ids_count = count($ids);
 		foreach (Strbox::whereIn('id', $ids)->get() as $item) :
-			Storage::delete('public/'.$item->file, 'public/md/'.$item->file, 'public/sm/'.$item->file, 'public/xs/'.$item->file);
+			foreach ([$item->file, 'md/'.$item->file, 'sm/'.$item->file, 'xs/'.$item->file] as $path) :
+				if (Storage::disk('public')->exists($path)) :
+					Storage::disk('public')->delete($path);
+				endif;
+			endforeach;
 			Strbox::whereId($item->id)->delete();
 		endforeach;
 

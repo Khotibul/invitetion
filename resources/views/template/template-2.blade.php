@@ -4,9 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+<title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
 <meta property="og:image" content="{{ $ogImage }}">
-<meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+<meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
 <meta name="theme-color" content="#2d7a4f">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -154,7 +154,7 @@ h1,h2,h3,h4{font-family:'DM Serif Display',serif}
         <img src="{{ $coverSrc }}" alt="cover" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.2);margin-bottom:1.5rem">
         @endif
         <div class="cover-tag">Undangan Pernikahan</div>
-        <h1 class="cover-names">{{ $femaleName }}<span class="cover-amp"> &amp; </span>{{ $maleName }}</h1>
+        <h1 class="cover-names">{{ $femaleNickname }}<span class="cover-amp"> &amp; </span>{{ $maleNickname }}</h1>
         <p class="cover-date">{{ $weddingDateShort }}</p>
         @if($other['guest'])<div class="cover-guest">Kepada Yth.<strong>{{ $other['guest']['name'] ?? '' }}</strong></div>@endif
         <button class="btn-open" id="btnOpen"><i class="fa-solid fa-envelope-open-text"></i> {{ $coverButton }}</button>
@@ -172,7 +172,7 @@ h1,h2,h3,h4{font-family:'DM Serif Display',serif}
     <div class="hero-leaf2">🌿</div>
     <div class="hero-inner reveal">
         <p class="hero-tag">The Wedding of</p>
-        <h1 class="hero-names">{{ $femaleName }}<span class="hero-amp">&amp;</span>{{ $maleName }}</h1>
+        <h1 class="hero-names">{{ $femaleNickname }}<span class="hero-amp">&amp;</span>{{ $maleNickname }}</h1>
         <div class="hero-bar"></div>
         <p class="hero-date">{{ $weddingDateFormatted }}</p>
         @if($quoteContent)<p class="hero-quote">"{{ $quoteContent }}"</p>@endif
@@ -283,7 +283,7 @@ h1,h2,h3,h4{font-family:'DM Serif Display',serif}
 @include('template.partials.rsvp-wishes')
 
 <footer class="site-footer">
-    <h2 class="footer-names">{{ $femaleName }} &amp; {{ $maleName }}</h2>
+    <h2 class="footer-names">{{ $femaleNickname }} &amp; {{ $maleNickname }}</h2>
     @if($showClosing && $closingText)<p style="font-size:.85rem;margin-top:.5rem">{{ $closingText }}</p>@endif
     <p class="footer-brand">Risa Digital Invitation</p>
 </footer>

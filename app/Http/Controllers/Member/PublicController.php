@@ -27,7 +27,7 @@ class PublicController extends Controller
 		}
 
 		$invitation = Invitation::select('id', 'title', 'slug', 'file', 'preset', 'publish', 'user_id', 'template_id')
-			->with('temp')
+			->with('temp:id,url,title')
 			->where('slug', $slug)
 			->first();
 
@@ -37,7 +37,7 @@ class PublicController extends Controller
 
 		// Cek aktivasi — status CONFIRMED (case-insensitive)
 		$invitation_activation = AccountInvoice::select('date', 'package_id')
-			->with('pack')
+			->with('pack:id,content,title')
 			->whereRaw('UPPER(status) = ?', ['CONFIRMED'])
 			->where('user_id', $invitation->user_id)
 			->latest()
@@ -54,12 +54,12 @@ class PublicController extends Controller
 			}
 		}
 
-		// Cek expired — jika expired tampilkan halaman expired, bukan 404
+		// Cek expired
 		if (isexpired($activation_date, $invitation_active) === true) {
 			return response()->view('errors.invitation-expired', compact('invitation'), 402);
 		}
 
-		// Undangan draft hanya bisa dilihat oleh pemiliknya (member yang login)
+		// Undangan draft hanya bisa dilihat oleh pemiliknya
 		if ($invitation->publish !== 'publish') {
 			$isOwner = auth()->check() && auth()->id() === (int) $invitation->user_id;
 			if (!$isOwner) {
@@ -88,46 +88,55 @@ class PublicController extends Controller
 			? json_decode($invitation_activation->pack->content)
 			: null;
 
+		// Load semua relasi sekaligus — hindari N+1
+		$invId = $invitation->id;
+		$photo = InvitationGallery::select('id', 'type', 'title', 'content', 'invitation_id')
+			->where('type', 'photo')->where('invitation_id', $invId)->first();
+		$video = InvitationGallery::select('id', 'type', 'title', 'content', 'invitation_id')
+			->where('type', 'video')->where('invitation_id', $invId)->first();
+
+		if ($photo) $photo->prop = json_decode($photo->content);
+		if ($video) $video->prop = json_decode($video->content);
+
 		$other = [
-			'video'    => InvitationGallery::where('type', 'video')->where('invitation_id', $invitation->id)->first(),
-			'photo'    => InvitationGallery::where('type', 'photo')->where('invitation_id', $invitation->id)->first(),
+			'video'    => $video,
+			'photo'    => $photo,
 			'protocol' => $protocol,
-			'event'    => ($packContent && !empty($packContent->event))
-				? InvitationEvent::where('invitation_id', $invitation->id)->get()
-				: InvitationEvent::where('invitation_id', $invitation->id)->get(),
-			'story'    => ($packContent && !empty($packContent->story))
-				? InvitationStory::where('invitation_id', $invitation->id)->get()
-				: InvitationStory::where('invitation_id', $invitation->id)->get(),
+			'event'    => InvitationEvent::select('id', 'title', 'content', 'publish', 'invitation_id')
+				->where('invitation_id', $invId)->get(),
+			'story'    => InvitationStory::select('id', 'title', 'content', 'created_at', 'invitation_id')
+				->where('invitation_id', $invId)->get(),
 			'guest'    => null,
 		];
-
-		if ($other['photo']) {
-			$other['photo']->prop = json_decode($other['photo']->content);
-		}
-		if ($other['video']) {
-			$other['video']->prop = json_decode($other['video']->content);
-		}
 
 		// Guest personalization
 		$guestSlug = request()->get('to');
 		if (!empty($guestSlug)) {
 			$guest = InvitationGuest::select('type', 'name')
 				->where('slug', $guestSlug)
-				->where('invitation_id', $invitation->id)
+				->where('invitation_id', $invId)
 				->first();
 			$other['guest'] = $guest ? json_decode($guest->name, true) : null;
 		}
 
 		$templateUrl = $invitation->temp?->url ?? 'default';
 
-		// Fallback jika view template tidak ada
 		if (!\Illuminate\Support\Facades\View::exists('template.'.$templateUrl)) {
 			$templateUrl = 'default';
 		}
 
 		$helpers = $this->resolveHelperVars($data, $invitation, $other);
 
-		return response()->view('template.'.$templateUrl, array_merge(compact('invitation', 'data', 'other'), $helpers));
+		$response = response()->view(
+			'template.'.$templateUrl,
+			array_merge(compact('invitation', 'data', 'other'), $helpers)
+		);
+
+		// Cache-Control: undangan publish bisa di-cache browser 5 menit
+		$response->header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+		$response->header('Vary', 'Accept-Encoding');
+
+		return $response;
 	}
 
 	public function invitation_present(Request $request, string $slug): JsonResponse
@@ -376,9 +385,14 @@ class PublicController extends Controller
 	 */
 	private function resolveHelperVars(object $data, object $invitation, array $other): array
 	{
-		// ── Nama pasangan
+		// Nama lengkap (profil) — untuk section couple/profil
 		$maleName   = (string)($data->profile->name->male   ?? $data->cover->name->male   ?? 'Mempelai Pria');
 		$femaleName = (string)($data->profile->name->female ?? $data->cover->name->female ?? 'Mempelai Wanita');
+
+		// Nama panggilan (cover) — untuk cover overlay, hero, judul, footer
+		$maleNickname   = (string)($data->cover->name->male   ?? $maleName);
+		$femaleNickname = (string)($data->cover->name->female ?? $femaleName);
+
 		$maleInitial   = strtoupper(substr(trim($maleName),   0, 1)) ?: 'M';
 		$femaleInitial = strtoupper(substr(trim($femaleName), 0, 1)) ?: 'W';
 
@@ -488,7 +502,8 @@ class PublicController extends Controller
 		$invSlug = $invitation->slug ?? request()->route('slug') ?? '';
 
 		return compact(
-			'maleName', 'femaleName', 'maleInitial', 'femaleInitial',
+			'maleName', 'femaleName', 'maleNickname', 'femaleNickname',
+			'maleInitial', 'femaleInitial',
 			'weddingDate', 'weddingTime', 'weddingTz', 'weddingDateFormatted', 'weddingDateShort',
 			'maleMethod', 'maleImg', 'maleFrame', 'femaleMethod', 'femaleImg', 'femaleFrame',
 			'maleSrc', 'femaleSrc', 'coverSrc', 'ogImage',

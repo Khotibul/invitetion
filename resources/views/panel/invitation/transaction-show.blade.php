@@ -28,11 +28,11 @@
                     <table class="table">
                         <tr>
                             <td>Nama</td>
-                            <td>{{ $invoice->user->name }}</td>
+                            <td>{{ $invoice->user->name ?? '-' }}</td>
                         </tr>
                         <tr>
                             <td>Email</td>
-                            <td>{{ $invoice->user->email }}</td>
+                            <td>{{ $invoice->user->email ?? '-' }}</td>
                         </tr>
                     </table>
 				</div>
@@ -84,7 +84,7 @@
                     @if ($invoice->status=='PENDING')
                     <div class="border rounded p-3">
                         <h6 class="mb-2"><i class="bx bx-error me-2"></i>Konfirmasi</h6>
-                        <p>Terima konfirmasi pembayaran untuk mengaktifkan akun <b>{{ $invoice->user->name }}</b>.</p>
+                        <p>Terima konfirmasi pembayaran untuk mengaktifkan akun <b>{{ $invoice->user->name ?? '-' }}</b>.</p>
                         <div>
                             <a href="{{ route('invoice-transaction.confirm', ['id'=>$invoice->id, 'status'=>'approve']) }}" class="btn btn-success w-100 mb-2">
                                 <i class="bx bx-check-double"></i>

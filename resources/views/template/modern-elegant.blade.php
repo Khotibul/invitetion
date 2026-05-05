@@ -5,9 +5,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Wedding of {{ $maleName }} & {{ $femaleName }} | Risa Digital Invitation</title>
+<title>Wedding of {{ $maleNickname }} & {{ $femaleNickname }} | Risa Digital Invitation</title>
 <meta property="og:image" content="{{ $ogImage }}">
-<meta property="og:title" content="Wedding of {{ $maleName }} & {{ $femaleName }}">
+<meta property="og:title" content="Wedding of {{ $maleNickname }} & {{ $femaleNickname }}">
 <meta name="theme-color" content="#2d7a4f">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -126,7 +126,7 @@ h1,h2,h3{font-family:var(--font-heading)}
     <div class="cover-inner">
         <div class="cover-ornament">❦</div>
         <p class="cover-title">The Wedding of</p>
-        <h1 class="cover-names">{{ $femaleName }}<span class="cover-amp">&</span>{{ $maleName }}</h1>
+        <h1 class="cover-names">{{ $femaleNickname }}<span class="cover-amp">&</span>{{ $maleNickname }}</h1>
         <p class="cover-date"><i class="fa-regular fa-calendar" style="margin-right:.4rem"></i>{{ $weddingDateFormatted }}</p>
         <p class="cover-sub">{{ $coverContent }}</p>
         @if($other['guest'])<p class="cover-guest">Kepada Yth.<strong>{{ $other['guest']['name'] ?? '' }}</strong></p>@endif
@@ -146,7 +146,7 @@ h1,h2,h3{font-family:var(--font-heading)}
     <div class="hero-content reveal">
         <div class="ornament" style="color:var(--color-gold);font-size:2rem;margin-bottom:.5rem">❦</div>
         <h1>The Wedding of</h1>
-        <div class="couple-names"><span>{{ $femaleName }}</span><span class="amp">&</span><span>{{ $maleName }}</span></div>
+        <div class="couple-names"><span>{{ $femaleNickname }}</span><span class="amp">&</span><span>{{ $maleNickname }}</span></div>
         <div class="divider"></div>
         <p class="subtitle">{{ $coverContent }}</p>
         @if($quoteContent)<p style="font-style:italic;color:var(--color-muted);font-size:.9rem;max-width:500px;margin:0 auto">"{{ $quoteContent }}"</p>@endif
@@ -292,7 +292,7 @@ h1,h2,h3{font-family:var(--font-heading)}
 
 {{-- Footer --}}
 <footer class="site-footer">
-    <h2 class="footer-names" style="font-family:var(--font-heading)">{{ $femaleName }} &amp; {{ $maleName }}</h2>
+    <h2 class="footer-names" style="font-family:var(--font-heading)">{{ $femaleNickname }} &amp; {{ $maleNickname }}</h2>
     @if($showClosing && $closingText)<p style="font-size:.85rem;margin-bottom:.5rem">{{ $closingText }}</p>@endif
     <p class="footer-brand">Risa Digital Invitation</p>
 </footer>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\Package;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,52 +19,64 @@ class AccountInvoiceController extends Controller
      */
     public function index(): Response
     {
-		$data = [
-			'title'	=> 'transaksi',
-			'list'	=> route('invoice-transaction.list'),
-			'create'=> ['action' => route('invoice-transaction.create')],
-			'delete'=> ['action' => route('invoice-transaction.destroy', 0), 'message' => 'Hapus layanan?']
-		];
+        $data = [
+            'title'  => 'transaksi',
+            'list'   => route('invoice-transaction.list'),
+            'create' => ['action' => route('invoice-transaction.create')],
+            'delete' => ['action' => route('invoice-transaction.destroy', 0), 'message' => 'Hapus transaksi?'],
+        ];
 
-		return response()->view('panel.invitation.transaction', compact('data'));
+        return response()->view('panel.invitation.transaction', compact('data'));
     }
 
     public function list(Request $request): JsonResponse
-	{
-		$totalFilteredRecord = $totalDataRecord = $draw_val = "";
-		$column = [0 => 'id', 1 => 'title', 2 => 'info', 3 => 'log'];
-		$totalDataRecord = AccountInvoice::count();
-		$totalFilteredRecord = $totalDataRecord;
-		$limit_val	= $request->input('length');
-		$start_val	= $request->input('start');
-		if (empty($request->input('search.value'))) :
-			$datatable = AccountInvoice::offset($start_val)->latest()->limit($limit_val)->get();
-		else :
-			$search_text = $request->input('search.value');
-			$datatable =  AccountInvoice::where('id', 'LIKE', "%{$search_text}%")->orWhere('payment_code', 'LIKE', "%{$search_text}%")->offset($start_val)->limit($limit_val)->get();
-			$totalFilteredRecord = AccountInvoice::where('id', 'LIKE', "%{$search_text}%")->orWhere('payment_code', 'LIKE', "%{$search_text}%")->count();
-		endif;
-		$data_val = [];
-		if (!empty($datatable)) :
-			foreach ($datatable as $key => $item) :
-                if ($item->status=='CONFIRMED') :
-                    $status = ['color'=>'bg-success', 'text'=>'selesai'];
-                elseif ($item->status=='PENDING' AND empty(json_decode($item->content)->payment)) :
-                    $status = ['color'=>'bg-info', 'text'=>'menunggu pembayaran'];
-                elseif ($item->status=='PENDING' AND !empty(json_decode($item->content)->payment)) :
-                    $status = ['color'=>'bg-warning', 'text'=>'menunggu konfirmasi'];
-                endif;
-				$data_val[$key]['id'] = input_check(name:"check[]", value:$item->id, class:['form-check-input', 'check-row'], mode:'multiple');
-				$data_val[$key]['title'] = anchor(text:json_decode($item->content)->invoice_number.':'.$item->payment_code, href:route('invoice-transaction.show', $item->id));
-				$data_val[$key]['info'] = $item->pack->title." &mdash; ".date('d/m/Y', strtotime($item->date));
-				$data_val[$key]['log'] = "<span class=\"badge {$status['color']}\">".Str::upper($status['text'])."</span>";
-			endforeach;
-		endif;
-		$draw_val = $request->input('draw');
-		$get_json_data = ["draw" => intval($draw_val), "recordsTotal" => intval($totalDataRecord), "recordsFiltered" => intval($totalFilteredRecord), "data" => $data_val];
+    {
+        $totalDataRecord     = AccountInvoice::count();
+        $totalFilteredRecord = $totalDataRecord;
+        $limit_val           = $request->input('length');
+        $start_val           = $request->input('start');
 
-		return response()->json($get_json_data);
-	}
+        if (empty($request->input('search.value'))) {
+            $datatable = AccountInvoice::with('pack', 'user')->offset($start_val)->latest()->limit($limit_val)->get();
+        } else {
+            $search_text         = $request->input('search.value');
+            $datatable           = AccountInvoice::with('pack', 'user')
+                ->where('id', 'LIKE', "%{$search_text}%")
+                ->orWhere('payment_code', 'LIKE', "%{$search_text}%")
+                ->offset($start_val)->limit($limit_val)->get();
+            $totalFilteredRecord = AccountInvoice::where('id', 'LIKE', "%{$search_text}%")
+                ->orWhere('payment_code', 'LIKE', "%{$search_text}%")->count();
+        }
+
+        $data_val = [];
+        foreach ($datatable as $key => $item) {
+            $content = json_decode($item->content);
+            $payment = $content->payment ?? null;
+
+            if ($item->status === 'CONFIRMED') {
+                $status = ['color' => 'bg-success', 'text' => 'selesai'];
+            } elseif ($item->status === 'PENDING' && empty($payment)) {
+                $status = ['color' => 'bg-info', 'text' => 'menunggu pembayaran'];
+            } elseif ($item->status === 'PENDING' && !empty($payment)) {
+                $status = ['color' => 'bg-warning', 'text' => 'menunggu konfirmasi'];
+            } else {
+                $status = ['color' => 'bg-secondary', 'text' => $item->status];
+            }
+
+            $invoiceNum = $content->invoice_number ?? '-';
+            $data_val[$key]['id']    = input_check(name: "check[]", value: $item->id, class: ['form-check-input', 'check-row'], mode: 'multiple');
+            $data_val[$key]['title'] = anchor(text: $invoiceNum . ':' . $item->payment_code, href: route('invoice-transaction.show', $item->id));
+            $data_val[$key]['info']  = ($item->pack->title ?? '-') . ' &mdash; ' . date('d/m/Y', strtotime($item->date));
+            $data_val[$key]['log']   = "<span class=\"badge {$status['color']}\">" . Str::upper($status['text']) . "</span>";
+        }
+
+        return response()->json([
+            'draw'            => intval($request->input('draw')),
+            'recordsTotal'    => intval($totalDataRecord),
+            'recordsFiltered' => intval($totalFilteredRecord),
+            'data'            => $data_val,
+        ]);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -84,42 +97,44 @@ class AccountInvoiceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Int $id)
+    public function show(int $id): Response
     {
-        $invoice = AccountInvoice::find($id);
+        $invoice          = AccountInvoice::with('pack', 'user')->findOrFail($id);
         $invoice->content = json_decode($invoice->content);
-        if ($invoice->status=='CONFIRMED') :
-            $status = ['color'=>'bg-success', 'text'=>'selesai'];
-        elseif ($invoice->status=='PENDING' AND empty($invoice->content->payment)) :
-            $status = ['color'=>'bg-info', 'text'=>'menunggu pembayaran'];
-        elseif ($invoice->status=='PENDING' AND !empty($invoice->content->payment)) :
-            $status = ['color'=>'bg-warning', 'text'=>'menunggu konfirmasi'];
-        endif;
-        if ($invoice->payment_link=='#manual') :
-            $bank = Bank::select('name', 'content', 'file')->whereId(base64_decode($invoice->content->bank))->first();
-        else :
-            $bank = null;
-        endif;
-        $data = [
-			'title'	=> 'transaksi',
-		];
+        $payment          = $invoice->content->payment ?? null;
 
-		return response()->view('panel.invitation.transaction-show', compact('data', 'invoice', 'bank', 'status'));
+        if ($invoice->status === 'CONFIRMED') {
+            $status = ['color' => 'bg-success', 'text' => 'selesai'];
+        } elseif ($invoice->status === 'PENDING' && empty($payment)) {
+            $status = ['color' => 'bg-info', 'text' => 'menunggu pembayaran'];
+        } elseif ($invoice->status === 'PENDING' && !empty($payment)) {
+            $status = ['color' => 'bg-warning', 'text' => 'menunggu konfirmasi'];
+        } else {
+            $status = ['color' => 'bg-secondary', 'text' => $invoice->status];
+        }
+
+        $bank = null;
+        if ($invoice->payment_link === '#manual' && !empty($invoice->content->bank ?? '')) {
+            $bank = Bank::select('name', 'content', 'file')
+                ->whereId(base64_decode($invoice->content->bank))
+                ->first();
+        }
+
+        $data = ['title' => 'transaksi'];
+
+        return response()->view('panel.invitation.transaction-show', compact('data', 'invoice', 'bank', 'status'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AccountInvoice $accountInvoice): \Illuminate\Http\Response
+    public function edit(int $id): Response
     {
-        $invoice = $accountInvoice;
-        $invoice->content = json_decode($invoice->content);
+        $invoice          = AccountInvoice::with('pack', 'user')->findOrFail($id);
+        $invoice->content = json_decode($invoice->content ?? '{}');
+        $packages         = Package::select('id', 'title', 'price')->publish()->get();
 
-        $packages = \App\Models\Package::select('id', 'title', 'price')->publish()->get();
-
-        $data = [
-            'title' => 'Edit Transaksi',
-        ];
+        $data = ['title' => 'Edit Transaksi'];
 
         return response()->view('panel.invitation.transaction-edit', compact('data', 'invoice', 'packages'));
     }
@@ -127,8 +142,10 @@ class AccountInvoiceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AccountInvoice $accountInvoice): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, int $id): RedirectResponse
     {
+        $accountInvoice = AccountInvoice::findOrFail($id);
+
         $request->validate([
             'status'     => 'required|in:PENDING,CONFIRMED',
             'date'       => 'required|date',
@@ -145,7 +162,7 @@ class AccountInvoiceController extends Controller
             'status'     => $request->status,
             'date'       => $request->date,
             'package_id' => $request->package_id,
-            'amount'     => $request->amount,
+            'amount'     => (int) $request->amount,
         ]);
 
         return redirect()->route('invoice-transaction.show', $accountInvoice->id)
@@ -154,25 +171,21 @@ class AccountInvoiceController extends Controller
 
     public function confirm(int $id, string $status): RedirectResponse
     {
-        $invoice = AccountInvoice::find($id);
-        if ($status=='approve') :
-            $column = [
-                'status' => Str::upper('confirmed')
-            ];
-        elseif ($status=='decline') :
+        $invoice = AccountInvoice::findOrFail($id);
+
+        if ($status === 'approve') {
+            $invoice->update(['status' => 'CONFIRMED']);
+        } elseif ($status === 'decline') {
             $prove = json_decode($invoice->content, true);
-            if (!empty($prove['payment']['image'])) :
-                if (Storage::disk('public')->exists($prove['payment']['image'])) :
+            if (!empty($prove['payment']['image'] ?? '')) {
+                if (Storage::disk('public')->exists($prove['payment']['image'])) {
                     Storage::disk('public')->delete($prove['payment']['image']);
-                endif;
-            endif;
-            $prove['payment']['date'] = null;
+                }
+            }
+            $prove['payment']['date']  = null;
             $prove['payment']['image'] = null;
-            $column = [
-                'content' => json_encode($prove)
-            ];
-        endif;
-        $invoice = $invoice->update($column);
+            $invoice->update(['content' => json_encode($prove)]);
+        }
 
         return redirect()->back();
     }
@@ -182,19 +195,21 @@ class AccountInvoiceController extends Controller
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $ids = explode(',', $request->id);
-		$ids_count = count($ids);
-		foreach (AccountInvoice::whereIn('id', $ids)->get() as $item) :
-            $item->content = json_decode($item->content);
-            if (Storage::disk('public')->exists($item->content->payment->image)) :
-                Storage::disk('public')->delete($item->content->payment->image);
-            endif;
-			AccountInvoice::whereId($item->id)->delete();
-		endforeach;
+        $ids       = explode(',', $request->id);
+        $ids_count = count($ids);
 
-		return response()->json([
-			'toast'		=> ['icon' => 'success', 'title' => ucfirst('dihapus'), 'html' => "<b>{$ids_count}</b> data telah buang"],
-			'redirect'	=> ['type' => 'dataTables']
-		]);
-	}
+        foreach (AccountInvoice::whereIn('id', $ids)->get() as $item) {
+            $content = json_decode($item->content);
+            $image   = $content->payment->image ?? null;
+            if ($image && Storage::disk('public')->exists($image)) {
+                Storage::disk('public')->delete($image);
+            }
+            $item->delete();
+        }
+
+        return response()->json([
+            'toast'    => ['icon' => 'success', 'title' => 'Dihapus', 'html' => "<b>{$ids_count}</b> data telah dihapus"],
+            'redirect' => ['type' => 'dataTables'],
+        ]);
+    }
 }

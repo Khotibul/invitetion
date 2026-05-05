@@ -71,13 +71,9 @@ function image_reducer($data, string $file_name): void
 			});
 			$canvas = \Image::canvas($w, $h);
 			$canvas->insert($img, 'center');
-			// Simpan ke disk aktif (r2 atau public)
-			Storage::disk(config('filesystems.default', 'public'))
-				->put($key . '/' . $file_name, $canvas->encode()->getEncoded());
+			Storage::disk('public')->put($key . '/' . $file_name, $canvas->encode()->getEncoded());
 		} catch (\Exception $e) {
-			// Fallback: simpan file asli tanpa resize
-			Storage::disk(config('filesystems.default', 'public'))
-				->put($key . '/' . $file_name, $data);
+			Storage::disk('public')->put($key . '/' . $file_name, $data);
 		}
 	}
 }

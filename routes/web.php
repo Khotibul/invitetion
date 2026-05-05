@@ -166,7 +166,9 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::get('activity-log/{id}/show', [SettingController::class, 'log_detail'])->name('setting.log_activity.show');
 	Route::delete('activity-log/clear', [SettingController::class, 'log_clear'])->name('setting.log_activity.clear');
 	// AccountInvoice
-	Route::resource('invoice-transaction', AccountInvoiceController::class);
+	Route::resource('invoice-transaction', AccountInvoiceController::class)->parameters([
+		'invoice-transaction' => 'id',
+	]);
 	Route::post('invoice-transaction/list', [AccountInvoiceController::class, 'list'])->name('invoice-transaction.list');
 	Route::get('invoice-transaction/{id}/{status}', [AccountInvoiceController::class, 'confirm'])->name('invoice-transaction.confirm');
 	// Bank

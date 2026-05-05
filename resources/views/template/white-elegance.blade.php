@@ -8,7 +8,7 @@
 @endphp
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+<title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
 <meta property="og:title" content="Wedding of {{ $femaleName }} &amp; {{ $maleName }}">
 <meta property="og:image" content="{{ $ogImage }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -446,9 +446,9 @@ section{padding:5rem 1.5rem}
 
     <p class="cover-title">The Wedding of</p>
     <h1 class="cover-names script">
-        {{ $femaleName }}
+        {{ $femaleNickname }}
         <span class="cover-amp">&</span>
-        {{ $maleName }}
+        {{ $maleNickname }}
     </h1>
     <p class="cover-sub">{{ $coverContent }}</p>
 
@@ -485,9 +485,9 @@ section{padding:5rem 1.5rem}
     <div class="hero-inner reveal">
         <p class="hero-eyebrow">The Wedding of</p>
         <h1 class="hero-names script">
-            {{ $femaleName }}
+            {{ $femaleNickname }}
             <span class="hero-amp script">&</span>
-            {{ $maleName }}
+            {{ $maleNickname }}
         </h1>
         <div class="hero-date">
             <i class="fa-regular fa-calendar" style="color:var(--gold);margin-right:.5rem"></i>
@@ -771,7 +771,7 @@ section{padding:5rem 1.5rem}
 {{-- ── FOOTER ── --}}
 <footer class="site-footer">
     <p class="script footer-names">
-        {{ $femaleName }} &amp; {{ $maleName }}
+        {{ $femaleNickname }} &amp; {{ $maleNickname }}
     </p>
     @if($showClosing && $closingText)
     <p style="font-size:.85rem;margin-top:.5rem">{{ $closingText }}</p>

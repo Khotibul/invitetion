@@ -5,9 +5,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+<title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
 <meta property="og:image" content="{{ $ogImage }}">
-<meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+<meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
 <meta name="theme-color" content="#c9a84c">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -585,9 +585,9 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
 
         <p class="cover-eyebrow">The Wedding of</p>
         <h1 class="cover-names">
-            {{ $femaleName }}
+            {{ $femaleNickname }}
             <span class="cover-amp">&amp;</span>
-            {{ $maleName }}
+            {{ $maleNickname }}
         </h1>
         <div class="cover-rule"></div>
         <p class="cover-date">{{ $weddingDateShort }}</p>
@@ -623,9 +623,9 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
     <div class="hero-inner reveal">
         <p class="hero-eyebrow">The Wedding of</p>
         <h1 class="hero-names">
-            {{ $femaleName }}
+            {{ $femaleNickname }}
             <span class="hero-amp">&amp;</span>
-            {{ $maleName }}
+            {{ $maleNickname }}
         </h1>
         <div class="hero-rule"></div>
         <p class="hero-date">{{ $weddingDateFormatted }}</p>
@@ -848,7 +848,7 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
     <div class="g-divider" style="margin-bottom:2rem">
         <span class="g-divider-icon" style="color:rgba(201,168,76,.4)">&#x2666;</span>
     </div>
-    <h2 class="footer-names">{{ $femaleName }} &amp; {{ $maleName }}</h2>
+    <h2 class="footer-names">{{ $femaleNickname }} &amp; {{ $maleNickname }}</h2>
     @if($showClosing && $closingText)
     <p class="footer-closing">{{ $closingText }}</p>
     @endif

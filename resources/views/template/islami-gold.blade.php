@@ -1,33 +1,11 @@
-﻿{{-- islami-gold template --}}
-
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
-@php
-    use Carbon\Carbon;
-    use Illuminate\Support\Str;
-    $weddingDate = $data->detail->calendar->date ?? now()->toDateString();
-    $weddingTime = $data->detail->calendar->time ?? '00:00';
-    $tz          = strtoupper($data->detail->calendar->timezone ?? 'WIB');
-    $maleName    = $data->profile->name->male   ?? ($data->cover->name->male   ?? 'Mempelai Pria');
-    $femaleName  = $data->profile->name->female ?? ($data->cover->name->female ?? 'Mempelai Wanita');
-    $maleMethod  = $data->profile->photo->male->method   ?? 'none';
-    $maleImg     = $data->profile->photo->male->image     ?? '';
-    $maleFrame   = $data->profile->photo->male->frame     ?? '';
-    $femaleMethod= $data->profile->photo->female->method  ?? 'none';
-    $femaleImg   = $data->profile->photo->female->image   ?? '';
-    $femaleFrame = $data->profile->photo->female->frame   ?? '';
-    $maleSrc     = (!empty($maleImg)   && $maleMethod   !== 'none') ? ($maleMethod   === 'storage' ? url('storage/sm/'.$maleImg)   : url('storage/avatar/'.$maleImg))   : null;
-    $femaleSrc   = (!empty($femaleImg) && $femaleMethod !== 'none') ? ($femaleMethod === 'storage' ? url('storage/sm/'.$femaleImg) : url('storage/avatar/'.$femaleImg)) : null;
-    $coverObj    = $data->cover->description->image ?? null;
-    $coverSrc    = ($coverObj && !empty($coverObj->image)) ? ($coverObj->method === 'asset' ? asset($coverObj->image) : url('storage/'.$coverObj->image)) : null;
-    $invFile     = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-    $ogImage     = $coverSrc ?? $invFile;
-@endphp
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Undangan Pernikahan {{ $maleName }} &amp; {{ $femaleName }}</title>
-<meta property="og:title"       content="Undangan Pernikahan {{ $maleName }} & {{ $femaleName }}">
+<title>Undangan Pernikahan {{ $maleNickname }} &amp; {{ $femaleNickname }}</title>
+<meta property="og:title"       content="Undangan Pernikahan {{ $maleNickname }} & {{ $femaleNickname }}">
 <meta property="og:image"       content="{{ $ogImage }}">
 <meta property="og:description" content="Kami mengundang kehadiran Anda di hari bahagia kami">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,13 +83,11 @@ a{text-decoration:none;color:inherit}
     font-size:.8rem;letter-spacing:3px;text-transform:uppercase;
     color:var(--gold-light);margin:1rem 0;
 }
-@if($coverSrc)
 .cover-photo{
     width:130px;height:130px;border-radius:50%;object-fit:cover;
     border:3px solid var(--gold);margin-bottom:1.2rem;
     box-shadow:0 0 0 6px rgba(201,168,76,.15);
 }
-@endif
 .cover-guest{
     font-size:.8rem;color:rgba(255,255,255,.6);margin-bottom:.3rem;
 }
@@ -471,13 +447,13 @@ textarea.f-input{resize:vertical;min-height:90px}
     <p class="cover-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
     <p class="cover-label">Undangan Pernikahan</p>
     <h1 class="cover-names script">
-        {{ $maleName }}
+        {{ $maleNickname }}
         <span class="cover-amp script">&amp;</span>
-        {{ $femaleName }}
+        {{ $femaleNickname }}
     </h1>
     <p class="cover-date">
         <i class="fa-regular fa-calendar" style="margin-right:.4rem"></i>
-        {{ Carbon::parse($weddingDate)->locale('id')->translatedFormat('l, d F Y') }}
+        {{ $weddingDateFormatted }}
     </p>
 
     @if($other['guest'])
@@ -492,15 +468,15 @@ textarea.f-input{resize:vertical;min-height:90px}
 
     <button class="btn-open" id="btnOpen">
         <i class="fa-solid fa-envelope-open-text"></i>
-        {{ $data->cover->button ?? 'Buka Undangan' }}
+        {{ $coverButton }}
     </button>
 </div>
 
 {{-- ══ MAIN ══ --}}
 <div id="main">
 
-@if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
-<audio id="bgAudio" loop><source src="{{ $data->music->url }}" type="audio/mpeg"></audio>
+@if($showMusic && $musicUrl)
+<audio id="bgAudio" loop><source src="{{ $musicUrl }}" type="audio/mpeg"></audio>
 <button class="music-fab" id="musicFab"><i class="fa-solid fa-music"></i></button>
 @endif
 
@@ -511,17 +487,17 @@ textarea.f-input{resize:vertical;min-height:90px}
         <p class="hero-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
         <p class="hero-label">Undangan Pernikahan</p>
         <h1 class="hero-names script">
-            {{ $maleName }}
+            {{ $maleNickname }}
             <span class="hero-amp script">&amp;</span>
-            {{ $femaleName }}
+            {{ $femaleNickname }}
         </h1>
         <div class="hero-date-box">
             <i class="fa-regular fa-calendar" style="margin-right:.5rem"></i>
-            {{ Carbon::parse($weddingDate)->locale('id')->translatedFormat('l, d F Y') }}
-            &nbsp;|&nbsp; {{ $weddingTime }} {{ $tz }}
+            {{ $weddingDateFormatted }}
+            &nbsp;|&nbsp; {{ $weddingTime }} {{ $weddingTz }}
         </div>
-        @if(!empty($data->quote->content ?? ''))
-        <p class="hero-quote">"{{ $data->quote->content }}"</p>
+        @if(!empty($quoteContent ?? ''))
+        <p class="hero-quote">"{{ $quoteContent }}"</p>
         @endif
     </div>
     <div class="scroll-down"><span>Scroll</span><i class="fa-solid fa-chevron-down"></i></div>
@@ -557,22 +533,24 @@ textarea.f-input{resize:vertical;min-height:90px}
                     <img src="{{ $femaleSrc }}" alt="{{ $femaleName }}" class="couple-photo">
                     @if($femaleFrame)<img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" class="couple-frame-img">@endif
                     @else
-                    <div class="couple-photo-placeholder"><i class="fa-solid fa-user"></i></div>
+                    <div class="couple-photo-placeholder">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
                     @endif
                 </div>
                 <h3 class="couple-name">{{ $femaleName }}</h3>
                 <p class="couple-role">Mempelai Wanita</p>
-                @if(($data->profile->parent->show ?? false) === true)
+                @if($showParent)
                 <p class="couple-parent">
-                    Putri ke-{{ $data->profile->parent->female->childhood ?? '1' }} dari<br>
-                    Bapak {{ $data->profile->parent->female->father ?? '' }}<br>
-                    &amp; Ibu {{ $data->profile->parent->female->mother ?? '' }}
+                    Putri ke-{{ $femaleChildhood }} dari<br>
+                    Bapak {{ $femaleFather }}<br>
+                    &amp; Ibu {{ $femaleMother }}
                 </p>
                 @endif
-                @if(($data->profile->instagram->show ?? false) === true && !empty($data->profile->instagram->female ?? ''))
+                @if($showIg && !empty($femaleIg ?? ''))
                 <div class="couple-ig">
-                    <a href="https://instagram.com/{{ $data->profile->instagram->female }}" target="_blank">
-                        <i class="fa-brands fa-instagram"></i> @{{ $data->profile->instagram->female }}
+                    <a href="https://instagram.com/{{ $femaleIg }}" target="_blank">
+                        <i class="fa-brands fa-instagram"></i> @{{ $femaleIg }}
                     </a>
                 </div>
                 @endif
@@ -591,22 +569,24 @@ textarea.f-input{resize:vertical;min-height:90px}
                     <img src="{{ $maleSrc }}" alt="{{ $maleName }}" class="couple-photo">
                     @if($maleFrame)<img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" class="couple-frame-img">@endif
                     @else
-                    <div class="couple-photo-placeholder"><i class="fa-solid fa-user"></i></div>
+                    <div class="couple-photo-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
                     @endif
                 </div>
                 <h3 class="couple-name">{{ $maleName }}</h3>
                 <p class="couple-role">Mempelai Pria</p>
-                @if(($data->profile->parent->show ?? false) === true)
+                @if($showParent)
                 <p class="couple-parent">
-                    Putra ke-{{ $data->profile->parent->male->childhood ?? '1' }} dari<br>
-                    Bapak {{ $data->profile->parent->male->father ?? '' }}<br>
-                    &amp; Ibu {{ $data->profile->parent->male->mother ?? '' }}
+                    Putra ke-{{ $maleChildhood }} dari<br>
+                    Bapak {{ $maleFather }}<br>
+                    &amp; Ibu {{ $maleMother }}
                 </p>
                 @endif
-                @if(($data->profile->instagram->show ?? false) === true && !empty($data->profile->instagram->male ?? ''))
+                @if($showIg && !empty($maleIg ?? ''))
                 <div class="couple-ig">
-                    <a href="https://instagram.com/{{ $data->profile->instagram->male }}" target="_blank">
-                        <i class="fa-brands fa-instagram"></i> @{{ $data->profile->instagram->male }}
+                    <a href="https://instagram.com/{{ $maleIg }}" target="_blank">
+                        <i class="fa-brands fa-instagram"></i> @{{ $maleIg }}
                     </a>
                 </div>
                 @endif
@@ -639,12 +619,12 @@ textarea.f-input{resize:vertical;min-height:90px}
                     <span>
                         {{ date('H:i', strtotime($ep->time->start)) }}
                         @if(!($ep->time->done ?? false)) – {{ date('H:i', strtotime($ep->time->end)) }} @else – selesai @endif
-                        {{ $tz }}
+                        {{ $weddingTz }}
                     </span>
                 </div>
                 <div class="event-row">
                     <i class="fa-regular fa-calendar"></i>
-                    <span>{{ Carbon::parse($weddingDate)->locale('id')->translatedFormat('l, d F Y') }}</span>
+                    <span>{{ $weddingDateFormatted }}</span>
                 </div>
                 @if(!empty($ep->location->address ?? ''))
                 <div class="event-row">
@@ -666,7 +646,7 @@ textarea.f-input{resize:vertical;min-height:90px}
 @endif
 
 {{-- ── COUNTDOWN ── --}}
-@if(($data->detail->countdown->show ?? true) === true)
+@if($showCountdown)
 <section class="countdown-sec" id="countdown">
     <div class="sec-inner reveal" style="text-align:center">
         <p class="sec-label">Menghitung Hari</p>
@@ -679,7 +659,7 @@ textarea.f-input{resize:vertical;min-height:90px}
             <div class="cd-box"><span class="cd-num" id="cd-s">00</span><span class="cd-lbl">Detik</span></div>
         </div>
         @if(($data->detail->calendar->save->show ?? false) === true)
-        <a href="https://www.google.com/calendar/event?action=TEMPLATE&dates={{ date('Ymd',strtotime($weddingDate)) }}T090000Z%2F{{ date('Ymd',strtotime($weddingDate.' +1 days')) }}T090000Z&text={{ urlencode('Pernikahan '.$maleName.' & '.$femaleName) }}&location={{ urlencode($data->detail->location->address ?? '') }}"
+        <a href="https://www.google.com/calendar/event?action=TEMPLATE&dates={{ date('Ymd',strtotime($weddingDate)) }}T090000Z%2F{{ date('Ymd',strtotime($weddingDate.' +1 days')) }}T090000Z&text={{ urlencode('Pernikahan '.$maleName.' & '.$femaleName) }}&location={{ urlencode($locationAddress) }}"
            target="_blank"
            style="display:inline-flex;align-items:center;gap:.5rem;margin-top:1.5rem;padding:.6rem 1.8rem;border:1px solid var(--gold);color:var(--gold);font-size:.75rem;letter-spacing:2px;text-transform:uppercase;transition:all .3s"
            onmouseover="this.style.background='var(--gold)';this.style.color='var(--green-dark)'"
@@ -708,7 +688,7 @@ textarea.f-input{resize:vertical;min-height:90px}
             @foreach($other['story'] as $st)
             <div class="story-item reveal">
                 <div class="story-dot"><i class="fa-solid fa-heart"></i></div>
-                <p class="story-date">{{ Carbon::parse($st->created_at)->locale('id')->translatedFormat('d F Y') }}</p>
+                <p class="story-date">{{ \Carbon\Carbon::parse($st->created_at)->locale('id')->translatedFormat('d F Y') }}</p>
                 <h4 class="story-title">{{ $st->title }}</h4>
                 <p class="story-desc">{{ $st->content }}</p>
             </div>
@@ -741,19 +721,19 @@ textarea.f-input{resize:vertical;min-height:90px}
 </section>
 
 {{-- ── WISHES ── --}}
-@if(($data->wishes->public ?? false) === true)
+@if($showWishes)
 <section class="wishes-sec" id="wishes">
     <div class="sec-inner">
         <div style="text-align:center" class="reveal">
             <p class="sec-label">Ucapan &amp; Doa</p>
-            <h2 class="sec-title">{{ $data->wishes->title ?? 'Kirim Ucapan' }}</h2>
+            <h2 class="sec-title">{{ $wishesTitle ?? 'Kirim Ucapan' }}</h2>
             <div class="ornament-divider"><i class="fa-solid fa-hands-praying"></i></div>
-            @if(!empty($data->wishes->content ?? ''))
-            <p style="color:var(--gray);font-size:.9rem;margin-bottom:1.5rem">{{ $data->wishes->content }}</p>
+            @if(!empty($wishesContent ?? ''))
+            <p style="color:var(--gray);font-size:.9rem;margin-bottom:1.5rem">{{ $wishesContent }}</p>
             @endif
         </div>
         <form class="wishes-form reveal" id="wishForm"
-              action="{{ route('invitation.wish', request()->route('slug') ?? '') }}" method="post">
+              action="{{ $invSlug ? route('invitation.wish', $invSlug) : '#' }}" method="post">
             @csrf
             <label class="f-label">Nama <var dir="name"></var></label>
             <input type="text" name="name" class="f-input" placeholder="Nama Anda" required>
@@ -775,24 +755,24 @@ textarea.f-input{resize:vertical;min-height:90px}
     <div class="sec-inner">
         <div style="text-align:center" class="reveal">
             <p class="sec-label">Konfirmasi Kehadiran</p>
-            <h2 class="sec-title">{{ $data->rsvp->title ?? 'Apakah Anda Hadir?' }}</h2>
+            <h2 class="sec-title">{{ $rsvpTitle ?? 'Apakah Anda Hadir?' }}</h2>
             <div class="ornament-divider" style="color:var(--gold-light)"><i class="fa-solid fa-check-double"></i></div>
-            @if(!empty($data->rsvp->content ?? ''))
-            <p style="color:rgba(255,255,255,.6);font-size:.9rem">{{ $data->rsvp->content }}</p>
+            @if(!empty($rsvpContent ?? ''))
+            <p style="color:rgba(255,255,255,.6);font-size:.9rem">{{ $rsvpContent }}</p>
             @endif
         </div>
         <form class="rsvp-form reveal" id="rsvpForm"
-              action="{{ route('invitation.present', request()->route('slug') ?? '') }}" method="post">
+              action="{{ $invSlug ? route('invitation.present', $invSlug) : '#' }}" method="post">
             @csrf
             <input type="hidden" name="option" id="rsvpOpt" value="">
             <div class="rsvp-opts">
                 <button type="button" class="rsvp-opt" onclick="pickRsvp(this,'yes')">
                     <i class="fa-solid fa-check" style="margin-right:.3rem"></i>
-                    {{ $data->rsvp->yes->option ?? 'Hadir' }}
+                    {{ $rsvpYes ?? 'Hadir' }}
                 </button>
                 <button type="button" class="rsvp-opt" onclick="pickRsvp(this,'no')">
                     <i class="fa-solid fa-xmark" style="margin-right:.3rem"></i>
-                    {{ $data->rsvp->no->option ?? 'Tidak Hadir' }}
+                    {{ $rsvpNo ?? 'Tidak Hadir' }}
                 </button>
             </div>
             <input type="text"   name="name"   class="rsvp-input" placeholder="Nama Anda" required>
@@ -806,19 +786,19 @@ textarea.f-input{resize:vertical;min-height:90px}
 </section>
 
 {{-- ── GIFT ── --}}
-@if(($data->gift->show ?? false) === true && !empty($data->gift->bank->code ?? ''))
+@if($showGift && !empty($giftCode ?? ''))
 <section class="gift-sec" id="gift">
     <div class="sec-inner reveal" style="text-align:center">
         <p class="sec-label">Amplop Digital</p>
-        <h2 class="sec-title">{{ $data->gift->title ?? 'Hadiah Pernikahan' }}</h2>
+        <h2 class="sec-title">{{ $giftTitle ?? 'Hadiah Pernikahan' }}</h2>
         <div class="ornament-divider"><i class="fa-solid fa-gift"></i></div>
-        @if(!empty($data->gift->content ?? ''))
-        <p style="color:var(--gray);font-size:.9rem;margin-bottom:.5rem">{{ $data->gift->content }}</p>
+        @if(!empty($giftContent ?? ''))
+        <p style="color:var(--gray);font-size:.9rem;margin-bottom:.5rem">{{ $giftContent }}</p>
         @endif
         <div class="gift-card">
-            <p class="gift-bank-logo">{{ strtoupper($data->gift->bank->option ?? 'Bank') }}</p>
-            <p class="gift-account" id="giftAccNum">{{ $data->gift->bank->code }}</p>
-            <p class="gift-name">a.n. {{ $data->gift->bank->name }}</p>
+            <p class="gift-bank-logo">{{ strtoupper($giftBank ?? 'Bank') }}</p>
+            <p class="gift-account" id="giftAccNum">{{ $giftCode }}</p>
+            <p class="gift-name">a.n. {{ $giftName }}</p>
             <button class="btn-copy" onclick="copyAcc()">
                 <i class="fa-regular fa-copy"></i> Salin Nomor
             </button>
@@ -829,9 +809,9 @@ textarea.f-input{resize:vertical;min-height:90px}
 
 {{-- ── FOOTER ── --}}
 <footer class="site-footer">
-    <h2 class="footer-names script">{{ $maleName }} &amp; {{ $femaleName }}</h2>
-    @if(($data->detail->additional->show ?? false) === true && !empty($data->detail->additional->closing ?? ''))
-    <p class="footer-closing">{{ $data->detail->additional->closing }}</p>
+    <h2 class="footer-names script">{{ $maleNickname }} &amp; {{ $femaleNickname }}</h2>
+    @if($showClosing && !empty($closingText ?? ''))
+    <p class="footer-closing">{{ $closingText }}</p>
     @endif
     <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:.5rem">
         Wassalamu'alaikum Warahmatullahi Wabarakatuh
@@ -846,13 +826,13 @@ textarea.f-input{resize:vertical;min-height:90px}
 document.getElementById('btnOpen').addEventListener('click', function() {
     document.getElementById('cover').classList.add('gone');
     document.getElementById('main').classList.add('on');
-    @if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
+    @if($showMusic && $musicUrl)
     setTimeout(() => document.getElementById('bgAudio')?.play().catch(()=>{}), 600);
     @endif
 });
 
 // ── Music
-@if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
+@if($showMusic && $musicUrl)
 const aud = document.getElementById('bgAudio');
 const fab = document.getElementById('musicFab');
 fab.addEventListener('click', function() {

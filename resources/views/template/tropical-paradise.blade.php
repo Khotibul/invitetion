@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
     <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
     <meta name="theme-color" content="#00a86b">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -268,7 +268,7 @@
                  style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.7);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.2)">
             @endif
             <h1>Beach Wedding</h1>
-            <div class="names">{{ $femaleName }} &amp; {{ $maleName }}</div>
+            <div class="names">{{ $femaleNickname }} &amp; {{ $maleNickname }}</div>
             <p style="font-size:1.1rem;opacity:.9">{{ $weddingDateFormatted }}</p>
             @if($other['guest'])<p style="font-size:.85rem;opacity:.8;margin-top:.5rem">Kepada: {{ $other['guest']['name'] ?? '' }}</p>@endif
         </div>
@@ -340,7 +340,7 @@
     @include('template.partials.rsvp-wishes')
 
     <footer>
-        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        <p>{{ $femaleNickname }} &amp; {{ $maleNickname }}</p>
         @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
         <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>

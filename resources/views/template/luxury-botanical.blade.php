@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding of {{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
+    <title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
     <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
     <meta name="theme-color" content="#2d7a4f">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -535,7 +535,7 @@
 
     <!-- Footer -->
     <footer>
-        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        <p>{{ $femaleNickname }} &amp; {{ $maleNickname }}</p>
         @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
         <p style="font-size:.7rem;margin-top:.5rem"><span class="gold">Risa Digital Invitation</span></p>
     </footer>

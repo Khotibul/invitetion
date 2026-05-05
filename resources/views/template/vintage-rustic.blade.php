@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $femaleName }} &amp; {{ $maleName }} | Risa Digital Invitation</title>
     <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:title" content="Wedding of {{ $femaleName }} & {{ $maleName }}">
+    <meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
     <meta name="theme-color" content="#8b7355">
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -387,7 +387,7 @@
                  style="width:130px;height:130px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.5);margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.25)">
             @endif
             <h1>{{ $coverTop ?: 'The Wedding' }}</h1>
-            <div class="names">{{ $femaleName }} &amp; {{ $maleName }}</div>
+            <div class="names">{{ $femaleNickname }} &amp; {{ $maleNickname }}</div>
             <div class="date">{{ $weddingDateFormatted }}</div>
         </div>
     </section>
@@ -477,7 +477,7 @@
     <!-- Footer -->
     <footer>
         <div class="ornament">❦</div>
-        <p>{{ $femaleName }} &amp; {{ $maleName }}</p>
+        <p>{{ $femaleNickname }} &amp; {{ $maleNickname }}</p>
         @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
         <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>

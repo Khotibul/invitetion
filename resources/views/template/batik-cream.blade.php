@@ -1,37 +1,12 @@
-﻿<!DOCTYPE html>
+@include('template.partials.helpers')
+<!DOCTYPE html>
 <html lang="id">
 <head>
-@php
-    use Carbon\Carbon;
-    use Illuminate\Support\Str;
-
-    $wDate   = $data->detail->calendar->date ?? now()->toDateString();
-    $wTime   = $data->detail->calendar->time ?? '00:00';
-    $tz      = strtoupper($data->detail->calendar->timezone ?? 'WIB');
-    $male    = $data->profile->name->male   ?? ($data->cover->name->male   ?? 'Mempelai Pria');
-    $female  = $data->profile->name->female ?? ($data->cover->name->female ?? 'Mempelai Wanita');
-
-    $mM      = $data->profile->photo->male->method   ?? 'none';
-    $mI      = $data->profile->photo->male->image    ?? '';
-    $mF      = $data->profile->photo->male->frame    ?? '';
-    $fM      = $data->profile->photo->female->method ?? 'none';
-    $fI      = $data->profile->photo->female->image  ?? '';
-    $fF      = $data->profile->photo->female->frame  ?? '';
-
-    $mSrc    = (!empty($mI) && $mM !== 'none') ? ($mM === 'storage' ? url('storage/sm/'.$mI) : url('storage/avatar/'.$mI)) : null;
-    $fSrc    = (!empty($fI) && $fM !== 'none') ? ($fM === 'storage' ? url('storage/sm/'.$fI) : url('storage/avatar/'.$fI)) : null;
-
-    $covObj  = $data->cover->description->image ?? null;
-    $covSrc  = ($covObj && !empty($covObj->image)) ? ($covObj->method === 'asset' ? asset($covObj->image) : url('storage/'.$covObj->image)) : null;
-    $invFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-    $ogImg   = $covSrc ?? $invFile;
-@endphp
-
-<meta charset="UTF-8">
+﻿<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Undangan Pernikahan {{ $male }} &amp; {{ $female }}</title>
-<meta property="og:title" content="Undangan Pernikahan {{ $male }} &amp; {{ $female }}">
-<meta property="og:image" content="{{ $ogImg }}">
+<title>Undangan Pernikahan {{ $maleNickname }} &amp; {{ $femaleNickname }}</title>
+<meta property="og:title" content="Undangan Pernikahan {{ $maleName }} &amp; {{ $femaleName }}">
+<meta property="og:image" content="{{ $ogImage }}">
 <meta property="og:description" content="Kami mengundang kehadiran Anda di hari bahagia kami">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -662,23 +637,23 @@ textarea.f-input{min-height:120px;resize:vertical}
     <div class="cover-card reveal visible">
         <div class="cover-badge">
             <i class="fa-regular fa-calendar"></i>
-            {{ Carbon::parse($wDate)->locale('id')->translatedFormat('d F Y') }}
+            {{ Carbon::parse($weddingDate)->locale('id')->translatedFormat('d F Y') }}
         </div>
 
         <h1 class="cover-names script">
-            {{ $data->cover->name->male ?? $male }}
+            {{ $maleName ?? $maleName }}
             <span class="amp">&</span>
-            {{ $data->cover->name->female ?? $female }}
+            {{ $femaleName ?? $femaleName }}
         </h1>
 
-        @if(!empty($data->cover->content ?? ''))
-        <p class="cover-sub">{{ $data->cover->content }}</p>
-        @elseif(!empty($data->quote->content ?? ''))
-        <p class="cover-sub">"{{ $data->quote->content }}"</p>
+        @if(!empty($coverContent ?? ''))
+        <p class="cover-sub">{{ $coverContent }}</p>
+        @elseif(!empty($quoteContent ?? ''))
+        <p class="cover-sub">"{{ $quoteContent }}"</p>
         @endif
 
-        @if($covSrc)
-        <img src="{{ $covSrc }}" alt="cover" class="cover-photo" loading="lazy">
+        @if($coverSrc)
+        <img src="{{ $coverSrc }}" alt="cover" class="cover-photo" loading="lazy">
         @endif
 
         @if(($other['guest'] ?? null))
@@ -693,7 +668,7 @@ textarea.f-input{min-height:120px;resize:vertical}
 
         <button class="btn-open" id="btnOpen">
             <i class="fa-solid fa-envelope-open-text"></i>
-            {{ $data->cover->button ?? 'Buka Undangan' }}
+            {{ $coverButton }}
         </button>
     </div>
 </div>
@@ -702,9 +677,9 @@ textarea.f-input{min-height:120px;resize:vertical}
 <div id="main-content">
 
 {{-- Music --}}
-@if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
+@if(!empty($musicUrl ?? null) && $showMusic)
 <audio id="bgMusic" loop>
-    <source src="{{ $data->music->url }}" type="audio/mpeg">
+    <source src="{{ $musicUrl }}" type="audio/mpeg">
 </audio>
 <button class="music-fab" id="musicBtn" title="Musik">
     <i class="fa-solid fa-music"></i>
@@ -721,22 +696,22 @@ textarea.f-input{min-height:120px;resize:vertical}
 </nav>
 
 {{-- -- HERO -- --}}
-<section class="hero" id="home" @if($covSrc) style="--hero-img:url('{{ $covSrc }}');" @endif>
+<section class="hero" id="home" @if($coverSrc) style="--hero-img:url('{{ $coverSrc }}');" @endif>
     <div class="hero-inner reveal">
         <p class="hero-eyebrow">Undangan Pernikahan</p>
         <h1 class="hero-names script">
-            {{ $data->cover->name->male ?? $male }}
+            {{ $maleName ?? $maleName }}
             <span class="hero-amp">&</span>
-            {{ $data->cover->name->female ?? $female }}
+            {{ $femaleName ?? $femaleName }}
         </h1>
         <div class="hero-date">
             <i class="fa-regular fa-clock" style="color:var(--gold)"></i>
-            {{ Carbon::parse($wDate)->locale('id')->translatedFormat('l, d F Y') }} • {{ date('H:i', strtotime($wTime)) }} {{ $tz }}
+            {{ Carbon::parse($weddingDate)->locale('id')->translatedFormat('l, d F Y') }} • {{ date('H:i', strtotime($weddingTime)) }} {{ $weddingTz }}
         </div>
-        @if(!empty($data->quote->content ?? ''))
-        <p class="hero-quote">"{{ $data->quote->content }}"</p>
+        @if(!empty($quoteContent ?? ''))
+        <p class="hero-quote">"{{ $quoteContent }}"</p>
         @endif
-        @if(($data->detail->additional->show ?? false) === true && !empty($data->detail->additional->opening ?? ''))
+        @if($showClosing && !empty($data->detail->additional->opening ?? ''))
         <p class="hero-quote" style="font-style:normal;margin-top:1rem">{{ $data->detail->additional->opening }}</p>
         @endif
     </div>
@@ -758,28 +733,28 @@ textarea.f-input{min-height:120px;resize:vertical}
         <div class="couple-grid reveal">
             <div class="couple-card">
                 <div class="couple-photo-wrap">
-                    @if($mSrc)
-                    <img src="{{ $mSrc }}" alt="{{ $male }}" class="couple-photo" loading="lazy">
-                    @if(!empty($mF))
-                    <img src="{{ url('storage/frame/'.$mF) }}" alt="" class="couple-frame" loading="lazy">
+                    @if($maleSrc)
+                    <img src="{{ $maleSrc }}" alt="{{ $maleName }}" class="couple-photo" loading="lazy">
+                    @if(!empty($maleFrame))
+                    <img src="{{ url('storage/frame/'.$maleFrame) }}" alt="" class="couple-frame" loading="lazy">
                     @endif
                     @else
                     <div class="couple-photo-placeholder"><i class="fa-solid fa-user"></i></div>
                     @endif
                 </div>
-                <h3 class="couple-name">{{ $male }}</h3>
+                <h3 class="couple-name">{{ $maleName }}</h3>
                 <p class="couple-role">Mempelai Pria</p>
-                @if(($data->profile->parent->show ?? false) === true)
+                @if($showParent)
                 <p class="couple-parent">
-                    Putra ke-{{ $data->profile->parent->male->childhood ?? '1' }} dari<br>
-                    Bapak {{ $data->profile->parent->male->father ?? '' }}<br>
-                    &amp; Ibu {{ $data->profile->parent->male->mother ?? '' }}
+                    Putra ke-{{ $maleChildhood }} dari<br>
+                    Bapak {{ $maleFather }}<br>
+                    &amp; Ibu {{ $maleMother }}
                 </p>
                 @endif
-                @if(($data->profile->instagram->show ?? false) === true && !empty($data->profile->instagram->male ?? ''))
+                @if($showIg && !empty($maleIg ?? ''))
                 <div class="couple-ig">
-                    <a href="https://instagram.com/{{ $data->profile->instagram->male }}" target="_blank" rel="noopener">
-                        <i class="fa-brands fa-instagram"></i> @{{ $data->profile->instagram->male }}
+                    <a href="https://instagram.com/{{ $maleIg }}" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-instagram"></i> @{{ $maleIg }}
                     </a>
                 </div>
                 @endif
@@ -787,28 +762,28 @@ textarea.f-input{min-height:120px;resize:vertical}
 
             <div class="couple-card">
                 <div class="couple-photo-wrap">
-                    @if($fSrc)
-                    <img src="{{ $fSrc }}" alt="{{ $female }}" class="couple-photo" loading="lazy">
-                    @if(!empty($fF))
-                    <img src="{{ url('storage/frame/'.$fF) }}" alt="" class="couple-frame" loading="lazy">
+                    @if($femaleSrc)
+                    <img src="{{ $femaleSrc }}" alt="{{ $femaleName }}" class="couple-photo" loading="lazy">
+                    @if(!empty($femaleFrame))
+                    <img src="{{ url('storage/frame/'.$femaleFrame) }}" alt="" class="couple-frame" loading="lazy">
                     @endif
                     @else
                     <div class="couple-photo-placeholder"><i class="fa-solid fa-user"></i></div>
                     @endif
                 </div>
-                <h3 class="couple-name">{{ $female }}</h3>
+                <h3 class="couple-name">{{ $femaleName }}</h3>
                 <p class="couple-role">Mempelai Wanita</p>
-                @if(($data->profile->parent->show ?? false) === true)
+                @if($showParent)
                 <p class="couple-parent">
-                    Putri ke-{{ $data->profile->parent->female->childhood ?? '1' }} dari<br>
-                    Bapak {{ $data->profile->parent->female->father ?? '' }}<br>
-                    &amp; Ibu {{ $data->profile->parent->female->mother ?? '' }}
+                    Putri ke-{{ $femaleChildhood }} dari<br>
+                    Bapak {{ $femaleFather }}<br>
+                    &amp; Ibu {{ $femaleMother }}
                 </p>
                 @endif
-                @if(($data->profile->instagram->show ?? false) === true && !empty($data->profile->instagram->female ?? ''))
+                @if($showIg && !empty($femaleIg ?? ''))
                 <div class="couple-ig">
-                    <a href="https://instagram.com/{{ $data->profile->instagram->female }}" target="_blank" rel="noopener">
-                        <i class="fa-brands fa-instagram"></i> @{{ $data->profile->instagram->female }}
+                    <a href="https://instagram.com/{{ $femaleIg }}" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-instagram"></i> @{{ $femaleIg }}
                     </a>
                 </div>
                 @endif
@@ -843,7 +818,7 @@ textarea.f-input{min-height:120px;resize:vertical}
                         @else
                         - {{ date('H:i', strtotime($ev->prop->time->end ?? '00:00')) }}
                         @endif
-                        <span style="opacity:.9">({{ $tz }})</span>
+                        <span style="opacity:.9">({{ $weddingTz }})</span>
                     </div>
                 </div>
                 @if(!empty($ev->prop->location->address ?? ''))
@@ -938,25 +913,25 @@ textarea.f-input{min-height:120px;resize:vertical}
 </section>
 
 {{-- -- GIFT -- --}}
-@if(($data->gift->show ?? false) === true)
+@if($showGift)
 <section class="gift-section" id="gift">
     <div class="section-inner">
         <div class="sec-head reveal">
             <p class="sec-label">Hadiah</p>
-            <h2 class="sec-title">{{ $data->gift->title ?? 'Wedding Gift' }}</h2>
+            <h2 class="sec-title">{{ $giftTitle ?? 'Wedding Gift' }}</h2>
             <div class="sec-divider"></div>
         </div>
 
         <div class="gift-box reveal">
-            @if(!empty($data->gift->content ?? ''))
-            <p class="gift-text">{{ $data->gift->content }}</p>
+            @if(!empty($giftContent ?? ''))
+            <p class="gift-text">{{ $giftContent }}</p>
             @endif
 
             <div class="bank-card">
                 <div class="bank-left">
-                    <div class="bank-name">{{ $data->gift->bank->option ?? 'Bank' }}</div>
-                    <div class="bank-code" id="bankCode">{{ $data->gift->bank->code ?? '' }}</div>
-                    <div style="color:var(--latte);font-size:.9rem">a.n {{ $data->gift->bank->name ?? '' }}</div>
+                    <div class="bank-name">{{ $giftBank ?? 'Bank' }}</div>
+                    <div class="bank-code" id="bankCode">{{ $giftCode ?? '' }}</div>
+                    <div style="color:var(--latte);font-size:.9rem">a.n {{ $giftName ?? '' }}</div>
                 </div>
                 <button type="button" class="btn-copy" onclick="copyAcc()">
                     <i class="fa-regular fa-copy"></i> Salin Nomor
@@ -969,15 +944,15 @@ textarea.f-input{min-height:120px;resize:vertical}
 @endif
 
 {{-- -- WISHES -- --}}
-@if(($data->wishes->public ?? false) === true)
+@if($showWishes)
 <section class="wishes-section" id="wishes">
     <div class="section-inner">
         <div class="sec-head reveal">
             <p class="sec-label">Ucapan</p>
-            <h2 class="sec-title">{{ $data->wishes->title ?? 'Ucapan & Doa' }}</h2>
+            <h2 class="sec-title">{{ $wishesTitle ?? 'Ucapan & Doa' }}</h2>
             <div class="sec-divider"></div>
-            @if(!empty($data->wishes->content ?? ''))
-            <p style="margin-top:1rem;color:var(--latte);line-height:1.8">{{ $data->wishes->content }}</p>
+            @if(!empty($wishesContent ?? ''))
+            <p style="margin-top:1rem;color:var(--latte);line-height:1.8">{{ $wishesContent }}</p>
             @endif
         </div>
 
@@ -1011,10 +986,10 @@ textarea.f-input{min-height:120px;resize:vertical}
     <div class="section-inner">
         <div class="sec-head reveal">
             <p class="sec-label">Konfirmasi</p>
-            <h2 class="sec-title">{{ $data->rsvp->title ?? 'Konfirmasi Kehadiran' }}</h2>
+            <h2 class="sec-title">{{ $rsvpTitle ?? 'Konfirmasi Kehadiran' }}</h2>
             <div class="sec-divider"></div>
-            @if(!empty($data->rsvp->content ?? ''))
-            <p style="margin-top:1rem;color:var(--latte);line-height:1.8">{{ $data->rsvp->content }}</p>
+            @if(!empty($rsvpContent ?? ''))
+            <p style="margin-top:1rem;color:var(--latte);line-height:1.8">{{ $rsvpContent }}</p>
             @endif
         </div>
 
@@ -1024,10 +999,10 @@ textarea.f-input{min-height:120px;resize:vertical}
                 <input type="hidden" name="option" id="rsvpOption" value="">
                 <div class="rsvp-options">
                     <button type="button" class="rsvp-option" onclick="setRsvp(this,'yes')">
-                        <i class="fa-solid fa-check" style="margin-right:.35rem"></i> {{ $data->rsvp->yes->option ?? 'Hadir' }}
+                        <i class="fa-solid fa-check" style="margin-right:.35rem"></i> {{ $rsvpYes ?? 'Hadir' }}
                     </button>
                     <button type="button" class="rsvp-option" onclick="setRsvp(this,'no')">
-                        <i class="fa-solid fa-xmark" style="margin-right:.35rem"></i> {{ $data->rsvp->no->option ?? 'Tidak Hadir' }}
+                        <i class="fa-solid fa-xmark" style="margin-right:.35rem"></i> {{ $rsvpNo ?? 'Tidak Hadir' }}
                     </button>
                 </div>
                 <div class="f-row">
@@ -1049,10 +1024,10 @@ textarea.f-input{min-height:120px;resize:vertical}
 
 {{-- -- FOOTER -- --}}
 <footer class="site-footer">
-    <p class="script footer-names">{{ $data->cover->name->male ?? $male }} &amp; {{ $data->cover->name->female ?? $female }}</p>
-    @if(($data->detail->additional->show ?? false) === true && !empty($data->detail->additional->closing ?? ''))
+    <p class="script footer-names">{{ $maleName ?? $maleName }} &amp; {{ $femaleName ?? $femaleName }}</p>
+    @if($showClosing && !empty($closingText ?? ''))
     <p style="position:relative;z-index:1;margin-top:.65rem;font-size:.92rem;line-height:1.8;color:rgba(255,255,255,.75)">
-        {{ $data->detail->additional->closing }}
+        {{ $closingText }}
     </p>
     @endif
     <p class="footer-brand">Risa Digital Invitation</p>
@@ -1065,13 +1040,13 @@ textarea.f-input{min-height:120px;resize:vertical}
 document.getElementById('btnOpen')?.addEventListener('click', function() {
     document.getElementById('cover-overlay')?.classList.add('hidden');
     document.getElementById('main-content')?.classList.add('visible');
-    @if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
+    @if(!empty($musicUrl ?? null) && $showMusic)
     setTimeout(() => { document.getElementById('bgMusic')?.play().catch(()=>{}); }, 450);
     @endif
 });
 
 // -- Music toggle
-@if(!empty($data->music->url ?? null) && ($data->music->show ?? false))
+@if(!empty($musicUrl ?? null) && $showMusic)
 const bgMusic = document.getElementById('bgMusic');
 const musicBtn = document.getElementById('musicBtn');
 musicBtn?.addEventListener('click', function() {
@@ -1090,7 +1065,7 @@ musicBtn?.addEventListener('click', function() {
 
 // -- Countdown
 (function() {
-    const target = new Date('{{ $wDate }}T{{ $wTime }}:00');
+    const target = new Date('{{ $weddingDate }}T{{ $weddingTime }}:00');
     const grid = document.getElementById('countdownGrid');
     function tick() {
         const now = new Date();

@@ -5,9 +5,14 @@ use Illuminate\Support\Str;
 // Skip if already resolved by controller (resolveHelperVars)
 if (!isset($femaleName)) {
 
-    // Nama pasangan
+    // Nama lengkap (profil) — untuk section profil/couple
     $maleName   = (string)($data->profile->name->male   ?? $data->cover->name->male   ?? 'Mempelai Pria');
     $femaleName = (string)($data->profile->name->female ?? $data->cover->name->female ?? 'Mempelai Wanita');
+
+    // Nama panggilan (cover) — untuk cover/hero/judul
+    $maleNickname   = (string)($data->cover->name->male   ?? $maleName);
+    $femaleNickname = (string)($data->cover->name->female ?? $femaleName);
+
     $maleInitial   = Str::upper(Str::substr(trim($maleName),   0, 1)) ?: 'M';
     $femaleInitial = Str::upper(Str::substr(trim($femaleName), 0, 1)) ?: 'W';
 

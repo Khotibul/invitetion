@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risa Digital Invitation - Undangan Digital Elegant</title>
+<!-- Preconnect ke Google Fonts untuk mempercepat loading font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- DNS prefetch untuk resource eksternal -->
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{

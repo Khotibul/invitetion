@@ -19,27 +19,53 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+
     resolve: {
         alias: {
-            '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
-            '~boxicons': path.resolve(__dirname, 'node_modules/boxicons'),
-            '~html2canvas': path.resolve(__dirname, 'node_modules/html2canvas'),
-            '~owl-carousel': path.resolve(__dirname, 'node_modules/owl-carousel'),
+            '~bootstrap':         path.resolve(__dirname, 'node_modules/bootstrap'),
+            '~boxicons':          path.resolve(__dirname, 'node_modules/boxicons'),
+            '~html2canvas':       path.resolve(__dirname, 'node_modules/html2canvas'),
+            '~owl-carousel':      path.resolve(__dirname, 'node_modules/owl-carousel'),
             '~perfect-scrollbar': path.resolve(__dirname, 'node_modules/perfect-scrollbar'),
-            '~sweetalert2': path.resolve(__dirname, 'node_modules/sweetalert2'),
-            '~js-circle-progress': path.resolve(__dirname, 'node_modules/js-circle-progress'),
-        }
+            '~sweetalert2':       path.resolve(__dirname, 'node_modules/sweetalert2'),
+            '~js-circle-progress':path.resolve(__dirname, 'node_modules/js-circle-progress'),
+        },
     },
+
     optimizeDeps: {
-        exclude: ['html2canvas']
+        exclude: ['html2canvas'],
     },
+
+    build: {
+        // Minify dengan esbuild (lebih cepat dari terser)
+        minify: 'esbuild',
+        // Chunk size warning threshold
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                // Manual chunk splitting untuk vendor libraries
+                manualChunks(id) {
+                    if (id.includes('node_modules/sweetalert2')) return 'vendor-swal';
+                    if (id.includes('node_modules/jquery'))       return 'vendor-jquery';
+                    if (id.includes('node_modules/bootstrap'))    return 'vendor-bootstrap';
+                },
+                // Asset file naming dengan hash untuk cache busting
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+            },
+        },
+        // CSS code splitting
+        cssCodeSplit: true,
+        // Source maps hanya di dev
+        sourcemap: false,
+    },
+
     // Suppress Dart Sass deprecation warnings dari Bootstrap 5.x
     css: {
         preprocessorOptions: {
             scss: {
-                // Gunakan legacy API agar kompatibel dengan Bootstrap 5 @import
                 api: 'legacy',
-                // Suppress semua deprecation warnings
                 silenceDeprecations: [
                     'import',
                     'global-builtin',
