@@ -68,6 +68,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show py-2" role="alert">
+        <i class="bx bx-error-circle me-1"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -172,6 +178,31 @@
             },
             error: function (xhr) {
                 alert(xhr.responseJSON?.message ?? 'Gagal menghapus user.');
+            }
+        });
+    });
+
+    // Toggle aktif / non-aktif dari tabel
+    $(document).on('click', '.btn-toggle-active', function () {
+        var btn    = $(this);
+        var url    = btn.data('url');
+        var active = parseInt(btn.data('active'));
+        var name   = btn.data('name');
+        var label  = active === 1 ? 'non-aktifkan' : 'aktifkan';
+
+        if (!confirm('Yakin ingin ' + label + ' akun "' + name + '"?')) return;
+
+        btn.prop('disabled', true);
+        $.ajax({
+            url:  url,
+            type: 'PATCH',
+            data: { _token: $('meta[name="csrf-token"]').attr('content') },
+            success: function (res) {
+                table.ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                btn.prop('disabled', false);
+                alert(xhr.responseJSON?.message ?? 'Gagal mengubah status akun.');
             }
         });
     });

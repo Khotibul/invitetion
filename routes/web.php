@@ -204,6 +204,7 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('user-management.edit');
 	Route::put('users/{id}/update', [UserController::class, 'update'])->name('user-management.update');
 	Route::delete('users/{id}/destroy', [UserController::class, 'destroy'])->name('user-management.destroy');
+	Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('user-management.toggle-active');
 	// Artisan
 	Route::get('public-link', function (){
 		\Illuminate\Support\Facades\Artisan::call('storage:link');

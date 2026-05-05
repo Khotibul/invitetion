@@ -12,6 +12,10 @@
                 <i class="bx bx-chevron-left"></i>
                 <span>{{ Str::title('kembali') }}</span>
             </button>
+            <a href="{{ route('invoice-transaction.edit', $invoice->id) }}" class="btn btn-primary btn-sm">
+                <i class="bx bx-edit me-1"></i>
+                <span>Edit Transaksi</span>
+            </a>
         </div>
     </div>
     <div class="card border-0 mt-3">

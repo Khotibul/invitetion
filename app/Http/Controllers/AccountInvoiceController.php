@@ -110,17 +110,46 @@ class AccountInvoiceController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AccountInvoice $accountInvoice)
+    public function edit(AccountInvoice $accountInvoice): \Illuminate\Http\Response
     {
-        //
+        $invoice = $accountInvoice;
+        $invoice->content = json_decode($invoice->content);
+
+        $packages = \App\Models\Package::select('id', 'title', 'price')->publish()->get();
+
+        $data = [
+            'title' => 'Edit Transaksi',
+        ];
+
+        return response()->view('panel.invitation.transaction-edit', compact('data', 'invoice', 'packages'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AccountInvoice $accountInvoice)
+    public function update(Request $request, AccountInvoice $accountInvoice): \Illuminate\Http\RedirectResponse
     {
-        //
+        $request->validate([
+            'status'     => 'required|in:PENDING,CONFIRMED',
+            'date'       => 'required|date',
+            'package_id' => 'required|exists:packages,id',
+            'amount'     => 'required|integer|min:0',
+        ], [
+            'status.required'     => 'Status wajib dipilih.',
+            'date.required'       => 'Tanggal wajib diisi.',
+            'package_id.required' => 'Paket wajib dipilih.',
+            'amount.required'     => 'Jumlah bayar wajib diisi.',
+        ]);
+
+        $accountInvoice->update([
+            'status'     => $request->status,
+            'date'       => $request->date,
+            'package_id' => $request->package_id,
+            'amount'     => $request->amount,
+        ]);
+
+        return redirect()->route('invoice-transaction.show', $accountInvoice->id)
+            ->with('success', 'Transaksi berhasil diperbarui.');
     }
 
     public function confirm(int $id, string $status): RedirectResponse

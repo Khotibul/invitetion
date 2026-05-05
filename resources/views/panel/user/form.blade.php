@@ -74,10 +74,11 @@
                             </label>
                             <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                                 <option value="">-- Pilih Role --</option>
-                                @foreach(['developer' => ['label'=>'Developer','color'=>'danger','desc'=>'Akses penuh ke semua fitur sistem'],
-                                          'admin'     => ['label'=>'Admin','color'=>'warning','desc'=>'Akses panel admin (tanpa fitur developer)'],
-                                          'member'    => ['label'=>'Member','color'=>'primary','desc'=>'Pengguna biasa dengan akses dashboard undangan']]
-                                         as $roleKey => $roleInfo)
+                                @foreach([
+                                    'developer' => ['label'=>'Developer', 'color'=>'danger',  'desc'=>'Akses penuh ke semua fitur sistem'],
+                                    'admin'     => ['label'=>'Admin',     'color'=>'warning', 'desc'=>'Akses panel admin'],
+                                    'member'    => ['label'=>'Member',    'color'=>'primary', 'desc'=>'Pengguna biasa dengan akses dashboard undangan'],
+                                ] as $roleKey => $roleInfo)
                                 <option value="{{ $roleKey }}"
                                     {{ old('role', $user->role ?? '') === $roleKey ? 'selected' : '' }}>
                                     {{ $roleInfo['label'] }} — {{ $roleInfo['desc'] }}
@@ -87,8 +88,6 @@
                             @error('role')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-
-                            {{-- Role description badges --}}
                             <div class="mt-2 d-flex gap-2 flex-wrap">
                                 <span class="badge bg-danger">Developer</span>
                                 <span class="small text-muted">Akses penuh</span>
@@ -159,6 +158,47 @@
             </div>
 
             @if($isEdit)
+            {{-- Status Aktif Card (hanya untuk member yang punya akun) --}}
+            @if($user->acc)
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body px-4 py-3">
+                    <h6 class="mb-3 small fw-semibold text-muted text-uppercase">
+                        <i class="bx bx-toggle-left me-1"></i> Status Akun
+                    </h6>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            @if($user->acc->actived == 1)
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="bx bx-check-circle me-1"></i> Aktif
+                                </span>
+                                <p class="text-muted small mt-1 mb-0">Akun dapat digunakan untuk login dan mengakses dashboard.</p>
+                            @else
+                                <span class="badge bg-secondary fs-6 px-3 py-2">
+                                    <i class="bx bx-x-circle me-1"></i> Non-aktif
+                                </span>
+                                <p class="text-muted small mt-1 mb-0">Akun diblokir, user tidak dapat mengakses dashboard.</p>
+                            @endif
+                        </div>
+                        <div>
+                            @if($user->acc->actived == 1)
+                            <button type="button" class="btn btn-outline-warning btn-sm btn-toggle-status"
+                                    data-url="{{ route('user-management.toggle-active', $user->id) }}"
+                                    data-active="1" data-name="{{ $user->name }}">
+                                <i class="bx bx-user-minus me-1"></i> Non-aktifkan
+                            </button>
+                            @else
+                            <button type="button" class="btn btn-outline-success btn-sm btn-toggle-status"
+                                    data-url="{{ route('user-management.toggle-active', $user->id) }}"
+                                    data-active="0" data-name="{{ $user->name }}">
+                                <i class="bx bx-user-check me-1"></i> Aktifkan
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Info Card --}}
             <div class="card border-0 shadow-sm mt-3">
                 <div class="card-body px-4 py-3">
@@ -226,6 +266,35 @@ document.getElementById('togglePassword')?.addEventListener('click', function ()
         input.type = 'password';
         icon.classList.replace('bx-hide', 'bx-show');
     }
+});
+
+// Toggle aktif / non-aktif
+document.querySelector('.btn-toggle-status')?.addEventListener('click', function () {
+    var btn    = this;
+    var url    = btn.dataset.url;
+    var active = parseInt(btn.dataset.active);
+    var name   = btn.dataset.name;
+    var label  = active === 1 ? 'non-aktifkan' : 'aktifkan';
+
+    if (!confirm('Yakin ingin ' + label + ' akun "' + name + '"?')) return;
+
+    btn.disabled = true;
+    fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        // Reload halaman agar status terupdate
+        window.location.reload();
+    })
+    .catch(function() {
+        btn.disabled = false;
+        alert('Gagal mengubah status akun.');
+    });
 });
 
 // Delete confirm

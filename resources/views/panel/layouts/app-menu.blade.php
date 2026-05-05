@@ -164,11 +164,7 @@
 				<i class="bx bx-customize text-primary fs-1"></i>
 			</span>
 			<span class="app-brand-text menu-text fw-bolder ms-2">
-				@if (Auth::user()->role=='admin')
 				{{ Str::title('panel') }}
-				@elseif (Auth::user()->role=='developer')
-				<span class="badge badge-tag warning" data-tag="dev">{{ Str::title('panel') }}</span>
-				@endif
 			</span>
 		</a>
 		<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">

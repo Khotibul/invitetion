@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
@@ -30,14 +31,12 @@ class UserController extends Controller
      */
     public function list(Request $request): JsonResponse
     {
-        $column = [0 => 'id', 1 => 'name', 2 => 'role', 3 => 'created_at'];
+        $totalDataRecord     = User::count();
+        $totalFilteredRecord = $totalDataRecord;
+        $limit_val           = $request->input('length');
+        $start_val           = $request->input('start');
 
-        $totalDataRecord      = User::count();
-        $totalFilteredRecord  = $totalDataRecord;
-        $limit_val            = $request->input('length');
-        $start_val            = $request->input('start');
-
-        $query = User::query();
+        $query = User::with('acc');
 
         // Filter by role
         if ($request->filled('role') && $request->role !== 'all') {
@@ -68,15 +67,38 @@ class UserController extends Controller
             $roleColor = $roleColors[$item->role] ?? 'bg-secondary';
             $editUrl   = route('user-management.edit', $item->id);
             $deleteUrl = route('user-management.destroy', $item->id);
+            $toggleUrl = route('user-management.toggle-active', $item->id);
 
-            $data_val[$key]['name']  = anchor(text: $item->name, href: $editUrl)
+            // Badge status aktif (hanya untuk member yang punya akun)
+            $activeBadge = '';
+            if ($item->role === 'member' && $item->acc) {
+                $activeBadge = $item->acc->actived == 1
+                    ? "<span class='badge bg-success ms-1'>Aktif</span>"
+                    : "<span class='badge bg-secondary ms-1'>Non-aktif</span>";
+            }
+
+            // Tombol toggle aktif/non-aktif
+            $toggleBtn = '';
+            if ($item->acc) {
+                $isActive  = $item->acc->actived == 1;
+                $toggleBtn = "<button type='button' class='btn btn-sm "
+                    . ($isActive ? "btn-outline-warning" : "btn-outline-success")
+                    . " btn-toggle-active me-1' "
+                    . "data-url='{$toggleUrl}' data-name='{$item->name}' data-active='" . ($item->acc->actived ?? 0) . "' "
+                    . "title='" . ($isActive ? 'Non-aktifkan' : 'Aktifkan') . "'>"
+                    . "<i class='bx " . ($isActive ? "bx-user-minus" : "bx-user-check") . "'></i></button>";
+            }
+
+            $data_val[$key]['name']   = anchor(text: $item->name, href: $editUrl)
                 . "<small class='d-block text-muted'>{$item->email}</small>";
-            $data_val[$key]['role']  = "<span class='badge {$roleColor}'>" . strtoupper($item->role) . "</span>";
-            $data_val[$key]['date']  = date_info($item->created_at);
+            $data_val[$key]['role']   = "<span class='badge {$roleColor}'>" . strtoupper($item->role) . "</span>"
+                . $activeBadge;
+            $data_val[$key]['date']   = date_info($item->created_at);
             $data_val[$key]['action'] =
-                "<a href='{$editUrl}' class='btn btn-sm btn-outline-primary me-1'><i class='bx bx-edit'></i></a>"
+                "<a href='{$editUrl}' class='btn btn-sm btn-outline-primary me-1' title='Edit'><i class='bx bx-edit'></i></a>"
+                . $toggleBtn
                 . "<button type='button' class='btn btn-sm btn-outline-danger btn-delete-user' "
-                . "data-url='{$deleteUrl}' data-name='{$item->name}'><i class='bx bx-trash'></i></button>";
+                . "data-url='{$deleteUrl}' data-name='{$item->name}' title='Hapus'><i class='bx bx-trash'></i></button>";
         }
 
         return response()->json([
@@ -132,7 +154,7 @@ class UserController extends Controller
      */
     public function edit(int $id): Response
     {
-        $user = User::findOrFail($id);
+        $user = User::with('acc', 'inv')->findOrFail($id);
         $data = ['title' => 'Edit User'];
         return response()->view('panel.user.form', compact('data', 'user'));
     }
@@ -145,15 +167,16 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'name'  => 'required|string|max:100',
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
-            'role'  => ['required', Rule::in(['developer', 'admin', 'member'])],
+            'name'     => 'required|string|max:100',
+            'email'    => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'role'     => ['required', Rule::in(['developer', 'admin', 'member'])],
             'password' => 'nullable|string|min:6|confirmed',
         ], [
             'name.required'      => 'Nama wajib diisi.',
             'email.required'     => 'Email wajib diisi.',
             'email.unique'       => 'Email sudah digunakan.',
             'role.required'      => 'Role wajib dipilih.',
+            'role.in'            => 'Role tidak valid.',
             'password.min'       => 'Password minimal 6 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
@@ -173,13 +196,34 @@ class UserController extends Controller
     }
 
     /**
+     * Toggle aktif / non-aktif akun user (via Account.actived).
+     */
+    public function toggleActive(int $id): JsonResponse
+    {
+        $user = User::with('acc')->findOrFail($id);
+
+        if (!$user->acc) {
+            return response()->json(['message' => 'Akun user tidak ditemukan.'], 404);
+        }
+
+        $newStatus = $user->acc->actived == 1 ? 0 : 1;
+        $user->acc->update(['actived' => $newStatus]);
+
+        $label = $newStatus == 1 ? 'diaktifkan' : 'dinon-aktifkan';
+
+        return response()->json([
+            'message' => "Akun '{$user->name}' berhasil {$label}.",
+            'actived' => $newStatus,
+        ]);
+    }
+
+    /**
      * Hapus user (soft delete).
      */
     public function destroy(int $id): JsonResponse
     {
         $user = User::findOrFail($id);
 
-        // Jangan hapus diri sendiri
         if ($user->id === auth()->id()) {
             return response()->json(['message' => 'Tidak dapat menghapus akun sendiri.'], 403);
         }
