@@ -1465,6 +1465,7 @@ return array(
     'Database\\Seeders\\TheWeddingTemplateSeeder' => $baseDir . '/database/seeders/TheWeddingTemplateSeeder.php',
     'Database\\Seeders\\UpdateExistingTemplatesSeeder' => $baseDir . '/database/seeders/UpdateExistingTemplatesSeeder.php',
     'Database\\Seeders\\UserSeeder' => $baseDir . '/database/seeders/UserSeeder.php',
+    'Database\\Seeders\\WeddingPinkPurpleSeeder' => $baseDir . '/database/seeders/WeddingPinkPurpleSeeder.php',
     'Database\\Seeders\\WeddingVariantsSeeder' => $baseDir . '/database/seeders/WeddingVariantsSeeder.php',
     'Database\\Seeders\\WhiteEleganceTemplateSeeder' => $baseDir . '/database/seeders/WhiteEleganceTemplateSeeder.php',
     'DateError' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/DateError.php',

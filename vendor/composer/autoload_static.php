@@ -2070,6 +2070,7 @@ class ComposerStaticInit61e4024e4e1116cd11e45bff46485107
         'Database\\Seeders\\TheWeddingTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/TheWeddingTemplateSeeder.php',
         'Database\\Seeders\\UpdateExistingTemplatesSeeder' => __DIR__ . '/../..' . '/database/seeders/UpdateExistingTemplatesSeeder.php',
         'Database\\Seeders\\UserSeeder' => __DIR__ . '/../..' . '/database/seeders/UserSeeder.php',
+        'Database\\Seeders\\WeddingPinkPurpleSeeder' => __DIR__ . '/../..' . '/database/seeders/WeddingPinkPurpleSeeder.php',
         'Database\\Seeders\\WeddingVariantsSeeder' => __DIR__ . '/../..' . '/database/seeders/WeddingVariantsSeeder.php',
         'Database\\Seeders\\WhiteEleganceTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/WhiteEleganceTemplateSeeder.php',
         'DateError' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/DateError.php',
