@@ -729,7 +729,9 @@
 	</div>
 	@endif
 
-	<footer id="fh5co-footer" role="contentinfo" style="background: url('{{ asset('template/the-wedding/images/background/repeat-background/witewall_3.png') }}'); background-repeat:repeat ">
+	@include('template.partials.details')
+
+<footer id="fh5co-footer" role="contentinfo" style="background: url('{{ asset('template/the-wedding/images/background/repeat-background/witewall_3.png') }}'); background-repeat:repeat ">
 		<div class="container">
 			<img class="flower-1" style="position: absolute; right: 0; bottom: 0" src="{{ asset('template/the-wedding/images/background/flowers/bottom-right-1.svg') }}">
 			<img class="flower-1" style="position: absolute; left: 0; bottom:0" src="{{ asset('template/the-wedding/images/background/flowers/bottom-left-1.svg') }}">

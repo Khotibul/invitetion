@@ -769,6 +769,9 @@ section{padding:5rem 1.5rem}
 </section>
 
 {{-- ── FOOTER ── --}}
+@php $__detailsShownStory = true; @endphp
+@include('template.partials.details')
+
 <footer class="site-footer">
     <p class="script footer-names">
         {{ $femaleNickname }} &amp; {{ $maleNickname }}

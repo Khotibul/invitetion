@@ -201,9 +201,9 @@ class InvitationController extends Controller
 			'template'  => (Auth::user()->inv && Auth::user()->inv->temp) ? Auth::user()->inv->temp->grade : 'basic',
 			// Tampilkan SEMUA template — grade lock ditangani di view
 			'templates' => [
-				'basic'     => Template::select('id','title','slug','file','grade')->where('grade','basic')->publish()->latest()->get(),
-				'premium'   => Template::select('id','title','slug','file','grade')->where('grade','premium')->publish()->latest()->get(),
-				'exclusive' => Template::select('id','title','slug','file','grade')->where('grade','exclusive')->publish()->latest()->get(),
+				'basic'     => Template::select('id','title','slug','file','grade')->where('grade','basic')->publish()->orderBy('title')->get(),
+				'premium'   => Template::select('id','title','slug','file','grade')->where('grade','premium')->publish()->orderBy('title')->get(),
+				'exclusive' => Template::select('id','title','slug','file','grade')->where('grade','exclusive')->publish()->orderBy('title')->get(),
 			],
 			'templateLimit' => $templateLimit, // kirim limit ke view untuk badge
 		];

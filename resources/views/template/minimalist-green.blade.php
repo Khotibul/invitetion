@@ -226,7 +226,9 @@
     </section>
     @endif
 
-    @include('template.partials.rsvp-wishes')
+    @include('template.partials.details')
+
+@include('template.partials.rsvp-wishes')
 
     <footer>
         <p>{{ $femaleNickname }} &amp; {{ $maleNickname }}</p>

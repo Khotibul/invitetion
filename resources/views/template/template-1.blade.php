@@ -841,6 +841,9 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
 @endif
 
 {{-- RSVP + WISHES --}}
+@php $__detailsShownGift = true; $__detailsShownStory = true; @endphp
+@include('template.partials.details')
+
 @include('template.partials.rsvp-wishes')
 
 {{-- FOOTER --}}

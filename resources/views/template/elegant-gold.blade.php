@@ -323,6 +323,9 @@ a{text-decoration:none;color:inherit}
 </section>
 @endif
 
+@php $__detailsShownGift = true; @endphp
+@include('template.partials.details')
+
 @include('template.partials.rsvp-wishes')
 
 <footer class="site-footer">

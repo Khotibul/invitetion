@@ -288,6 +288,9 @@ h1,h2,h3{font-family:var(--font-heading)}
 </section>
 @endif
 
+@php $__detailsShownGift = true; $__detailsShownStory = true; @endphp
+@include('template.partials.details')
+
 @include('template.partials.rsvp-wishes')
 
 {{-- Footer --}}

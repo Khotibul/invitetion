@@ -31,8 +31,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
-        // ── Cloudflare R2 override dihapus — pakai public disk saja
-
         // ── Guard: jika tabel belum ada (fresh install / migration belum jalan)
         if (!Schema::hasTable('settings')) {
             View::share('global', $this->emptyGlobal());

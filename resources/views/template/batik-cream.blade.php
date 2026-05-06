@@ -1023,6 +1023,9 @@ textarea.f-input{min-height:120px;resize:vertical}
 </section>
 
 {{-- -- FOOTER -- --}}
+@php $__detailsShownGift = true; $__detailsShownStory = true; @endphp
+@include('template.partials.details')
+
 <footer class="site-footer">
     <p class="script footer-names">{{ $maleName ?? $maleName }} &amp; {{ $femaleName ?? $femaleName }}</p>
     @if($showClosing && !empty($closingText ?? ''))
