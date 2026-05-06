@@ -429,6 +429,7 @@ section{padding:5rem 1.5rem}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 {{-- ── COVER OVERLAY ── --}}
 <div id="cover-overlay">

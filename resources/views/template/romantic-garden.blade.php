@@ -613,6 +613,7 @@
     </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
     <div class="floral-bg"></div>
     <section class="opening-cover">
         <div class="opening-content">

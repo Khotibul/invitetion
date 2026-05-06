@@ -261,6 +261,7 @@
     </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
     <section class="hero-beach">
         <div class="hero-content">
             @if($coverSrc)

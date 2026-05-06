@@ -145,6 +145,7 @@ h1,h2,h3,h4{font-family:'DM Serif Display',serif}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 <div id="cover">
     <div class="cover-circle"></div>

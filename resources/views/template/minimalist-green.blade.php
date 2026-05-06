@@ -168,6 +168,7 @@
     </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
     <section class="cover" @if($coverSrc) style="background-image: linear-gradient(rgba(156, 175, 136, 0.92), rgba(45, 80, 22, 0.92)), url('{{ $coverSrc }}');background-size:cover;background-position:center" @endif>
         <div>
             @if($coverSrc)

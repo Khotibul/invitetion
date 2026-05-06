@@ -92,6 +92,7 @@ Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::put('edit/story/{id}', [MemberInvite::class, 'm_story_edit'])->name('menu.story-edit');
 	Route::delete('delete/story/{id}', [MemberInvite::class, 'm_story_delete'])->name('menu.story-delete');
 	Route::put('edit/e-invitation', [MemberInvite::class, 'm_einvitation_edit'])->name('menu.einvitation-edit');
+	Route::post('publish-invitation', [MemberInvite::class, 'm_einvitation_publish'])->name('menu.einvitation-publish');
 	Route::post('create/guest', [MemberInvite::class, 'm_share_add'])->name('menu.share-add');
 	Route::delete('delete/guest/{id}', [MemberInvite::class, 'm_share_delete'])->name('menu.share-delete');
 	Route::put('create/gallery', [MemberInvite::class, 'm_gallery_add'])->name('menu.gallery-add');

@@ -59,12 +59,17 @@ class PublicController extends Controller
 			return response()->view('errors.invitation-expired', compact('invitation'), 402);
 		}
 
-		// Undangan draft hanya bisa dilihat oleh pemiliknya
+		// Undangan draft:
+		// - Pemilik yang login: bisa akses (preview mode)
+		// - Siapapun yang punya link langsung: bisa akses (share preview)
+		// - Hanya blokir jika tidak ada slug sama sekali (sudah dicek di atas)
+		$isPreview = false;
 		if ($invitation->publish !== 'publish') {
 			$isOwner = auth()->check() && auth()->id() === (int) $invitation->user_id;
-			if (!$isOwner) {
-				return abort(404, 'Undangan belum dipublikasikan');
-			}
+			// Izinkan akses tapi tandai sebagai preview
+			$isPreview = true;
+			// Jika bukan pemilik dan bukan dari link langsung, tetap izinkan
+			// (link share sudah cukup sebagai "token" akses)
 		}
 
 		$invitation->title = implode(' & ', json_decode($invitation->title, true) ?? ['-', '-']);
@@ -109,10 +114,10 @@ class PublicController extends Controller
 			'guest'    => null,
 		];
 
-		// Guest personalization
+		// Guest personalization — cari berdasarkan slug tamu
 		$guestSlug = request()->get('to');
 		if (!empty($guestSlug)) {
-			$guest = InvitationGuest::select('type', 'name')
+			$guest = InvitationGuest::select('id', 'type', 'name', 'slug')
 				->where('slug', $guestSlug)
 				->where('invitation_id', $invId)
 				->first();
@@ -129,7 +134,7 @@ class PublicController extends Controller
 
 		$response = response()->view(
 			'template.'.$templateUrl,
-			array_merge(compact('invitation', 'data', 'other'), $helpers)
+			array_merge(compact('invitation', 'data', 'other'), $helpers, ['isPreview' => $isPreview ?? false])
 		);
 
 		// Cache-Control: undangan publish bisa di-cache browser 5 menit

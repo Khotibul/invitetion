@@ -117,6 +117,7 @@ h1,h2,h3{font-family:var(--font-heading)}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 {{-- Cover --}}
 <div id="cover">

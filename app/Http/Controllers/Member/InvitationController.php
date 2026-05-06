@@ -1032,15 +1032,48 @@ class InvitationController extends Controller
 		if ($packContent && json_decode($packContent)->{'e-invitation'} === true) :
 			$menu   = $this->menu['e-invitation'];
 			$preset = $this->safePreset();
+			$inv    = Auth::user()->inv;
 			$bagpack = [
-				'preset' => $preset->design,
-				'date'   => $preset->detail->calendar->date ?? '',
+				'preset'  => $preset->design,
+				'date'    => $preset->detail->calendar->date ?? '',
+				'publish' => $inv->publish ?? 'draft',
+				'slug'    => $inv->slug ?? '',
+				'link'    => $inv->slug ? route('invitation.index', $inv->slug) : null,
 			];
 			$data = json_decode(json_encode($bagpack));
 			return response()->view('member.m-einvitation', compact('menu', 'data'));
 		else :
 			return redirect()->route('packages');
 		endif;
+	}
+
+	/**
+	 * Toggle publish / draft undangan.
+	 */
+	public function m_einvitation_publish(Request $request): JsonResponse
+	{
+		$inv    = Auth::user()->inv;
+		$action = $request->input('action', 'publish'); // 'publish' atau 'draft'
+
+		if (!$inv) {
+			return response()->json(['toast' => ['icon' => 'error', 'title' => 'Gagal', 'text' => 'Undangan tidak ditemukan.']], 404);
+		}
+
+		$newStatus = $action === 'publish' ? 'publish' : 'draft';
+		Invitation::whereId($inv->id)->update(['publish' => $newStatus]);
+
+		// Invalidate cache jika ada
+		\Illuminate\Support\Facades\Cache::forget('global_view_data');
+
+		$message = $newStatus === 'publish'
+			? 'Undangan berhasil dipublikasikan! Tamu sudah bisa mengakses link undangan.'
+			: 'Undangan berhasil disembunyikan. Hanya Anda yang bisa melihat melalui link.';
+
+		return response()->json([
+			'toast'   => ['icon' => 'success', 'title' => 'Berhasil!', 'text' => $message],
+			'publish' => $newStatus,
+			'link'    => $inv->slug ? route('invitation.index', $inv->slug) : null,
+		]);
 	}
 
 	public function m_einvitation_edit(Request $request): JsonResponse|RedirectResponse

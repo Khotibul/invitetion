@@ -141,6 +141,7 @@ h1,h2,h3,h4{font-family:'Libre Baskerville',serif}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 <div id="cover">
     <div class="cover-petal p1">🌸</div>

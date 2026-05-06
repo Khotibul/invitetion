@@ -566,6 +566,7 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 
 {{-- ══ COVER OVERLAY ══ --}}

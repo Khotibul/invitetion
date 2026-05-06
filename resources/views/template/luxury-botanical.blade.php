@@ -439,6 +439,7 @@
     </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
     <div class="botanical-bg"></div>
 
     <!-- Opening -->

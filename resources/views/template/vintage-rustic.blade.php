@@ -376,6 +376,7 @@
     </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
     <div class="paper-texture"></div>
 
     <!-- Hero -->

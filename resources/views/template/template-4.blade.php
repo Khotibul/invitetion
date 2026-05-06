@@ -135,6 +135,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:300}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 <div id="cover">
     <div class="cover-bg-pattern"></div>

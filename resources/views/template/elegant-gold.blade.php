@@ -154,6 +154,7 @@ a{text-decoration:none;color:inherit}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 {{-- COVER --}}
 <div id="cover">

@@ -631,6 +631,7 @@ textarea.f-input{min-height:120px;resize:vertical}
 </style>
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 {{-- -- COVER OVERLAY -- --}}
 <div id="cover-overlay">

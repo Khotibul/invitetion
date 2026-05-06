@@ -258,6 +258,7 @@
 
 </head>
 <body>
+@include('template.partials.preview-banner')
 
 <div class="fh5co-loader"></div>
 

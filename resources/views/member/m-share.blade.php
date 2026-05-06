@@ -1,85 +1,130 @@
 @extends('member.layouts.app')
-@section('title', Str::title($menu['title']))   
+@section('title', Str::title($menu['title']))
 @section('content')
 <section class="position-relative py-3">
     @include('member.layouts.component', ['content'=>'breadcrumb', 'menu'=>$menu])
     <div class="row g-3">
-        <div class="col-lg-7">
+        <div class="col-12">
             <div class="bg-white shadow rounded p-3 mb-2">
-                <div class="mb-2">
-                    <div>
-                        <label for="share_link" class="form-label">Bagikan link berikut</label>
-                        <div class="input-group">
-                            <input type="text" name="share_link" id="share_link" class="form-control border-end-0" value="{{ route('invitation.index', Auth::user()->inv->slug) }}" placeholder="Share link" readonly>
-                            <span class="input-group-text bg-white border-start-0 copy-text" data-text="{{ route('invitation.index', Auth::user()->inv->slug) }}">
-                                <i class="bx bx-copy"></i>
-                                <span @style('display:none')>Disalin</span>
-                            </span>
-                        </div>
-                    </div>
+                <h5 class="mb-1"><i class="bx bx-link me-1 text-primary"></i> Link Undangan</h5>
+                <p class="text-muted small mb-2">Bagikan link ini kepada tamu undangan Anda.</p>
+                @php
+                    $invSlug = Auth::user()->inv->slug ?? '';
+                    $baseLink = $invSlug ? route('invitation.index', $invSlug) : '#';
+                    $publishStatus = Auth::user()->inv->publish ?? 'draft';
+                @endphp
+                @if($publishStatus !== 'publish')
+                <div class="alert alert-warning py-2 small mb-2">
+                    <i class="bx bx-error me-1"></i>
+                    Undangan belum dipublikasikan. Link sudah bisa dibagikan untuk preview, tapi tamu hanya bisa melihat setelah Anda
+                    <a href="{{ route('menu.einvitation') }}" class="fw-bold">publish undangan</a>.
+                </div>
+                @endif
+                <div class="input-group">
+                    <input type="text" id="share_link" class="form-control border-end-0"
+                           value="{{ $baseLink }}" readonly>
+                    <span class="input-group-text bg-white border-start-0 copy-text"
+                          data-text="{{ $baseLink }}" style="cursor:pointer">
+                        <i class="bx bx-copy"></i>
+                        <span style="display:none">Disalin</span>
+                    </span>
+                </div>
+                <div class="mt-2 d-flex gap-2 flex-wrap">
+                    <a href="{{ $baseLink }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bx bx-link-external me-1"></i> Buka Link
+                    </a>
+                    <a href="https://wa.me/?text={{ urlencode('Anda diundang ke pernikahan kami 💍 Buka undangan di: '.$baseLink) }}"
+                       target="_blank" class="btn btn-sm btn-success">
+                        <i class="bx bxl-whatsapp me-1"></i> Bagikan via WhatsApp
+                    </a>
                 </div>
             </div>
+        </div>
+        <div class="col-lg-7">
             <div class="bg-white shadow rounded p-3 mb-2">
+                <h6 class="mb-2"><i class="bx bx-user-plus me-1"></i> Tambah Link Personal Tamu</h6>
+                <p class="text-muted small mb-2">Buat link khusus per tamu agar nama tamu tampil di undangan.</p>
                 <form action="{{ route('menu.share-add') }}" method="post" class="add-guest">
                     @csrf
                     <div class="mb-2">
                         <var dir="share_guest_type"></var>
-                        <div>
+                        <div class="d-flex gap-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="share_guest_type" id="share_guest_type_1" value="personal" @checked(true)>
-                                <label class="form-check-label" for="share_guest_type_1">Individu</label>
+                                <label class="form-check-label small" for="share_guest_type_1">Individu</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="share_guest_type" id="share_guest_type_2" value="group">
-                                <label class="form-check-label" for="share_guest_type_2">Grup</label>
+                                <label class="form-check-label small" for="share_guest_type_2">Grup</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="share_guest_type" id="share_guest_type_3" value="private">
-                                <label class="form-check-label" for="share_guest_type_3">Privasi</label>
+                                <label class="form-check-label small" for="share_guest_type_3">Privasi</label>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-2">
-                        <div>
-                            <label for="share_guest_name" class="form-label">
-                                <var dir="share_guest_name">Nama</var>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label for="share_guest_name" class="form-label small">
+                                <var dir="share_guest_name">Nama Tamu</var>
                             </label>
-                            <input type="text" name="share_guest_name" id="share_guest_name" class="form-control form-control-sm" placeholder="Nama lengkap">
+                            <input type="text" name="share_guest_name" id="share_guest_name"
+                                   class="form-control form-control-sm" placeholder="Nama lengkap tamu">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="share_guest_location" class="form-label small">
+                                <var dir="share_guest_location">Lokasi / Kota</var>
+                            </label>
+                            <input type="text" name="share_guest_location" id="share_guest_location"
+                                   class="form-control form-control-sm" placeholder="Kota / lokasi tamu">
                         </div>
                     </div>
-                    <div class="mb-2">
-                        <div>
-                            <label for="share_guest_location" class="form-label">
-                                <var dir="share_guest_location">Lokasi</var>
-                            </label>
-                            <input type="text" name="share_guest_location" id="share_guest_location" class="form-control form-control-sm" placeholder="Lokasi">
-                        </div>
-                    </div>
-                    <div class="mb-1">
-                        <button type="submit" class="btn btn-creasik-primary w-100">
-                            <i class="bx bxs-plus-circle"></i>
-                            <span>Tambah tamu</span>
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-creasik-primary btn-sm w-100">
+                        <i class="bx bxs-plus-circle me-1"></i> Tambah Tamu
+                    </button>
                 </form>
             </div>
         </div>
         <div class="col-lg-5">
-            @forelse ($data->guest as $item)
-            <div class="guest-item bg-white shadow-sm rounded p-2 mb-1">
-                <div class="name">
-                    <span><small class="text-muted">u/</small> {{ json_decode($item->name)->name }} <small class="text-muted">di</small> {{ json_decode($item->name)->location }}</span>
-                    <small>{{ route('invitation.index', Auth::user()->inv->slug) }}?to={{ $item->slug }}</small>
-                    <b class="badge bg-warning">{{ Str::title($item->type) }}</b>
+            <div class="bg-white shadow rounded p-3">
+                <h6 class="mb-2"><i class="bx bx-list-ul me-1"></i> Daftar Tamu ({{ count($data->guest) }})</h6>
+                @forelse ($data->guest as $item)
+                @php
+                    $guestData = json_decode($item->name);
+                    $guestLink = $baseLink . '?to=' . $item->slug;
+                @endphp
+                <div class="guest-item bg-light rounded p-2 mb-1">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold small text-truncate">{{ $guestData->name ?? '-' }}</div>
+                            <div class="text-muted" style="font-size:.72rem">
+                                <i class="bx bx-map-pin me-1"></i>{{ $guestData->location ?? '-' }}
+                                <span class="badge bg-warning ms-1" style="font-size:.65rem">{{ Str::title($item->type) }}</span>
+                            </div>
+                            <div class="text-primary mt-1" style="font-size:.7rem;word-break:break-all">
+                                {{ $guestLink }}
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-1 flex-shrink-0">
+                            <button type="button" class="btn btn-sm btn-outline-primary copy-text p-1"
+                                    data-text="{{ $guestLink }}" title="Salin link">
+                                <i class="bx bx-copy" style="font-size:.9rem"></i>
+                                <span style="display:none"></span>
+                            </button>
+                            <a href="https://wa.me/?text={{ urlencode('Kepada Yth. '.($guestData->name ?? 'Tamu').' 🎊 Anda diundang! Buka undangan: '.$guestLink) }}"
+                               target="_blank" class="btn btn-sm btn-outline-success p-1" title="Kirim via WhatsApp">
+                                <i class="bx bxl-whatsapp" style="font-size:.9rem"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" class="copy-text" data-text="{{ route('invitation.index', Auth::user()->inv->slug) }}?to={{ $item->slug }}">
-                    <i class="bx bx-copy"></i>
-                    <span @style('display:none')></span>
-                </button>
+                @empty
+                <div class="text-center text-muted py-3 small">
+                    <i class="bx bx-user-x d-block fs-3 mb-1"></i>
+                    Belum ada tamu. Tambahkan tamu di sebelah kiri.
+                </div>
+                @endforelse
             </div>
-            @empty
-            <div class="empty">belum ada undangan tamu</div>
-            @endforelse
         </div>
     </div>
 </section>
@@ -90,48 +135,34 @@
 
 @push('script')
 <script>
+$(function() {
     $(".add-guest").on('submit', function(e) {
         e.preventDefault();
-        let action = $(this).attr('action'),
-			submit = $(this).find('button[type=submit]');
-		$.ajax({
-			type: 'post',
-			url : action,
-			data: $(this).serialize(),
-			error: function(q,w,e) {
-				submit.children('span').text('Coba Lagi');
-				submit.prop('disabled', false);
-				$.each(q.responseJSON.errors, function(index, value) {
-					$(`var[dir=${index}]`).after(`<sup role="alert" title="${value}">!</sup>`);
-				});
-				console.log(q);
-				console.log(w);
-				console.log(e);
-			},
-			beforeSend: function() {
-				$("sup[role=alert]").remove();
-				submit.children('span').text('Memeriksa data...');
-				submit.prop('disabled', true);
-			},
-			success: function(response) {
+        var form = $(this);
+        var submit = form.find('button[type=submit]');
+        $.ajax({
+            type: 'post',
+            url: form.attr('action'),
+            data: form.serialize(),
+            error: function(q) {
+                submit.children('span').text('Coba Lagi');
+                submit.prop('disabled', false);
+                if (q.responseJSON && q.responseJSON.errors) {
+                    $.each(q.responseJSON.errors, function(index, value) {
+                        $('var[dir=' + index + ']').after('<sup role="alert" title="' + value + '">!</sup>');
+                    });
+                }
+            },
+            beforeSend: function() {
+                $("sup[role=alert]").remove();
+                submit.children('span').text('Menyimpan...');
+                submit.prop('disabled', true);
+            },
+            success: function() {
                 window.location.reload();
-			}
-		});
+            }
+        });
     });
-    $(".copy-text").on('click', function(e) {
-        e.preventDefault();
-        var text = $(this).data('text');
-        $(this).children('i').fadeOut();
-        $(this).children('span').fadeIn();
-		$("body").append('<textarea name="selected-text"></textarea>');
-		$("textarea[name=selected-text]").css('position', 'absolute').css('transform', 'scale(0,0)').val(text).select();
-		if (document.execCommand('copy')) {
-            setTimeout(() => {
-                $(this).children('i').fadeIn();
-                $(this).children('span').fadeOut();
-            }, 1000);
-			$("textarea[name=selected-text]").remove();
-		}
-    });
+});
 </script>
 @endpush
