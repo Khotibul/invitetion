@@ -190,9 +190,10 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	// Package
 	Route::resource('package', PackageController::class);
 	Route::post('package/list', [PackageController::class, 'list'])->name('package.list');
-	// Template
-	Route::resource('template', TemplateController::class);
+	// Template — route spesifik HARUS sebelum resource agar tidak bentrok dengan {template} wildcard
 	Route::post('template/list', [TemplateController::class, 'list'])->name('template.list');
+	Route::post('template/cover/upload', [TemplateController::class, 'cover_upload'])->name('template.cover.upload');
+	Route::resource('template', TemplateController::class);
 	Route::get('component/{slug}/collection', [TemplateController::class, 'component'])->name('template.component');
 	Route::post('component/{slug}/store', [TemplateController::class, 'component_store'])->name('template.component.store');
 	Route::delete('component/{slug}/destroy', [TemplateController::class, 'component_destroy'])->name('template.component.destroy');

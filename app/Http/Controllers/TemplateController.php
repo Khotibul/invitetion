@@ -202,13 +202,13 @@ class TemplateController extends Controller
 		];
         if ($request->file_type == 'upload-file') :
 			$this->validate($request, ['upload_file' => 'required|mimes:jpg,jpeg,png'], ['mimes' => 'hanya file <b>jpg, jpeg</b> atau <b>png</b> saja.']);
-			if (!empty($request->file)) :
+			if ($request->hasFile('upload_file')) :
 				$image_name = $request->file('upload_file')->hashName();
-				Storage::disk('public')->put($image_name, file_get_contents($request->file('upload_file')));
-				image_reducer(file_get_contents($request->file('upload_file')), $image_name);
+				$imageData  = file_get_contents($request->file('upload_file')->getRealPath());
+				Storage::disk('public')->put($image_name, $imageData);
+				try { image_reducer($imageData, $image_name); } catch (\Throwable $e) {}
 				$column['file']	= $image_name;
 				$column['file_type'] = 'image';
-				// strbox
 				Strbox::create(['title' => $request->title, 'file' => $image_name, 'file_type' => 'image', 'user_id' => Auth::user()->id, 'ip_addr' => $_SERVER['REMOTE_ADDR']]);
 			endif;
 		elseif ($request->file_type == 'image') :
@@ -299,9 +299,58 @@ class TemplateController extends Controller
 			'avatar-male' => $male,
 			'avatar-female' => $female,
 		];
-		$template->preset = json_decode($template->preset);
+		// Decode preset untuk view — simpan string asli di $template->preset_raw
+		// agar update() bisa membaca string JSON yang benar
+		$template->preset_raw = $template->preset; // string JSON asli
+		$template->preset = json_decode($template->preset); // object untuk view
 
 		return response()->view('panel.template.form', compact('data', 'template'));
+    }
+
+    /**
+     * Upload foto sampul template via AJAX — endpoint terpisah dari form utama.
+     * Dipanggil dari JS saat admin memilih foto sampul.
+     */
+    public function cover_upload(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'cover_file' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'required' => 'File foto sampul harus dipilih.',
+            'image'    => 'File harus berupa gambar.',
+            'mimes'    => 'Hanya file JPG atau PNG yang diizinkan.',
+            'max'      => 'Ukuran file maksimal 2MB.',
+        ]);
+
+        $file     = $request->file('cover_file');
+        $fileName = $file->hashName();
+        $fileData = file_get_contents($file->getRealPath());
+
+        // Simpan file asli ke root storage (tanpa subfolder)
+        Storage::disk('public')->put($fileName, $fileData);
+
+        // image_reducer membuat xs/, sm/, md/ secara otomatis dari $fileName
+        try {
+            image_reducer($fileData, $fileName);
+        } catch (\Throwable $e) {
+            // Jika image_reducer gagal, file asli tetap tersimpan
+        }
+
+        // Catat di Strbox agar muncul di storage admin
+        Strbox::create([
+            'title'     => 'Cover: '.pathinfo($fileName, PATHINFO_FILENAME),
+            'file'      => $fileName,
+            'file_type' => 'image',
+            'user_id'   => Auth::user()->id,
+            'ip_addr'   => $_SERVER['REMOTE_ADDR'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'file'    => $fileName,
+            'url'     => url('storage/sm/'.$fileName),
+            'message' => 'Foto sampul berhasil diunggah.',
+        ]);
     }
 
     /**
@@ -319,49 +368,90 @@ class TemplateController extends Controller
 			'required'	=> '<code>:attribute</code> harus diisi.',
 			'max'		=> '<code>:attribute</code> tidak boleh lebih dari <b>:max</b> huruf.'
 		]);
+
         $column = [
 			'title'		=> $request->title,
 			'slug'		=> clean_str($request->title),
             'grade'     => $request->grade,
 			'price'		=> $request->price ?? 0,
 			'ip_addr'	=> $_SERVER['REMOTE_ADDR'],
-			'user_id'	=> Auth::user()->id
+			'user_id'	=> Auth::user()->id,
 		];
-		$preset = json_decode($template->preset, true);
-		$preset['design']['title']['color'] = $request->title_color;
-		$preset['design']['title']['font'] = $request->title_font;
-		$preset['design']['content']['color'] = $request->content_color;
-		$preset['design']['content']['font'] = $request->content_font;
-		$preset['design']['button']['color'] = $request->button_color;
+
+		// ── Preset: baca ulang dari DB sebagai string JSON murni
+		// (menghindari masalah jika $template->preset sudah di-decode menjadi object di edit())
+		$freshPresetJson = Template::where('id', $template->id)->value('preset');
+		$preset = json_decode($freshPresetJson ?: '{}', true) ?: [];
+
+		$preset['design']['title']['color']       = $request->title_color;
+		$preset['design']['title']['font']        = $request->title_font;
+		$preset['design']['content']['color']     = $request->content_color;
+		$preset['design']['content']['font']      = $request->content_font;
+		$preset['design']['button']['color']      = $request->button_color;
 		$preset['design']['button']['background'] = $request->button_background;
-		$preset['design']['background'] = $request->background;
-		$preset['profile']['photo']['male']['image'] = $request->photo_male;
-		$preset['profile']['photo']['female']['image'] = $request->photo_female;
+		$preset['design']['background']           = $request->background;
+		// Foto pasangan: simpan image dan pastikan method = 'avatar' (dropdown avatar)
+		$preset['profile']['photo']['male']['image']    = $request->photo_male;
+		$preset['profile']['photo']['male']['method']   = 'avatar';
+		$preset['profile']['photo']['female']['image']  = $request->photo_female;
+		$preset['profile']['photo']['female']['method'] = 'avatar';
+
+		// ── Foto sampul default — sudah diupload via AJAX, tinggal simpan method+file
+		$coverMethod = $request->input('cover_image_method', '');
+		$coverFile   = $request->input('cover_image_file', '');
+
+		if ($coverMethod === 'storage' && !empty($coverFile)) {
+			// File sudah ada di storage/sm/ (diupload via cover_upload endpoint)
+			$preset['cover']['description']['image'] = [
+				'method' => 'storage',
+				'image'  => $coverFile,
+			];
+		} elseif ($coverMethod === 'none') {
+			$preset['cover']['description']['image'] = [
+				'method' => 'none',
+				'image'  => '',
+			];
+		}
+		// Jika cover_image_method kosong/tidak diisi → biarkan preset cover tidak berubah
+
 		$column['preset'] = json_encode($preset);
-		if ($template->url!='no-file') :
-			$column['publish'] = ($request->publish=='publish') ? 'publish' : 'draft';
-		endif;
-        if ($request->file_type == 'upload-file') :
-			$this->validate($request, ['upload_file' => 'required|mimes:jpg,jpeg,png'], ['mimes' => 'hanya file <b>jpg, jpeg</b> atau <b>png</b> saja.']);
-			if (!empty($request->file)) :
+
+		// ── Publish
+		if ($template->url !== 'no-file') {
+			$column['publish'] = ($request->publish === 'publish') ? 'publish' : 'draft';
+		}
+
+		// ── Thumbnail kartu template (file utama)
+        if ($request->file_type === 'upload-file') {
+			$this->validate($request, [
+				'upload_file' => 'required|mimes:jpg,jpeg,png',
+			], ['mimes' => 'hanya file <b>jpg, jpeg</b> atau <b>png</b> saja.']);
+			if ($request->hasFile('upload_file')) {
 				$image_name = $request->file('upload_file')->hashName();
-				Storage::disk('public')->put($image_name, file_get_contents($request->file('upload_file')));
-				image_reducer(file_get_contents($request->file('upload_file')), $image_name);
-				$column['file']	= $image_name;
+				$imageData  = file_get_contents($request->file('upload_file')->getRealPath());
+				Storage::disk('public')->put($image_name, $imageData);
+				try { image_reducer($imageData, $image_name); } catch (\Throwable $e) {}
+				$column['file']      = $image_name;
 				$column['file_type'] = 'image';
-				// strbox
-				Strbox::create(['title' => $request->title, 'file' => $image_name, 'file_type' => 'image', 'user_id' => Auth::user()->id, 'ip_addr' => $_SERVER['REMOTE_ADDR']]);
-			endif;
-		elseif ($request->file_type == 'image') :
+				Strbox::create([
+					'title'     => $request->title,
+					'file'      => $image_name,
+					'file_type' => 'image',
+					'user_id'   => Auth::user()->id,
+					'ip_addr'   => $_SERVER['REMOTE_ADDR'],
+				]);
+			}
+		} elseif ($request->file_type === 'image') {
 			$this->validate($request, ['file' => 'required'], ['required' => '<code>:attribute</code> harus diisi.']);
-			$column['file']	= $request->file;
+			$column['file']      = $request->file;
 			$column['file_type'] = 'image';
-		endif;
+		}
+
 		$template->update($column);
 
         return response()->json([
 			'toast'		=> ['icon' => 'success', 'title' => ucfirst('disimpan'), 'html' => "\"<b>{$request->title}</b>\" telah disimpan"],
-			'redirect'	=> ['type' => 'assign', 'value' => route('template.index')]
+			'redirect'	=> ['type' => 'assign', 'value' => route('template.index')],
 		]);
     }
 

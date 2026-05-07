@@ -5,21 +5,52 @@
 		use Illuminate\Support\Str;
 		setlocale(LC_ALL, 'IND');
 		$invitationFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-		$coverImageObj  = $data->cover->description->image ?? null;
-		// Fix path: sistem simpan di storage/ bukan storage/cover/
-		$coverImageFile = null;
-		if ($coverImageObj && !empty($coverImageObj->image)) {
-			if ($coverImageObj->method === 'asset') {
-				$coverImageFile = asset($coverImageObj->image);
-			} elseif ($coverImageObj->method === 'storage') {
-				$coverImageFile = url('storage/sm/'.$coverImageObj->image);
-			} elseif ($coverImageObj->method === 'avatar') {
-				$coverImageFile = url('storage/avatar/'.$coverImageObj->image);
-			} else {
-				$coverImageFile = url('storage/'.$coverImageObj->image);
+
+		// ── Foto sampul: gunakan $coverSrc dari helper jika ada, fallback ke $invitationFile
+		// $coverSrc sudah dihitung di PublicController::resolveHelperVars()
+		$coverImageFile = $coverSrc ?? null;
+		// Jika tidak ada coverSrc, coba hitung manual dari preset
+		if (empty($coverImageFile)) {
+			$coverImageObj = $data->cover->description->image ?? null;
+			if ($coverImageObj && !empty($coverImageObj->image ?? '')) {
+				$m = $coverImageObj->method ?? '';
+				if ($m === 'asset')        $coverImageFile = asset($coverImageObj->image);
+				elseif ($m === 'storage')  $coverImageFile = url('storage/sm/'.$coverImageObj->image);
+				elseif ($m === 'avatar')   $coverImageFile = url('storage/avatar/'.$coverImageObj->image);
+				else                       $coverImageFile = url('storage/'.$coverImageObj->image);
 			}
 		}
-		$coverImageFile = $coverImageFile ?? $invitationFile;
+		// Fallback ke file undangan
+		$coverImageFile = $coverImageFile ?: $invitationFile;
+
+		// ── Foto pasangan: gunakan $maleSrc/$femaleSrc dari helper jika ada
+		// Fallback: hitung manual dari preset dengan semua method yang mungkin
+		$resolvedMaleSrc = $maleSrc ?? null;
+		if (empty($resolvedMaleSrc)) {
+			$_mImg = $data->profile->photo->male->image  ?? '';
+			$_mMet = $data->profile->photo->male->method ?? '';
+			if (!empty($_mImg) && !empty($_mMet) && $_mMet !== 'none') {
+				if ($_mMet === 'storage')     $resolvedMaleSrc = url('storage/sm/'.$_mImg);
+				elseif ($_mMet === 'avatar')  $resolvedMaleSrc = url('storage/avatar/'.$_mImg);
+				else                          $resolvedMaleSrc = url('storage/avatar/'.$_mImg);
+			} elseif (!empty($_mImg)) {
+				// method kosong/null tapi ada image — asumsikan avatar
+				$resolvedMaleSrc = url('storage/avatar/'.$_mImg);
+			}
+		}
+		$resolvedFemaleSrc = $femaleSrc ?? null;
+		if (empty($resolvedFemaleSrc)) {
+			$_fImg = $data->profile->photo->female->image  ?? '';
+			$_fMet = $data->profile->photo->female->method ?? '';
+			if (!empty($_fImg) && !empty($_fMet) && $_fMet !== 'none') {
+				if ($_fMet === 'storage')     $resolvedFemaleSrc = url('storage/sm/'.$_fImg);
+				elseif ($_fMet === 'avatar')  $resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
+				else                          $resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
+			} elseif (!empty($_fImg)) {
+				$resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
+			}
+		}
+
 		$set = [
 			'title'   => "Wedding of ".$invitation->title." | The Wedding",
 			'file'    => $invitationFile,
@@ -297,10 +328,8 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box fadeInUp animated-fast">
-						@if ($coverImageFile && $coverImageFile !== $invitationFile)
+						@if ($coverImageFile)
 						<img src="{{ $coverImageFile }}" alt="" class="couple-main">
-						@elseif($invitationFile)
-						<img src="{{ $invitationFile }}" alt="" class="couple-main">
 						@else
 						<div style="width:200px;height:200px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto">
 							<span style="color:#aaa">Foto Sampul</span>
@@ -337,10 +366,8 @@
 			</div>
 			<div class="row">
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box">
-					@if ($coverImageFile && $coverImageFile !== $invitationFile)
+					@if ($coverImageFile)
 					<img src="{{ $coverImageFile }}" alt="" class="couple-main">
-					@elseif($invitationFile)
-					<img src="{{ $invitationFile }}" alt="" class="couple-main">
 					@else
 					<div style="width:220px;height:220px;background:#f5f0e8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;border:3px solid #bf9b73">
 						<span style="color:#bf9b73;font-size:3rem">📷</span>
@@ -411,13 +438,11 @@
 				<div class="couple-half">
 					<div class="groom">
 						@php
-							$maleFrame = $data->profile->photo->male->frame ?? '';
-							$maleImg   = $data->profile->photo->male->image ?? '';
-							$maleMethod = $data->profile->photo->male->method ?? 'none';
+							$maleFrame  = $data->profile->photo->male->frame ?? '';
 						@endphp
-						@if(!empty($maleImg) && $maleMethod !== 'none')
+						@if($resolvedMaleSrc)
 						<div class="position-relative d-inline-block">
-							<img src="{{ $maleMethod === 'storage' ? url('storage/sm/'.$maleImg) : url('storage/avatar/'.$maleImg) }}"
+							<img src="{{ $resolvedMaleSrc }}"
 								alt="groom" class="img-responsive"
 								style="border-radius:50%; width:200px; height:200px; object-fit:cover;">
 							@if(!empty($maleFrame))
@@ -454,12 +479,10 @@
 					<div class="bride">
 						@php
 							$femaleFrame = $data->profile->photo->female->frame ?? '';
-							$femaleImg   = $data->profile->photo->female->image ?? '';
-							$femaleMethod = $data->profile->photo->female->method ?? 'none';
 						@endphp
-						@if(!empty($femaleImg) && $femaleMethod !== 'none')
+						@if($resolvedFemaleSrc)
 						<div class="position-relative d-inline-block">
-							<img src="{{ $femaleMethod === 'storage' ? url('storage/sm/'.$femaleImg) : url('storage/avatar/'.$femaleImg) }}"
+							<img src="{{ $resolvedFemaleSrc }}"
 								alt="bride" class="img-responsive"
 								style="border-radius:50%; width:200px; height:200px; object-fit:cover;">
 							@if(!empty($femaleFrame))
@@ -745,20 +768,10 @@
 					<p>Jazakumullahu Khairan</p>
 
 					{{-- Foto pasangan dalam dua lingkaran terpisah --}}
-					@php
-						$fMaleMethod  = $data->profile->photo->male->method   ?? 'none';
-						$fMaleImg     = $data->profile->photo->male->image     ?? '';
-						$fFemaleMethod= $data->profile->photo->female->method  ?? 'none';
-						$fFemaleImg   = $data->profile->photo->female->image   ?? '';
-						$fMaleSrc     = (!empty($fMaleImg)   && $fMaleMethod   !== 'none')
-							? ($fMaleMethod   === 'storage' ? url('storage/sm/'.$fMaleImg)   : url('storage/avatar/'.$fMaleImg))   : null;
-						$fFemaleSrc   = (!empty($fFemaleImg) && $fFemaleMethod !== 'none')
-							? ($fFemaleMethod === 'storage' ? url('storage/sm/'.$fFemaleImg) : url('storage/avatar/'.$fFemaleImg)) : null;
-					@endphp
 					<div class="footer-couple-photos">
 						{{-- Pria di kiri --}}
-						@if($fMaleSrc)
-						<img src="{{ $fMaleSrc }}" alt="{{ $data->profile->name->male ?? '' }}" class="footer-couple-photo">
+						@if($resolvedMaleSrc)
+						<img src="{{ $resolvedMaleSrc }}" alt="{{ $data->profile->name->male ?? '' }}" class="footer-couple-photo">
 						@else
 						<div class="footer-couple-placeholder">🤵</div>
 						@endif
@@ -766,8 +779,8 @@
 						<span class="footer-couple-sep">&amp;</span>
 
 						{{-- Wanita di kanan --}}
-						@if($fFemaleSrc)
-						<img src="{{ $fFemaleSrc }}" alt="{{ $data->profile->name->female ?? '' }}" class="footer-couple-photo">
+						@if($resolvedFemaleSrc)
+						<img src="{{ $resolvedFemaleSrc }}" alt="{{ $data->profile->name->female ?? '' }}" class="footer-couple-photo">
 						@else
 						<div class="footer-couple-placeholder">👰</div>
 						@endif

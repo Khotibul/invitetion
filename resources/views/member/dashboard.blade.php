@@ -177,39 +177,79 @@
 }
 .tpl-card.active-tpl { border-color:var(--cr-green); box-shadow:0 0 0 3px rgba(45,122,79,.2); }
 .tpl-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,.15); }
-
 /* CSS Thumbnail — cover preview */
 .tpl-thumb {
-    height:120px; position:relative; overflow:hidden;
+    height:160px; position:relative; overflow:hidden;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
     padding:.75rem .5rem;
 }
-.tpl-thumb .tpl-photo {
-    width:44px; height:44px; border-radius:50%;
-    border:2px solid rgba(255,255,255,.6);
-    background:rgba(255,255,255,.2);
+/* Ornamen dekoratif di pojok */
+.tpl-thumb::before {
+    content:''; position:absolute;
+    top:-20px; right:-20px;
+    width:70px; height:70px;
+    border-radius:50%;
+    background:rgba(255,255,255,.07);
+    pointer-events:none;
+}
+.tpl-thumb::after {
+    content:''; position:absolute;
+    bottom:-25px; left:-15px;
+    width:80px; height:80px;
+    border-radius:50%;
+    background:rgba(255,255,255,.05);
+    pointer-events:none;
+}
+/* Foto pasangan berdampingan */
+.tpl-couple-row {
+    display:flex; align-items:center; gap:.3rem;
+    margin-bottom:.35rem; position:relative; z-index:1;
+}
+.tpl-photo {
+    width:38px; height:38px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.7);
+    background:rgba(255,255,255,.15);
     display:flex; align-items:center; justify-content:center;
-    font-size:1.2rem; margin-bottom:.35rem; flex-shrink:0;
-    overflow:hidden;
+    font-size:.95rem; flex-shrink:0; overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.tpl-photo-sep {
+    font-size:.7rem; opacity:.8; color:inherit;
+    margin:0 .1rem;
+}
+/* Foto sampul kecil di pojok kanan atas */
+.tpl-cover-icon {
+    position:absolute; top:.45rem; right:.45rem;
+    width:28px; height:28px; border-radius:6px;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.35);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.75rem; z-index:2;
+    backdrop-filter:blur(2px);
 }
 .tpl-thumb .tpl-names {
     font-size:.62rem; font-weight:700; text-align:center;
     line-height:1.3; letter-spacing:.3px;
+    position:relative; z-index:1;
 }
 .tpl-thumb .tpl-divider {
     width:30px; height:1px; margin:.3rem auto;
     background:rgba(255,255,255,.5);
+    position:relative; z-index:1;
 }
 .tpl-thumb .tpl-date {
     font-size:.55rem; text-align:center; opacity:.85;
+    position:relative; z-index:1;
 }
 .tpl-thumb .tpl-btn {
-    margin-top:.35rem; padding:.2rem .6rem;
+    margin-top:.4rem; padding:.25rem .7rem;
     border-radius:50px; font-size:.5rem; font-weight:600;
     letter-spacing:.5px; text-transform:uppercase;
-    background:rgba(255,255,255,.25); color:#fff;
-    border:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.22); color:#fff;
+    border:1px solid rgba(255,255,255,.45);
+    position:relative; z-index:1;
+    backdrop-filter:blur(2px);
 }
 /* Lock overlay */
 .tpl-thumb .tpl-lock {
@@ -217,7 +257,7 @@
     background:rgba(0,0,0,.45);
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    color:#fff;
+    color:#fff; z-index:3;
 }
 .tpl-thumb .tpl-lock i { font-size:1.6rem; }
 .tpl-thumb .tpl-lock span { font-size:.6rem; margin-top:.2rem; }
@@ -226,7 +266,7 @@
     position:absolute; top:.4rem; left:.4rem;
     background:var(--cr-green); color:#fff;
     font-size:.55rem; border-radius:50px; padding:.15rem .5rem;
-    font-weight:700;
+    font-weight:700; z-index:4;
 }
 
 .tpl-info {
@@ -286,7 +326,7 @@
     .dash-hero .couple-name { font-size:1.1rem; }
     .stat-card .stat-value { font-size:1.2rem; }
     .tpl-card { width:145px; }
-    .tpl-thumb { height:110px; }
+    .tpl-thumb { height:145px; }
 }
 @media (max-width:480px) {
     .preset-menu-modern { grid-template-columns:repeat(3,1fr); }
@@ -506,6 +546,16 @@
                         @endif
                     </div>
                     <div class="pack-title mb-1">{{ $packTitle }}</div>
+                    @php
+                        // Cari harga paket aktif dari database
+                        $activePack = collect($data->packages ?? [])->first(fn($p) => strtolower($p->title) === strtolower($packTitle));
+                        $activePackPrice = $activePack ? ($activePack->price == 0 ? 'Gratis' : 'Rp ' . number_format((int)$activePack->price, 0, ',', '.')) : null;
+                    @endphp
+                    @if($activePackPrice)
+                    <div class="mb-1" style="font-size:.82rem;font-weight:700;color:var(--cr-gold2)">
+                        <i class="bx bx-tag-alt me-1"></i>{{ $activePackPrice }}
+                    </div>
+                    @endif
                     @if(!$isExpired)
                     <div class="text-muted small mb-2">
                         <i class="bx bx-calendar me-1"></i>
@@ -641,25 +691,173 @@
             $gradeIcons    = ['basic' => 'bx-star', 'premium' => 'bx-crown', 'exclusive' => 'bx-diamond'];
             $activeInvTemp = Auth::user()->inv?->temp;
 
-            // CSS thumbnail styles per template slug
+            // CSS Thumbnail styles per template slug — sesuai tampilan cover asli
+            // bg: gradient background, color: warna teks, accent: warna aksen/divider,
+            // font: font utama, ornament: karakter dekoratif, btn_bg: warna tombol
             $thumbStyles = [
-                'the-wedding'        => ['bg'=>'linear-gradient(160deg,#8b6b4a 0%,#bf9b73 55%,#d4b896 100%)','color'=>'#fff','accent'=>'rgba(255,255,255,.5)','font'=>'Satisfy,serif'],
-                'the-wedding-navy'   => ['bg'=>'linear-gradient(160deg,#0d1f35 0%,#1e3a5f 55%,#2d5a8e 100%)','color'=>'#c8d8e8','accent'=>'rgba(143,168,200,.6)','font'=>'Merriweather,serif'],
-                'the-wedding-sage'   => ['bg'=>'linear-gradient(160deg,#2d4a3e 0%,#4a7c59 55%,#6b9e7a 100%)','color'=>'#e8f5ee','accent'=>'rgba(200,230,210,.6)','font'=>'Satisfy,serif'],
-                'the-wedding-pink'   => ['bg'=>'linear-gradient(160deg,#8b6b6b 0%,#d4a5a5 55%,#f7d7d7 100%)','color'=>'#fff','accent'=>'rgba(255,255,255,.5)','font'=>'Satisfy,serif'],
-                'the-wedding-purple' => ['bg'=>'linear-gradient(160deg,#3d1f6b 0%,#6b3fa0 55%,#9b6fc8 100%)','color'=>'#f5f0fa','accent'=>'rgba(201,168,224,.6)','font'=>'Satisfy,serif'],
-                'modern-elegant'     => ['bg'=>'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)','color'=>'#e8d5b7','accent'=>'rgba(232,213,183,.5)','font'=>'Playfair Display,serif'],
-                'minimalist-green'   => ['bg'=>'linear-gradient(135deg,#1b4332 0%,#2d6a4f 50%,#40916c 100%)','color'=>'#d8f3dc','accent'=>'rgba(216,243,220,.5)','font'=>'Lato,sans-serif'],
-                'luxury-botanical'   => ['bg'=>'linear-gradient(135deg,#1c2b1a 0%,#2d4a2b 50%,#4a7c59 100%)','color'=>'#f0e6d3','accent'=>'rgba(212,175,55,.5)','font'=>'Cormorant Garamond,serif'],
-                'romantic-garden'    => ['bg'=>'linear-gradient(135deg,#6b2d3e 0%,#a0405a 50%,#c8607a 100%)','color'=>'#fce4ec','accent'=>'rgba(252,228,236,.5)','font'=>'Dancing Script,cursive'],
-                'tropical-paradise'  => ['bg'=>'linear-gradient(135deg,#0d4f3c 0%,#1a7a5e 50%,#2eb87a 100%)','color'=>'#e0f7fa','accent'=>'rgba(224,247,250,.5)','font'=>'Pacifico,cursive'],
-                'vintage-rustic'     => ['bg'=>'linear-gradient(135deg,#5c3d2e 0%,#8b5e3c 50%,#b8845a 100%)','color'=>'#fdf6ec','accent'=>'rgba(253,246,236,.5)','font'=>'Playfair Display,serif'],
-                'elegant-gold'       => ['bg'=>'linear-gradient(135deg,#1a1200 0%,#3d2b00 50%,#6b4c00 100%)','color'=>'#ffd700','accent'=>'rgba(255,215,0,.5)','font'=>'Cormorant Garamond,serif'],
-                'islami-gold'        => ['bg'=>'linear-gradient(135deg,#1a2a1a 0%,#2d4a2b 50%,#4a7c59 100%)','color'=>'#d4af37','accent'=>'rgba(212,175,55,.5)','font'=>'Amiri,serif'],
-                'blush-rose'         => ['bg'=>'linear-gradient(135deg,#7b2d3e 0%,#c4607a 50%,#e8a0b0 100%)','color'=>'#fff','accent'=>'rgba(255,255,255,.5)','font'=>'Dancing Script,cursive'],
-                'white-elegance'     => ['bg'=>'linear-gradient(135deg,#2c2c2c 0%,#4a4a4a 50%,#6b6b6b 100%)','color'=>'#f5f5f5','accent'=>'rgba(245,245,245,.5)','font'=>'Cormorant Garamond,serif'],
+                // ── The Wedding series (coklat/krem klasik)
+                'the-wedding'        => [
+                    'bg'       => 'linear-gradient(160deg,#6b4c2a 0%,#a07850 45%,#c9a87a 100%)',
+                    'color'    => '#fff8f0',
+                    'accent'   => 'rgba(255,240,210,.55)',
+                    'font'     => 'Satisfy,Georgia,serif',
+                    'ornament' => '❦',
+                    'btn_bg'   => 'rgba(255,255,255,.2)',
+                ],
+                // ── The Wedding Navy (biru tua elegan)
+                'the-wedding-navy'   => [
+                    'bg'       => 'linear-gradient(160deg,#0a1628 0%,#162d52 50%,#1e4080 100%)',
+                    'color'    => '#c8d8f0',
+                    'accent'   => 'rgba(143,168,210,.6)',
+                    'font'     => 'Merriweather,Georgia,serif',
+                    'ornament' => '✦',
+                    'btn_bg'   => 'rgba(143,168,210,.25)',
+                ],
+                // ── The Wedding Sage (hijau sage)
+                'the-wedding-sage'   => [
+                    'bg'       => 'linear-gradient(160deg,#1e3a2e 0%,#3a6648 50%,#5a8c68 100%)',
+                    'color'    => '#e0f0e8',
+                    'accent'   => 'rgba(180,220,195,.6)',
+                    'font'     => 'Satisfy,Georgia,serif',
+                    'ornament' => '❧',
+                    'btn_bg'   => 'rgba(180,220,195,.2)',
+                ],
+                // ── The Wedding Pink (pink blush)
+                'the-wedding-pink'   => [
+                    'bg'       => 'linear-gradient(160deg,#7a4a4a 0%,#c48080 50%,#f0b8b8 100%)',
+                    'color'    => '#fff',
+                    'accent'   => 'rgba(255,220,220,.6)',
+                    'font'     => 'Satisfy,Georgia,serif',
+                    'ornament' => '♡',
+                    'btn_bg'   => 'rgba(255,255,255,.22)',
+                ],
+                // ── The Wedding Purple (ungu royal)
+                'the-wedding-purple' => [
+                    'bg'       => 'linear-gradient(160deg,#2a1050 0%,#5a2e90 50%,#8a5ec0 100%)',
+                    'color'    => '#f0e8ff',
+                    'accent'   => 'rgba(200,168,230,.6)',
+                    'font'     => 'Satisfy,Georgia,serif',
+                    'ornament' => '✿',
+                    'btn_bg'   => 'rgba(200,168,230,.22)',
+                ],
+                // ── Modern Elegant (hijau gelap + emas)
+                'modern-elegant'     => [
+                    'bg'       => 'linear-gradient(135deg,#e8f5ee 0%,#d0ead8 50%,#b8dfc4 100%)',
+                    'color'    => '#1d5a3f',
+                    'accent'   => 'rgba(212,175,55,.7)',
+                    'font'     => 'Playfair Display,Georgia,serif',
+                    'ornament' => '❦',
+                    'btn_bg'   => 'rgba(45,122,79,.85)',
+                ],
+                // ── Minimalist Green (hijau tua minimalis)
+                'minimalist-green'   => [
+                    'bg'       => 'linear-gradient(135deg,#1b4332 0%,#2d6a4f 50%,#40916c 100%)',
+                    'color'    => '#d8f3dc',
+                    'accent'   => 'rgba(216,243,220,.55)',
+                    'font'     => 'Lato,Arial,sans-serif',
+                    'ornament' => '✦',
+                    'btn_bg'   => 'rgba(216,243,220,.2)',
+                ],
+                // ── Luxury Botanical (hijau gelap + emas mewah)
+                'luxury-botanical'   => [
+                    'bg'       => 'linear-gradient(135deg,#141f12 0%,#243820 50%,#3a5c35 100%)',
+                    'color'    => '#f0e6d3',
+                    'accent'   => 'rgba(212,175,55,.6)',
+                    'font'     => 'Cormorant Garamond,Georgia,serif',
+                    'ornament' => '❧',
+                    'btn_bg'   => 'rgba(212,175,55,.25)',
+                ],
+                // ── Romantic Garden (merah mawar)
+                'romantic-garden'    => [
+                    'bg'       => 'linear-gradient(135deg,#5a1e2e 0%,#8c3050 50%,#b85070 100%)',
+                    'color'    => '#fce4ec',
+                    'accent'   => 'rgba(252,228,236,.55)',
+                    'font'     => 'Dancing Script,cursive',
+                    'ornament' => '✿',
+                    'btn_bg'   => 'rgba(252,228,236,.2)',
+                ],
+                // ── Tropical Paradise (hijau tropis)
+                'tropical-paradise'  => [
+                    'bg'       => 'linear-gradient(135deg,#083d2e 0%,#126b50 50%,#1ea878 100%)',
+                    'color'    => '#e0f7f0',
+                    'accent'   => 'rgba(224,247,240,.55)',
+                    'font'     => 'Pacifico,cursive',
+                    'ornament' => '❋',
+                    'btn_bg'   => 'rgba(224,247,240,.2)',
+                ],
+                // ── Vintage Rustic (coklat tua rustic)
+                'vintage-rustic'     => [
+                    'bg'       => 'linear-gradient(135deg,#3e2010 0%,#6e3e20 50%,#9e6040 100%)',
+                    'color'    => '#fdf0e0',
+                    'accent'   => 'rgba(253,240,224,.55)',
+                    'font'     => 'Playfair Display,Georgia,serif',
+                    'ornament' => '❦',
+                    'btn_bg'   => 'rgba(253,240,224,.2)',
+                ],
+                // ── Elegant Gold (hitam + emas)
+                'elegant-gold'       => [
+                    'bg'       => 'linear-gradient(135deg,#0a0800 0%,#1e1600 50%,#3a2c00 100%)',
+                    'color'    => '#ffd700',
+                    'accent'   => 'rgba(255,215,0,.55)',
+                    'font'     => 'Cormorant Garamond,Georgia,serif',
+                    'ornament' => '✦',
+                    'btn_bg'   => 'rgba(255,215,0,.2)',
+                ],
+                // ── Islami Gold (hijau islami + emas)
+                'islami-gold'        => [
+                    'bg'       => 'linear-gradient(135deg,#0e1e0e 0%,#1e3a1e 50%,#2e5a2e 100%)',
+                    'color'    => '#d4af37',
+                    'accent'   => 'rgba(212,175,55,.55)',
+                    'font'     => 'Amiri,Georgia,serif',
+                    'ornament' => '☽',
+                    'btn_bg'   => 'rgba(212,175,55,.2)',
+                ],
+                // ── Blush Rose (merah muda + putih)
+                'blush-rose'         => [
+                    'bg'       => 'linear-gradient(135deg,#6a1e30 0%,#b04060 50%,#d87090 100%)',
+                    'color'    => '#fff',
+                    'accent'   => 'rgba(255,255,255,.55)',
+                    'font'     => 'Dancing Script,cursive',
+                    'ornament' => '♡',
+                    'btn_bg'   => 'rgba(255,255,255,.22)',
+                ],
+                // ── White Elegance (abu gelap + putih)
+                'white-elegance'     => [
+                    'bg'       => 'linear-gradient(135deg,#1a1a1a 0%,#333 50%,#555 100%)',
+                    'color'    => '#f5f5f5',
+                    'accent'   => 'rgba(245,245,245,.55)',
+                    'font'     => 'Cormorant Garamond,Georgia,serif',
+                    'ornament' => '✦',
+                    'btn_bg'   => 'rgba(245,245,245,.18)',
+                ],
+                // ── Batik Cream (krem + batik coklat emas)
+                'batik-cream'        => [
+                    'bg'       => 'linear-gradient(160deg,#f4eadc 0%,#ede0cc 50%,#e0d0b8 100%)',
+                    'color'    => '#2f2622',
+                    'accent'   => 'rgba(184,135,70,.6)',
+                    'font'     => 'Fraunces,Georgia,serif',
+                    'ornament' => '❧',
+                    'btn_bg'   => 'rgba(47,38,34,.75)',
+                ],
             ];
-            $defaultThumb = ['bg'=>'linear-gradient(135deg,#2d7a4f 0%,#3a9e65 100%)','color'=>'#fff','accent'=>'rgba(255,255,255,.5)','font'=>'serif'];
+            $defaultThumb = [
+                'bg'       => 'linear-gradient(135deg,#2d7a4f 0%,#3a9e65 100%)',
+                'color'    => '#fff',
+                'accent'   => 'rgba(255,255,255,.5)',
+                'font'     => 'serif',
+                'ornament' => '❦',
+                'btn_bg'   => 'rgba(255,255,255,.22)',
+            ];
+
+            // Nama pasangan untuk preview thumbnail
+            $thumbMale   = $namePria   !== '-' ? explode(' ', $namePria)[0]   : 'Pria';
+            $thumbFemale = $nameWanita !== '-' ? explode(' ', $nameWanita)[0] : 'Wanita';
+            $thumbDate   = ($data->date && !empty($data->date->date))
+                ? date('d M Y', strtotime($data->date->date))
+                : '2025';
+
+            // Harga paket dari database
+            $packagesDb = collect($data->packages ?? []);
         @endphp
 
         @foreach (['basic', 'premium', 'exclusive'] as $grade)
@@ -690,7 +888,7 @@
                 @endphp
                 <div class="tpl-card {{ $isActive ? 'active-tpl' : '' }}">
 
-                    {{-- CSS Thumbnail --}}
+                    {{-- CSS Thumbnail — mirip tampilan cover asli --}}
                     <div class="tpl-thumb" style="background:{{ $ts['bg'] }}">
                         @if($isActive)
                         <div class="tpl-active-badge"><i class="bx bx-check me-1"></i>Aktif</div>
@@ -701,17 +899,40 @@
                             <span>Upgrade</span>
                         </div>
                         @endif
-                        <div class="tpl-photo" style="border-color:{{ $ts['accent'] }}">
-                            <span style="color:{{ $ts['color'] }};font-size:1.3rem">&#128145;</span>
+
+                        {{-- Ikon foto sampul di pojok kanan atas --}}
+                        <div class="tpl-cover-icon" style="color:{{ $ts['color'] }}" title="Foto Sampul">
+                            <i class="bx bx-image-alt"></i>
                         </div>
+
+                        {{-- Ornamen dekoratif --}}
+                        <div style="font-size:.9rem;opacity:.7;color:{{ $ts['color'] }};margin-bottom:.2rem;position:relative;z-index:1">
+                            {{ $ts['ornament'] ?? '❦' }}
+                        </div>
+
+                        {{-- Foto pasangan berdampingan --}}
+                        <div class="tpl-couple-row">
+                            <div class="tpl-photo" style="border-color:{{ $ts['accent'] }};color:{{ $ts['color'] }}">
+                                <i class="bx bx-user" style="font-size:.9rem"></i>
+                            </div>
+                            <span class="tpl-photo-sep" style="color:{{ $ts['color'] }}">♡</span>
+                            <div class="tpl-photo" style="border-color:{{ $ts['accent'] }};color:{{ $ts['color'] }}">
+                                <i class="bx bx-user" style="font-size:.9rem"></i>
+                            </div>
+                        </div>
+
+                        {{-- Nama pasangan --}}
                         <div class="tpl-names" style="color:{{ $ts['color'] }};font-family:{{ $ts['font'] }}">
-                            Nama &amp; Pasangan
+                            {{ $thumbFemale }} &amp; {{ $thumbMale }}
                         </div>
                         <div class="tpl-divider" style="background:{{ $ts['accent'] }}"></div>
                         <div class="tpl-date" style="color:{{ $ts['color'] }}">
-                            &#128197; 2025
+                            <i class="bx bx-calendar" style="font-size:.6rem;vertical-align:middle"></i>
+                            {{ $thumbDate }}
                         </div>
-                        <div class="tpl-btn">Buka Undangan</div>
+                        <div class="tpl-btn" style="background:{{ $ts['btn_bg'] }};color:{{ $ts['color'] }}">
+                            Buka Undangan
+                        </div>
                     </div>
 
                     {{-- Card info --}}
@@ -760,6 +981,67 @@
         @endif
         @endforeach
     </div>
+
+    {{-- Harga Paket dari Database --}}
+    @if(count($data->packages ?? []) > 0)
+    <div class="mb-4">
+        <div class="section-header">
+            <h5><i class="bx bx-package me-1"></i>Pilihan Paket</h5>
+            <a href="{{ route('packages') }}" class="btn btn-sm btn-creasik-primary">
+                <i class="bx bx-cart-alt me-1"></i>Lihat Semua
+            </a>
+        </div>
+        <div class="row g-2">
+            @foreach($data->packages as $pkg)
+            @php
+                $pkgContent = is_object($pkg->content) ? $pkg->content : json_decode($pkg->content ?? '{}');
+                $pkgActive  = strtolower($pkg->title) === strtolower($packTitle);
+                $pkgColors  = [0=>'#6c757d',1=>'#2d7a4f',2=>'#0d6efd',3=>'#d4af37'];
+                $pkgColor   = $pkgColors[$pkg->grade] ?? '#2d7a4f';
+                $pkgTplList = (array)($pkgContent->template ?? ['basic']);
+                $pkgGuest   = $pkgContent->guest ?? '-';
+                $pkgDays    = $pkgContent->active ?? '-';
+            @endphp
+            <div class="col-6 col-md-3">
+                <div class="rounded-3 p-2 h-100 d-flex flex-column"
+                     style="background:#fff;border:1.5px solid {{ $pkgActive ? $pkgColor : '#eee' }};
+                            box-shadow:{{ $pkgActive ? '0 0 0 2px '.$pkgColor.'30' : '0 1px 6px rgba(0,0,0,.05)' }};
+                            transition:all .2s">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span style="font-size:.7rem;font-weight:700;color:{{ $pkgColor }};text-transform:uppercase;letter-spacing:.5px">
+                            {{ $pkg->title }}
+                        </span>
+                        @if($pkgActive)
+                        <span class="badge" style="background:{{ $pkgColor }};font-size:.55rem">Aktif</span>
+                        @endif
+                    </div>
+                    <div style="font-size:1rem;font-weight:800;color:{{ $pkgColor }};line-height:1.1;margin-bottom:.3rem">
+                        {{ $pkg->price_formatted }}
+                    </div>
+                    <div style="font-size:.62rem;color:#888;line-height:1.5;flex:1">
+                        <div><i class="bx bx-user me-1" style="color:{{ $pkgColor }}"></i>
+                            {{ $pkgGuest === 'unlimited' ? '∞ Tamu' : $pkgGuest.' Tamu' }}
+                        </div>
+                        <div><i class="bx bx-calendar me-1" style="color:{{ $pkgColor }}"></i>
+                            {{ $pkgDays }} Hari
+                        </div>
+                        <div><i class="bx bx-palette me-1" style="color:{{ $pkgColor }}"></i>
+                            {{ implode(', ', array_map('ucfirst', $pkgTplList)) }}
+                        </div>
+                    </div>
+                    @if(!$pkgActive)
+                    <a href="{{ route('packages') }}"
+                       class="btn btn-sm mt-2 w-100"
+                       style="background:{{ $pkgColor }};color:#fff;font-size:.62rem;border-radius:6px;padding:.25rem .5rem">
+                        Pilih
+                    </a>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
 </section>
 @endsection

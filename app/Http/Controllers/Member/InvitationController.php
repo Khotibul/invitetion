@@ -192,6 +192,18 @@ class InvitationController extends Controller
 			$templateLimit = ['basic'];
 		}
 
+		// Ambil semua paket publish beserta harga untuk ditampilkan di dashboard
+		$allPackages = Package::select('id','title','slug','price','grade','content')
+			->publish()
+			->orderBy('grade')
+			->get()
+			->map(function ($p) {
+				$p->price_formatted = $p->price == 0
+					? 'Gratis'
+					: 'Rp ' . number_format((int)$p->price, 0, ',', '.');
+				return $p;
+			});
+
 		$bagpack = [
 			'name'      => Auth::user()->inv ? Auth::user()->inv->title : json_encode(['-', '-']),
 			'date'      => (Auth::user()->inv && Auth::user()->inv->preset)
@@ -206,6 +218,7 @@ class InvitationController extends Controller
 				'exclusive' => Template::select('id','title','slug','file','grade')->where('grade','exclusive')->publish()->orderBy('title')->get(),
 			],
 			'templateLimit' => $templateLimit, // kirim limit ke view untuk badge
+			'packages'      => $allPackages,   // semua paket + harga dari database
 		];
 
 		$rawTitle   = json_decode($bagpack['name'], true) ?? ['-', '-'];

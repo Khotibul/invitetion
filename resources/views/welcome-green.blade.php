@@ -149,16 +149,20 @@ a{text-decoration:none}
 
 /* ── PRICING ── */
 .pricing{background:var(--green-light)}
-.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;align-items:start}
-.pricing-card{background:var(--white);padding:2.5rem 2rem;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(45,122,79,.1);transition:transform .3s}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;align-items:start}
+.pricing-card{background:var(--white);padding:2.5rem 2rem;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(45,122,79,.1);transition:transform .3s;position:relative}
 .pricing-card:hover{transform:translateY(-6px)}
-.pricing-card.featured{border:3px solid var(--gold);position:relative}
+.pricing-card.featured{border:3px solid var(--gold)}
 .pricing-card.featured::before{content:'Terpopuler';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--white);font-size:.7rem;font-weight:700;letter-spacing:1px;padding:.3rem 1rem;border-radius:50px;text-transform:uppercase}
-.pricing-card h3{font-size:1.6rem;color:var(--green);margin-bottom:.5rem}
-.price{font-size:2.5rem;font-weight:700;color:var(--green);margin:1rem 0}
-.price-features{list-style:none;margin:1.5rem 0;text-align:left}
-.price-features li{padding:.6rem 0;border-bottom:1px solid #eee;font-size:.88rem;color:#555}
-.price-features li::before{content:'✓ ';color:var(--green);font-weight:700}
+.pricing-card h3{font-size:1.5rem;color:var(--green);margin-bottom:.3rem}
+.pricing-grade{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+.price{font-size:2.4rem;font-weight:700;color:var(--green);margin:.8rem 0}
+.price-sub{font-size:.78rem;color:#888;margin-top:-.5rem;margin-bottom:.5rem}
+.price-features{list-style:none;margin:1.2rem 0;text-align:left}
+.price-features li{padding:.5rem 0;border-bottom:1px solid #eee;font-size:.85rem;color:#555;display:flex;align-items:center;gap:.4rem}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.price-features li.no::before{content:'✗';color:#ccc}
+.price-features li.no{color:#bbb}
 
 /* ── TESTIMONIALS ── */
 .testimonials{background:var(--white)}
@@ -331,32 +335,81 @@ footer p{font-size:.82rem;opacity:.6}
       <p>Pilih paket yang sesuai dengan kebutuhan Anda</p>
     </div>
     <div class="pricing-grid">
-      <div class="pricing-card">
-        <h3>Basic</h3><div class="price">Rp 150K</div>
+      @php
+        $featuredGrades = ['premium', 'basic']; // prioritas featured
+        $packages = $data['packages'] ?? collect();
+        $featuredSlug = $packages->sortByDesc('grade')->first()?->slug ?? '';
+        // Tandai paket tengah/terpopuler: paket dengan grade tertinggi kedua atau premium
+        $featuredPkg = $packages->firstWhere('slug', 'premium')
+            ?? $packages->firstWhere('grade', 2)
+            ?? $packages->get(1);
+      @endphp
+      @forelse($packages as $pkg)
+      @php
+        $isFeatured = $featuredPkg && $pkg->id === $featuredPkg->id;
+        $tplList    = (array)($pkg->features['template'] ?? ['basic']);
+        $guestLabel = ($pkg->features['guest'] === 'unlimited' || $pkg->features['guest'] == 0)
+            ? 'Tamu Unlimited' : ($pkg->features['guest'].' Tamu');
+        $photoLabel = ($pkg->features['gallery_photo'] === 'unlimited' || $pkg->features['gallery_photo'] == 0)
+            ? 'Galeri Unlimited' : ('Galeri '.$pkg->features['gallery_photo'].' Foto');
+        $activeLabel = $pkg->features['active'].' Hari Aktif';
+        $tplLabel   = implode(' + ', array_map('ucfirst', $tplList)).' Template';
+      @endphp
+      <div class="pricing-card {{ $isFeatured ? 'featured' : '' }}">
+        <h3>{{ $pkg->title }}</h3>
+        <p class="pricing-grade">{{ implode(' · ', array_map('ucfirst', $tplList)) }}</p>
+        <div class="price">{{ $pkg->price_formatted }}</div>
+        @if($pkg->price > 0)
+        <p class="price-sub">sekali bayar</p>
+        @endif
         <ul class="price-features">
-          <li>1 Template Pilihan</li><li>Gallery 20 Foto</li>
-          <li>RSVP System</li><li>Aktif 30 Hari</li><li>Support Email</li>
+          <li>{{ $tplLabel }}</li>
+          <li>{{ $guestLabel }}</li>
+          <li>{{ $photoLabel }}</li>
+          <li>{{ $activeLabel }}</li>
+          @if($pkg->features['story'])
+          <li>Love Story</li>
+          @else
+          <li class="no">Love Story</li>
+          @endif
+          @if($pkg->features['gift'])
+          <li>Amplop Digital</li>
+          @else
+          <li class="no">Amplop Digital</li>
+          @endif
+          @if($pkg->features['e_invitation'])
+          <li>E-Invitation</li>
+          @else
+          <li class="no">E-Invitation</li>
+          @endif
+          @if($pkg->features['smart_wa'])
+          <li>Smart WhatsApp</li>
+          @else
+          <li class="no">Smart WhatsApp</li>
+          @endif
         </ul>
-        <a href="{{ route('register') }}" class="btn btn-green">Pilih Paket</a>
+        <a href="{{ route('signup') }}" class="btn btn-green">
+          {{ $pkg->price == 0 ? 'Coba Gratis' : 'Pilih Paket' }}
+        </a>
+      </div>
+      @empty
+      {{-- Fallback jika database kosong --}}
+      <div class="pricing-card">
+        <h3>Starter</h3><div class="price">Rp 99K</div>
+        <ul class="price-features"><li>Template Basic</li><li>50 Tamu</li><li>90 Hari Aktif</li></ul>
+        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
       </div>
       <div class="pricing-card featured">
-        <h3>Premium</h3><div class="price">Rp 250K</div>
-        <ul class="price-features">
-          <li>Semua Template</li><li>Gallery Unlimited</li>
-          <li>RSVP + Guest Management</li><li>Aktif 60 Hari</li>
-          <li>Custom Domain</li><li>Priority Support</li>
-        </ul>
-        <a href="{{ route('register') }}" class="btn btn-green">Pilih Paket</a>
+        <h3>Basic</h3><div class="price">Rp 149K</div>
+        <ul class="price-features"><li>Template Basic + Premium</li><li>100 Tamu</li><li>180 Hari Aktif</li></ul>
+        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
       </div>
       <div class="pricing-card">
-        <h3>Enterprise</h3><div class="price">Rp 500K</div>
-        <ul class="price-features">
-          <li>Semua Fitur Premium</li><li>Custom Design</li>
-          <li>Video Background</li><li>Aktif 90 Hari</li>
-          <li>Dedicated Support</li><li>Free Revisi</li>
-        </ul>
-        <a href="{{ route('register') }}" class="btn btn-green">Pilih Paket</a>
+        <h3>Premium</h3><div class="price">Rp 249K</div>
+        <ul class="price-features"><li>Semua Template</li><li>Tamu Unlimited</li><li>365 Hari Aktif</li></ul>
+        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
       </div>
+      @endforelse
     </div>
   </div>
 </section>
