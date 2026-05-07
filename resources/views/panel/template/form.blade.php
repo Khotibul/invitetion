@@ -143,38 +143,56 @@
 											<small class="text-muted fw-normal ms-1">(gambar cover undangan saat preview)</small>
 										</label>
 
-										{{-- Hidden inputs yang dikirim ke controller --}}
-										<input type="hidden" name="cover_image_method" id="cover_image_method"
-											value="{{ get_preset_value($template->preset ?? null, 'cover.description.image.method', 'none') }}">
-										<input type="hidden" name="cover_image_file" id="cover_image_file"
-											value="{{ get_preset_value($template->preset ?? null, 'cover.description.image.image', '') }}">
+										{{-- Baca nilai cover yang sudah tersimpan di preset --}}
+										@php
+											$_cvMethod = get_preset_value($template->preset ?? null, 'cover.description.image.method', '');
+											$_cvFile   = get_preset_value($template->preset ?? null, 'cover.description.image.image', '');
+											$_hasCover = ($_cvMethod === 'storage' && !empty($_cvFile));
+											$_cvSrc    = $_hasCover ? url('storage/sm/'.$_cvFile) : null;
+										@endphp
 
+										{{-- Input file langsung (dikirim bersama form submit) --}}
 										<div class="row g-2 align-items-start">
 											<div class="col-12 col-lg-7">
-												{{-- Tombol aksi --}}
 												<div class="d-flex gap-2 flex-wrap mb-2">
-													{{-- Upload langsung --}}
-													<label class="btn btn-sm btn-outline-primary mb-0" style="cursor:pointer">
-														<i class="bx bx-upload me-1"></i>Unggah Foto
-														<input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/jpg" hidden>
+													{{-- Tombol pilih file --}}
+													<label class="btn btn-sm btn-outline-primary mb-0" style="cursor:pointer" id="cover-label">
+														<i class="bx bx-upload me-1"></i>
+														<span id="cover-label-text">{{ $_hasCover ? 'Ganti Foto' : 'Unggah Foto' }}</span>
+														{{-- File input langsung di dalam form — dikirim saat Simpan --}}
+														<input type="file"
+															name="cover_file"
+															id="cover-file-input"
+															accept="image/jpeg,image/png,image/jpg"
+															hidden>
 													</label>
 													{{-- Hapus --}}
+													@if($_hasCover)
 													<button type="button" class="btn btn-sm btn-outline-danger" id="btn-cover-remove">
 														<i class="bx bx-trash me-1"></i>Hapus
 													</button>
+													@else
+													<button type="button" class="btn btn-sm btn-outline-danger d-none" id="btn-cover-remove">
+														<i class="bx bx-trash me-1"></i>Hapus
+													</button>
+													@endif
 												</div>
-												{{-- Upload progress --}}
-												<div id="cover-upload-progress" class="d-none mb-2">
-													<div class="progress" style="height:6px">
-														<div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width:100%"></div>
-													</div>
-													<small class="text-muted">Mengunggah...</small>
+
+												{{-- Flag: 'delete' = hapus cover, kosong = tidak ubah --}}
+												<input type="hidden" name="cover_action" id="cover_action" value="">
+
+												{{-- Info file yang dipilih --}}
+												<div id="cover-file-info" class="d-none mb-1">
+													<span class="badge bg-success-subtle text-success border border-success-subtle">
+														<i class="bx bx-check me-1"></i>
+														<span id="cover-file-name"></span>
+													</span>
+													<small class="text-muted ms-1">— klik Simpan untuk menyimpan</small>
 												</div>
-												{{-- Status --}}
-												<div id="cover-upload-status" class="d-none"></div>
+
 												<small class="text-muted d-block">
 													<i class="bx bx-info-circle me-1"></i>
-													Format JPG/PNG, maks 2MB. Foto ini menjadi gambar sampul default saat template dipreview.
+													Format JPG/PNG, maks 2MB.
 												</small>
 											</div>
 											<div class="col-12 col-lg-5">
@@ -182,19 +200,8 @@
 												<div id="cover-preview-box"
 													class="border rounded d-flex align-items-center justify-content-center overflow-hidden"
 													style="height:110px;background:#f8f9fa;position:relative">
-													@php
-														$cvMethod = get_preset_value($template->preset ?? null, 'cover.description.image.method', 'none');
-														$cvFile   = get_preset_value($template->preset ?? null, 'cover.description.image.image', '');
-														$cvSrc    = null;
-														if ($cvFile && $cvMethod !== 'none') {
-															if ($cvMethod === 'asset')        $cvSrc = asset($cvFile);
-															elseif ($cvMethod === 'storage')  $cvSrc = url('storage/sm/'.$cvFile);
-															elseif ($cvMethod === 'avatar')   $cvSrc = url('storage/avatar/'.$cvFile);
-															else                              $cvSrc = url('storage/'.$cvFile);
-														}
-													@endphp
-													@if($cvSrc)
-													<img id="cover-preview-img" src="{{ $cvSrc }}" alt="cover"
+													@if($_cvSrc)
+													<img id="cover-preview-img" src="{{ $_cvSrc }}" alt="cover"
 														style="width:100%;height:100%;object-fit:cover">
 													@else
 													<div id="cover-preview-empty" class="text-center text-muted p-2">
@@ -317,16 +324,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('modules/datatable/datatables.min.css') }}">
 <link rel="stylesheet" href="{{ asset('modules/select2/dist/css/select2.min.css') }}">
-<style>
-/* Preview foto pasangan */
-#preview-photo-male, #preview-photo-female {
-    transition: opacity .2s;
-}
-/* Cover preview box */
-#cover-preview-box img {
-    transition: opacity .3s;
-}
-</style>
 @endpush
 
 @push('script')
@@ -336,121 +333,68 @@
 <script>
 $(function() {
 
-    // ══════════════════════════════════════════════
-    // 1. Preview foto pasangan saat dropdown berubah
-    // ══════════════════════════════════════════════
+    // ── Preview foto pasangan saat dropdown berubah
     $(".preview-image-option").on('change', function() {
-        var url = $(this).find(':selected').data('url');
+        var imgUrl = $(this).find(':selected').data('url');
         var target = (this.id === 'photo_male') ? '#preview-photo-male' : '#preview-photo-female';
-        $(target).attr('src', url);
+        $(target).attr('src', imgUrl);
     });
 
-    // ══════════════════════════════════════════════
-    // 2. Upload foto sampul via AJAX (tanpa submit form utama)
-    // ══════════════════════════════════════════════
+    // ── Pilih file foto sampul → tampilkan preview lokal + nama file
     $('#cover-file-input').on('change', function() {
         var file = this.files[0];
         if (!file) return;
 
-        // Validasi sisi klien
+        // Validasi tipe
         var allowed = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!allowed.includes(file.type)) {
-            showCoverStatus('danger', '<i class="bx bx-error me-1"></i>Hanya file JPG atau PNG yang diizinkan.');
+            alert('Hanya file JPG atau PNG yang diizinkan.');
             this.value = '';
             return;
         }
+        // Validasi ukuran (2MB)
         if (file.size > 2 * 1024 * 1024) {
-            showCoverStatus('danger', '<i class="bx bx-error me-1"></i>Ukuran file maksimal 2MB.');
+            alert('Ukuran file maksimal 2MB.');
             this.value = '';
             return;
         }
 
-        // Tampilkan preview lokal dulu (langsung)
+        // Preview lokal langsung
         var reader = new FileReader();
         reader.onload = function(e) {
-            setCoverPreview(e.target.result);
+            $('#cover-preview-box').html(
+                '<img id="cover-preview-img" src="' + e.target.result + '" alt="cover" style="width:100%;height:100%;object-fit:cover">'
+            );
         };
         reader.readAsDataURL(file);
 
-        // Upload via AJAX ke endpoint khusus
-        var formData = new FormData();
-        formData.append('_token', $('meta[name=csrf-token]').attr('content'));
-        formData.append('cover_file', file);
+        // Tampilkan nama file & tombol hapus
+        $('#cover-file-name').text(file.name);
+        $('#cover-file-info').removeClass('d-none');
+        $('#cover-label-text').text('Ganti Foto');
+        $('#btn-cover-remove').removeClass('d-none');
 
-        $('#cover-upload-progress').removeClass('d-none');
-        $('#cover-upload-status').addClass('d-none');
-
-        $.ajax({
-            url: '{{ route("template.cover.upload") }}',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(res) {
-                $('#cover-upload-progress').addClass('d-none');
-                if (res.success) {
-                    // Simpan ke hidden input
-                    $('#cover_image_method').val('storage');
-                    $('#cover_image_file').val(res.file);
-                    // Update preview dengan URL dari server
-                    setCoverPreview(res.url);
-                    showCoverStatus('success', '<i class="bx bx-check-circle me-1"></i>Foto sampul berhasil diunggah.');
-                } else {
-                    showCoverStatus('danger', '<i class="bx bx-error me-1"></i>' + (res.message || 'Gagal mengunggah.'));
-                    resetCoverPreview();
-                }
-            },
-            error: function(xhr) {
-                $('#cover-upload-progress').addClass('d-none');
-                var msg = 'Gagal mengunggah foto sampul.';
-                try {
-                    var err = JSON.parse(xhr.responseText);
-                    if (err.errors && err.errors.cover_file) msg = err.errors.cover_file[0];
-                    else if (err.message) msg = err.message;
-                } catch(e) {}
-                showCoverStatus('danger', '<i class="bx bx-error me-1"></i>' + msg);
-                resetCoverPreview();
-            }
-        });
-
-        // Reset input file agar bisa upload ulang file yang sama
-        this.value = '';
+        // Reset flag hapus (karena ada file baru)
+        $('#cover_action').val('');
     });
 
-    // ══════════════════════════════════════════════
-    // 3. Hapus foto sampul
-    // ══════════════════════════════════════════════
+    // ── Hapus foto sampul
     $('#btn-cover-remove').on('click', function() {
-        $('#cover_image_method').val('none');
-        $('#cover_image_file').val('');
-        resetCoverPreview();
-        showCoverStatus('secondary', '<i class="bx bx-info-circle me-1"></i>Foto sampul dihapus. Simpan untuk menyimpan perubahan.');
-    });
-
-    // ══════════════════════════════════════════════
-    // Helper functions
-    // ══════════════════════════════════════════════
-    function setCoverPreview(src) {
-        $('#cover-preview-box').html(
-            '<img id="cover-preview-img" src="' + src + '" alt="cover" style="width:100%;height:100%;object-fit:cover">'
-        );
-    }
-
-    function resetCoverPreview() {
+        // Kosongkan input file
+        $('#cover-file-input').val('');
+        // Set flag hapus
+        $('#cover_action').val('delete');
+        // Reset preview
         $('#cover-preview-box').html(
             '<div id="cover-preview-empty" class="text-center text-muted p-2">' +
             '<i class="bx bx-image" style="font-size:2rem"></i>' +
             '<p class="small mb-0 mt-1">Belum ada foto sampul</p>' +
             '</div>'
         );
-    }
-
-    function showCoverStatus(type, html) {
-        $('#cover-upload-status')
-            .removeClass('d-none alert-success alert-danger alert-secondary alert-warning')
-            .addClass('alert alert-' + type + ' py-1 px-2 small')
-            .html(html);
-    }
+        $('#cover-file-info').addClass('d-none');
+        $('#cover-label-text').text('Unggah Foto');
+        $(this).addClass('d-none');
+    });
 
 });
 </script>

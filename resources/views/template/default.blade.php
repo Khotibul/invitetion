@@ -49,6 +49,9 @@
             /* font */
             --primary_font: {{ $data->design->title->font }};
             --secondary_font: {{ $data->design->content->font }};
+            /* font size */
+            --primary_font_size: {{ $data->design->title->size ?? 24 }}px;
+            --secondary_font_size: {{ $data->design->content->size ?? 14 }}px;
         }
     </style>
 	@vite(['resources/css/template/default.css', 'resources/js/template/default.js'])

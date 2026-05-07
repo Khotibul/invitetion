@@ -1,4 +1,4 @@
-@include('template.partials.helpers')
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -629,6 +629,7 @@ textarea.f-input{min-height:120px;resize:vertical}
     .gallery-grid{grid-template-columns:1fr}
 }
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

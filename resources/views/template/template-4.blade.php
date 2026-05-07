@@ -133,6 +133,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:300}
     .g-item.wide{grid-column:span 1;aspect-ratio:1}
 }
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

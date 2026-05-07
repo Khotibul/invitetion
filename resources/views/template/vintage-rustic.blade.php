@@ -374,6 +374,7 @@
             .couple-grid { grid-template-columns: 1fr; }
         }
     </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

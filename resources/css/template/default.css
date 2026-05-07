@@ -11,12 +11,14 @@ body.opened {
             body.opened::-webkit-scrollbar-thumb:hover {
                 background-color: var(--primary_color); }
 h1, h2, h3, h4, h5, h6 {
-    font-family: var(--primary_font); }
+    font-family: var(--primary_font);
+    font-size: var(--primary_font_size, 24px); }
 section {
     background-color: var(--bg_color);
     position: relative;
     box-sizing: content-box;
     font-family: var(--secondary_font);
+    font-size: var(--secondary_font_size, 14px);
     margin: 0; }
     section#cover {
         position: fixed;

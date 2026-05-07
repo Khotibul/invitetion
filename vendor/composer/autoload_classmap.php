@@ -1453,6 +1453,7 @@ return array(
     'Database\\Seeders\\ElegantGoldTemplateSeeder' => $baseDir . '/database/seeders/ElegantGoldTemplateSeeder.php',
     'Database\\Seeders\\FixTemplateCompatibilitySeeder' => $baseDir . '/database/seeders/FixTemplateCompatibilitySeeder.php',
     'Database\\Seeders\\FixTheWeddingPreviewSeeder' => $baseDir . '/database/seeders/FixTheWeddingPreviewSeeder.php',
+    'Database\\Seeders\\FontSeeder' => $baseDir . '/database/seeders/FontSeeder.php',
     'Database\\Seeders\\FourTemplateSeeder' => $baseDir . '/database/seeders/FourTemplateSeeder.php',
     'Database\\Seeders\\InfoSeeder' => $baseDir . '/database/seeders/InfoSeeder.php',
     'Database\\Seeders\\IslamiGoldTemplateSeeder' => $baseDir . '/database/seeders/IslamiGoldTemplateSeeder.php',

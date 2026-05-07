@@ -444,8 +444,8 @@ class InvitationController extends Controller
 		$defaults = [
 			'design' => [
 				'template'   => $inv->template_id ?? null,
-				'title'      => ['color' => '#000000', 'font' => 'Arial'],
-				'content'    => ['color' => '#333333', 'font' => 'Arial'],
+				'title'      => ['color' => '#000000', 'font' => 'Arial', 'size' => 24],
+				'content'    => ['color' => '#333333', 'font' => 'Arial', 'size' => 14],
 				'background' => '#ffffff',
 				'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
 			],
@@ -523,10 +523,16 @@ class InvitationController extends Controller
 		if (!isset($raw->design)) $raw->design = (object)[];
 		$d = $raw->design;
 		if (!isset($d->template))   $d->template   = $inv->template_id ?? null;
-		if (!isset($d->title))      $d->title       = (object)['color'=>'#000000','font'=>'Arial'];
-		if (!isset($d->content))    $d->content     = (object)['color'=>'#333333','font'=>'Arial'];
+		if (!isset($d->title))      $d->title       = (object)['color'=>'#000000','font'=>'Arial','size'=>24];
+		if (!isset($d->content))    $d->content     = (object)['color'=>'#333333','font'=>'Arial','size'=>14];
 		if (!isset($d->background)) $d->background  = '#ffffff';
 		if (!isset($d->button))     $d->button      = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
+		// Backward compat: preset lama tidak punya size
+		if (!isset($d->title->size))   $d->title->size   = 24;
+		if (!isset($d->content->size)) $d->content->size = 14;
+		// Backward compat: preset lama tidak punya font
+		if (!isset($d->title->font))   $d->title->font   = 'Arial';
+		if (!isset($d->content->font)) $d->content->font = 'Arial';
 
 		// cover
 		if (!isset($raw->cover)) $raw->cover = (object)[];
@@ -619,14 +625,27 @@ class InvitationController extends Controller
 		if (!is_array($templateLimit) || empty($templateLimit)) {
 			$templateLimit = ['basic'];
 		}
+
+		// Ambil font sebagai array sederhana agar tidak error setelah json_encode/decode
+		$fontList = TemplateAssets::select('title','content')
+			->where('type','font')
+			->publish()
+			->orderBy('title')
+			->get()
+			->map(function($f) {
+				return ['title' => $f->title, 'content' => $f->content];
+			})
+			->values()
+			->toArray();
+
 		$bagpack = [
 			'template' => [
 				'basic'     => in_array('basic', $templateLimit, true)     ? Template::select('id','title','slug','file')->where('grade','basic')->publish()->latest()->get()     : collect(),
 				'premium'   => in_array('premium', $templateLimit, true)   ? Template::select('id','title','slug','file')->where('grade','premium')->publish()->latest()->get()   : collect(),
 				'exclusive' => in_array('exclusive', $templateLimit, true) ? Template::select('id','title','slug','file')->where('grade','exclusive')->publish()->latest()->get() : collect(),
 			],
-			'limit'  => $templateLimit,
-			'font'   => TemplateAssets::select('title','content')->where('type','font')->publish()->get(),
+			'limit'  => $templateLimit,   // tetap array PHP biasa
+			'font'   => $fontList,        // array sederhana, aman setelah json_encode/decode
 			'preset' => $preset->design,
 		];
 		$data = json_decode(json_encode($bagpack));
@@ -1238,13 +1257,16 @@ class InvitationController extends Controller
 					return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Access denied!!']]);
 				endif;
 			endif;
-			$preset['design']['title']['color'] = $request->input('design_title_color');
-			$preset['design']['content']['color'] = $request->input('design_content_color');
-			$preset['design']['background'] = $request->input('design_background');
+			$preset['design']['title']['color']   = $request->input('design_title_color');
+			$preset['design']['content']['color']  = $request->input('design_content_color');
+			$preset['design']['background']        = $request->input('design_background');
 			$preset['design']['button']['background'] = $request->input('design_button_background');
-			$preset['design']['button']['color'] = $request->input('design_button_color');
-			$preset['design']['title']['font'] = $request->input('design_title_font');
-			$preset['design']['content']['font'] = $request->input('design_content_font');
+			$preset['design']['button']['color']   = $request->input('design_button_color');
+			$preset['design']['title']['font']     = $request->input('design_title_font');
+			$preset['design']['content']['font']   = $request->input('design_content_font');
+			// Ukuran font — clamp ke range yang aman
+			$preset['design']['title']['size']   = max(12, min(72, (int) $request->input('design_title_size', 24)));
+			$preset['design']['content']['size'] = max(10, min(32, (int) $request->input('design_content_size', 14)));
 		elseif ($menu=='cover') :
 			$column['cover_name_female'] = 'required';
 			$column['cover_name_male']   = 'required';

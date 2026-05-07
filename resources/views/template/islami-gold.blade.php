@@ -431,6 +431,7 @@ textarea.f-input{resize:vertical;min-height:90px}
     .gallery-grid{grid-template-columns:1fr}
 }
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

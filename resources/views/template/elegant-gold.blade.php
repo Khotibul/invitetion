@@ -1,4 +1,4 @@
-@include('template.partials.helpers')
+﻿@include('template.partials.helpers')
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -152,6 +152,7 @@ a{text-decoration:none;color:inherit}
   .g-item.wide{grid-column:span 1;aspect-ratio:1}
 }
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

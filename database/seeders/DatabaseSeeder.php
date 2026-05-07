@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             NewTemplateSeeder::class, // New templates
             TheWeddingTemplateSeeder::class,
             TemplateAssetSeeder::class,
+            FontSeeder::class,        // Font pilihan member
             PackageSeeder::class,
             InfoSeeder::class,
             ContactSeeder::class,

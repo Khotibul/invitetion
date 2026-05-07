@@ -564,6 +564,7 @@ h1,h2,h3,h4 { font-family:'Cormorant Garamond',serif; font-weight:400; line-heig
     .hero-names { font-size:clamp(2.5rem,9vw,4rem); }
 }
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

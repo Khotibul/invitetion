@@ -5,22 +5,23 @@
 		use Illuminate\Support\Str;
 		setlocale(LC_ALL, 'IND');
 		$invitationFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-
-		// ── Foto sampul: gunakan $coverSrc dari helper jika ada
-		$coverImageFile = $coverSrc ?? null;
-		if (empty($coverImageFile)) {
-			$coverImageObj = $data->cover->description->image ?? null;
-			if ($coverImageObj && !empty($coverImageObj->image ?? '')) {
-				$m = $coverImageObj->method ?? '';
-				if ($m === 'asset')        $coverImageFile = asset($coverImageObj->image);
-				elseif ($m === 'storage')  $coverImageFile = url('storage/sm/'.$coverImageObj->image);
-				elseif ($m === 'avatar')   $coverImageFile = url('storage/avatar/'.$coverImageObj->image);
-				else                       $coverImageFile = url('storage/'.$coverImageObj->image);
+		$coverImageObj  = $data->cover->description->image ?? null;
+		// Fix path: sistem simpan di storage/ bukan storage/cover/
+		$coverImageFile = null;
+		if ($coverImageObj && !empty($coverImageObj->image)) {
+			if ($coverImageObj->method === 'asset') {
+				$coverImageFile = asset($coverImageObj->image);
+			} elseif ($coverImageObj->method === 'storage') {
+				$coverImageFile = url('storage/sm/'.$coverImageObj->image);
+			} elseif ($coverImageObj->method === 'avatar') {
+				$coverImageFile = url('storage/avatar/'.$coverImageObj->image);
+			} else {
+				$coverImageFile = url('storage/'.$coverImageObj->image);
 			}
 		}
-		$coverImageFile = $coverImageFile ?: $invitationFile;
+		$coverImageFile = $coverImageFile ?? $invitationFile;
 
-		// ── Foto pasangan: gunakan $maleSrc/$femaleSrc dari helper jika ada
+		// ── Foto pasangan
 		$resolvedMaleSrc = $maleSrc ?? null;
 		if (empty($resolvedMaleSrc)) {
 			$_mImg = $data->profile->photo->male->image  ?? '';
@@ -263,6 +264,7 @@
 	}
 	</style>
 
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

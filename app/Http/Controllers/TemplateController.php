@@ -308,52 +308,6 @@ class TemplateController extends Controller
     }
 
     /**
-     * Upload foto sampul template via AJAX — endpoint terpisah dari form utama.
-     * Dipanggil dari JS saat admin memilih foto sampul.
-     */
-    public function cover_upload(Request $request): JsonResponse
-    {
-        $this->validate($request, [
-            'cover_file' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-        ], [
-            'required' => 'File foto sampul harus dipilih.',
-            'image'    => 'File harus berupa gambar.',
-            'mimes'    => 'Hanya file JPG atau PNG yang diizinkan.',
-            'max'      => 'Ukuran file maksimal 2MB.',
-        ]);
-
-        $file     = $request->file('cover_file');
-        $fileName = $file->hashName();
-        $fileData = file_get_contents($file->getRealPath());
-
-        // Simpan file asli ke root storage (tanpa subfolder)
-        Storage::disk('public')->put($fileName, $fileData);
-
-        // image_reducer membuat xs/, sm/, md/ secara otomatis dari $fileName
-        try {
-            image_reducer($fileData, $fileName);
-        } catch (\Throwable $e) {
-            // Jika image_reducer gagal, file asli tetap tersimpan
-        }
-
-        // Catat di Strbox agar muncul di storage admin
-        Strbox::create([
-            'title'     => 'Cover: '.pathinfo($fileName, PATHINFO_FILENAME),
-            'file'      => $fileName,
-            'file_type' => 'image',
-            'user_id'   => Auth::user()->id,
-            'ip_addr'   => $_SERVER['REMOTE_ADDR'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'file'    => $fileName,
-            'url'     => url('storage/sm/'.$fileName),
-            'message' => 'Foto sampul berhasil diunggah.',
-        ]);
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Template $template): JsonResponse
@@ -396,23 +350,44 @@ class TemplateController extends Controller
 		$preset['profile']['photo']['female']['image']  = $request->photo_female;
 		$preset['profile']['photo']['female']['method'] = 'avatar';
 
-		// ── Foto sampul default — sudah diupload via AJAX, tinggal simpan method+file
-		$coverMethod = $request->input('cover_image_method', '');
-		$coverFile   = $request->input('cover_image_file', '');
+		// ── Foto sampul default — diupload langsung bersama form submit
+		$coverAction = trim((string) $request->input('cover_action', ''));
 
-		if ($coverMethod === 'storage' && !empty($coverFile)) {
-			// File sudah ada di storage/sm/ (diupload via cover_upload endpoint)
+		if ($request->hasFile('cover_file')) {
+			// Ada file baru yang diupload
+			$request->validate([
+				'cover_file' => 'image|mimes:jpg,jpeg,png|max:2048',
+			], [
+				'image' => 'File harus berupa gambar.',
+				'mimes' => 'Hanya file JPG atau PNG yang diizinkan.',
+				'max'   => 'Ukuran file maksimal 2MB.',
+			]);
+			$coverFile     = $request->file('cover_file');
+			$coverFileName = $coverFile->hashName();
+			$coverData     = file_get_contents($coverFile->getRealPath());
+			// Simpan ke root storage — image_reducer buat xs/, sm/, md/ otomatis
+			Storage::disk('public')->put($coverFileName, $coverData);
+			try { image_reducer($coverData, $coverFileName); } catch (\Throwable $e) {}
+			// Catat di Strbox
+			Strbox::create([
+				'title'     => 'Cover: '.$request->title,
+				'file'      => $coverFileName,
+				'file_type' => 'image',
+				'user_id'   => Auth::user()->id,
+				'ip_addr'   => $_SERVER['REMOTE_ADDR'],
+			]);
 			$preset['cover']['description']['image'] = [
 				'method' => 'storage',
-				'image'  => $coverFile,
+				'image'  => $coverFileName,
 			];
-		} elseif ($coverMethod === 'none') {
+		} elseif ($coverAction === 'delete') {
+			// Admin klik tombol Hapus
 			$preset['cover']['description']['image'] = [
 				'method' => 'none',
 				'image'  => '',
 			];
 		}
-		// Jika cover_image_method kosong/tidak diisi → biarkan preset cover tidak berubah
+		// Tidak ada file baru dan tidak ada aksi hapus → pertahankan cover yang ada di DB
 
 		$column['preset'] = json_encode($preset);
 

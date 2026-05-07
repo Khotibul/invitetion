@@ -437,6 +437,7 @@
             }
         }
     </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

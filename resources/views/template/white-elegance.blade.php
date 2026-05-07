@@ -1,4 +1,4 @@
-@include('template.partials.helpers')
+﻿@include('template.partials.helpers')
 <!-- white-elegance template -->
 <!DOCTYPE html>
 <html lang="id">
@@ -427,6 +427,7 @@ section{padding:5rem 1.5rem}
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

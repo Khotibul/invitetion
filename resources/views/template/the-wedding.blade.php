@@ -5,49 +5,41 @@
 		use Illuminate\Support\Str;
 		setlocale(LC_ALL, 'IND');
 		$invitationFile = Str::startsWith($invitation->file ?? '', 'template/') ? asset($invitation->file) : url('storage/'.($invitation->file ?? ''));
-
-		// ── Foto sampul: gunakan $coverSrc dari helper jika ada, fallback ke $invitationFile
-		// $coverSrc sudah dihitung di PublicController::resolveHelperVars()
-		$coverImageFile = $coverSrc ?? null;
-		// Jika tidak ada coverSrc, coba hitung manual dari preset
-		if (empty($coverImageFile)) {
-			$coverImageObj = $data->cover->description->image ?? null;
-			if ($coverImageObj && !empty($coverImageObj->image ?? '')) {
-				$m = $coverImageObj->method ?? '';
-				if ($m === 'asset')        $coverImageFile = asset($coverImageObj->image);
-				elseif ($m === 'storage')  $coverImageFile = url('storage/sm/'.$coverImageObj->image);
-				elseif ($m === 'avatar')   $coverImageFile = url('storage/avatar/'.$coverImageObj->image);
-				else                       $coverImageFile = url('storage/'.$coverImageObj->image);
+		$coverImageObj  = $data->cover->description->image ?? null;
+		// Fix path: sistem simpan di storage/ bukan storage/cover/
+		$coverImageFile = null;
+		if ($coverImageObj && !empty($coverImageObj->image)) {
+			if ($coverImageObj->method === 'asset') {
+				$coverImageFile = asset($coverImageObj->image);
+			} elseif ($coverImageObj->method === 'storage') {
+				$coverImageFile = url('storage/sm/'.$coverImageObj->image);
+			} elseif ($coverImageObj->method === 'avatar') {
+				$coverImageFile = url('storage/avatar/'.$coverImageObj->image);
+			} else {
+				$coverImageFile = url('storage/'.$coverImageObj->image);
 			}
 		}
-		// Fallback ke file undangan
-		$coverImageFile = $coverImageFile ?: $invitationFile;
+		$coverImageFile = $coverImageFile ?? $invitationFile;
 
-		// ── Foto pasangan: gunakan $maleSrc/$femaleSrc dari helper jika ada
-		// Fallback: hitung manual dari preset dengan semua method yang mungkin
+		// ── Foto pasangan
 		$resolvedMaleSrc = $maleSrc ?? null;
 		if (empty($resolvedMaleSrc)) {
 			$_mImg = $data->profile->photo->male->image  ?? '';
 			$_mMet = $data->profile->photo->male->method ?? '';
-			if (!empty($_mImg) && !empty($_mMet) && $_mMet !== 'none') {
-				if ($_mMet === 'storage')     $resolvedMaleSrc = url('storage/sm/'.$_mImg);
-				elseif ($_mMet === 'avatar')  $resolvedMaleSrc = url('storage/avatar/'.$_mImg);
-				else                          $resolvedMaleSrc = url('storage/avatar/'.$_mImg);
-			} elseif (!empty($_mImg)) {
-				// method kosong/null tapi ada image — asumsikan avatar
-				$resolvedMaleSrc = url('storage/avatar/'.$_mImg);
+			if (!empty($_mImg)) {
+				$resolvedMaleSrc = ($_mMet === 'storage')
+					? url('storage/sm/'.$_mImg)
+					: url('storage/avatar/'.$_mImg);
 			}
 		}
 		$resolvedFemaleSrc = $femaleSrc ?? null;
 		if (empty($resolvedFemaleSrc)) {
 			$_fImg = $data->profile->photo->female->image  ?? '';
 			$_fMet = $data->profile->photo->female->method ?? '';
-			if (!empty($_fImg) && !empty($_fMet) && $_fMet !== 'none') {
-				if ($_fMet === 'storage')     $resolvedFemaleSrc = url('storage/sm/'.$_fImg);
-				elseif ($_fMet === 'avatar')  $resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
-				else                          $resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
-			} elseif (!empty($_fImg)) {
-				$resolvedFemaleSrc = url('storage/avatar/'.$_fImg);
+			if (!empty($_fImg)) {
+				$resolvedFemaleSrc = ($_fMet === 'storage')
+					? url('storage/sm/'.$_fImg)
+					: url('storage/avatar/'.$_fImg);
 			}
 		}
 
@@ -128,6 +120,47 @@
 
 	<!-- Theme style  -->
 	<link rel="stylesheet" href="{{ asset('template/the-wedding/css/style.css') }}">
+
+	<!-- Font dari preset member -->
+	@php
+		$_titleFont   = $data->design->title->font   ?? 'Satisfy';
+		$_contentFont = $data->design->content->font ?? 'Didact Gothic';
+		$_titleSize   = $data->design->title->size   ?? 24;
+		$_contentSize = $data->design->content->size ?? 14;
+		$_titleColor  = $data->design->title->color  ?? '#5d4037';
+		$_contentColor= $data->design->content->color?? '#828282';
+	@endphp
+	@if(!in_array($_titleFont, ['Satisfy','Didact Gothic','Sacramento','Estonia','Oswald','Yanone Kaffeesatz','Dancing Script','Merriweather','Courgette']))
+	<link href="https://fonts.googleapis.com/css2?family={{ urlencode($_titleFont) }}&display=swap" rel="stylesheet">
+	@endif
+	@if(!in_array($_contentFont, ['Satisfy','Didact Gothic','Sacramento','Estonia','Oswald','Yanone Kaffeesatz','Dancing Script','Merriweather','Courgette']))
+	<link href="https://fonts.googleapis.com/css2?family={{ urlencode($_contentFont) }}&display=swap" rel="stylesheet">
+	@endif
+	<style>
+	:root {
+		--tw-title-font:    '{{ $_titleFont }}', 'Satisfy', serif;
+		--tw-content-font:  '{{ $_contentFont }}', 'Didact Gothic', sans-serif;
+		--tw-title-size:    {{ $_titleSize }}px;
+		--tw-content-size:  {{ $_contentSize }}px;
+		--tw-title-color:   {{ $_titleColor }};
+		--tw-content-color: {{ $_contentColor }};
+	}
+	/* Terapkan font & ukuran dari preset ke elemen utama */
+	#overlay h1, #fh5co-header h1, #fh5co-header h2,
+	.desc-groom h3, .desc-bride h3,
+	#fh5co-footer h1, #fh5co-footer h3 {
+		font-family: var(--tw-title-font) !important;
+		font-size: var(--tw-title-size) !important;
+		color: var(--tw-title-color) !important;
+	}
+	#fh5co-couple p, #fh5co-event p, #fh5co-testimonial p,
+	.desc-groom p, .desc-bride p, .event-wrap p,
+	#fh5co-footer p {
+		font-family: var(--tw-content-font) !important;
+		font-size: var(--tw-content-size) !important;
+		color: var(--tw-content-color) !important;
+	}
+	</style>
 
 	<!-- Fix: semua foto menjadi lingkaran -->
 	<style>

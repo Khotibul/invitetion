@@ -115,6 +115,7 @@ h1,h2,h3{font-family:var(--font-heading)}
 {{ '@' }}media(max-width:768px){.couple-grid{grid-template-columns:1fr;gap:1.5rem}.couple-sep{flex-direction:row;justify-content:center}.couple-sep .line{width:50px;height:1px}.gallery-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid .g-item.wide{grid-column:span 2;aspect-ratio:1}}
 {{ '@' }}media(max-width:480px){.gallery-grid{grid-template-columns:1fr}.gallery-grid .g-item.wide{grid-column:span 1;aspect-ratio:1}}
 </style>
+@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

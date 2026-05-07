@@ -337,10 +337,13 @@ class PublicController extends Controller
 		// design (beberapa template akses langsung tanpa null-coalescing)
 		if (!isset($data->design)) $data->design = (object)[];
 		$d = $data->design;
-		if (!isset($d->title))      $d->title      = (object)['color'=>'#000000','font'=>'Arial'];
-		if (!isset($d->content))    $d->content    = (object)['color'=>'#333333','font'=>'Arial'];
+		if (!isset($d->title))      $d->title      = (object)['color'=>'#000000','font'=>'Arial','size'=>24];
+		if (!isset($d->content))    $d->content    = (object)['color'=>'#333333','font'=>'Arial','size'=>14];
 		if (!isset($d->background)) $d->background = '#ffffff';
 		if (!isset($d->button))     $d->button     = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
+		// Pastikan size ada (backward compat untuk preset lama)
+		if (!isset($d->title->size))   $d->title->size   = 24;
+		if (!isset($d->content->size)) $d->content->size = 14;
 
 		// cover
 		if (!isset($data->cover))                       $data->cover = (object)[];
