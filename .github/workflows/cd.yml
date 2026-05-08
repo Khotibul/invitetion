@@ -1,0 +1,292 @@
+name: CD — Deploy to Proxmox (invitation.wahid-elektronik.online)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_migrations:
+        description: "Skip database migrations"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+      maintenance_mode:
+        description: "Enable maintenance mode during deploy"
+        required: false
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # jangan cancel deploy yang sedang berjalan
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 1. Pre-deploy: lint + validasi sebelum deploy ke server
+  # ─────────────────────────────────────────────────────────────────────────────
+  pre-deploy:
+    name: Pre-deploy Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: pdo, pdo_pgsql, gd, mbstring, openssl, tokenizer, xml, ctype, json, bcmath
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all --no-check-publish
+
+      - name: Check PHP syntax
+        run: |
+          find app bootstrap config database routes -name "*.php" \
+            | xargs -P4 -I{} php -l {} \
+            | grep -v "No syntax errors" \
+            | tee /tmp/lint-errors.txt
+          if [ -s /tmp/lint-errors.txt ]; then
+            echo "❌ PHP syntax errors found — deploy dibatalkan!"
+            exit 1
+          fi
+          echo "✅ Syntax OK."
+
+      - name: Check required .env keys
+        run: |
+          required="APP_KEY DB_CONNECTION DB_HOST DB_DATABASE DB_USERNAME DB_PASSWORD"
+          missing=""
+          for key in $required; do
+            grep -q "^${key}=" .env.example || missing="$missing $key"
+          done
+          if [ -n "$missing" ]; then
+            echo "⚠️  Key tidak ada di .env.example:$missing"
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 2. Deploy ke Proxmox via SSH
+  #
+  # Strategi: zero-downtime deploy dengan symlink
+  #   /var/www/invitation/
+  #     releases/          ← setiap deploy buat folder baru di sini
+  #       20240101_120000/ ← release terbaru
+  #       20240101_110000/ ← release sebelumnya (rollback)
+  #     current -> releases/20240101_120000  ← symlink aktif
+  #     shared/            ← file/folder yang di-share antar release
+  #       .env
+  #       storage/
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy → invitation.wahid-elektronik.online
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    environment:
+      name: production
+      url: https://invitation.wahid-elektronik.online
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Setup SSH key
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          # Jika menggunakan port non-standard
+          cat > ~/.ssh/config << EOF
+          Host proxmox-server
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            Port ${{ secrets.SSH_PORT || '22' }}
+            StrictHostKeyChecking no
+            ServerAliveInterval 60
+          EOF
+
+      # ── Buat release timestamp
+      - name: Set release name
+        id: release
+        run: echo "name=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_OUTPUT
+
+      # ── Upload kode ke server via rsync
+      - name: Upload code to server
+        run: |
+          RELEASE_PATH="${{ secrets.DEPLOY_PATH }}/releases/${{ steps.release.outputs.name }}"
+
+          # Buat direktori release baru di server
+          ssh proxmox-server "mkdir -p ${RELEASE_PATH}"
+
+          # Rsync: upload semua file kecuali yang tidak perlu
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='storage' \
+            --exclude='.env' \
+            --exclude='bootstrap/cache/*.php' \
+            --exclude='tests' \
+            --exclude='*.md' \
+            ./ proxmox-server:${RELEASE_PATH}/
+
+      # ── Jalankan semua perintah deploy di server
+      - name: Run deploy commands on server
+        env:
+          RELEASE: ${{ steps.release.outputs.name }}
+          SKIP_MIGRATIONS: ${{ github.event.inputs.skip_migrations || 'false' }}
+          MAINTENANCE: ${{ github.event.inputs.maintenance_mode || 'true' }}
+        run: |
+          ssh proxmox-server bash << ENDSSH
+          set -e
+
+          DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+          RELEASE_PATH="\${DEPLOY_PATH}/releases/${RELEASE}"
+          SHARED_PATH="\${DEPLOY_PATH}/shared"
+          CURRENT_PATH="\${DEPLOY_PATH}/current"
+
+          echo "=== [1/8] Persiapan direktori shared ==="
+          mkdir -p "\${SHARED_PATH}/storage/app/public"
+          mkdir -p "\${SHARED_PATH}/storage/framework/cache/data"
+          mkdir -p "\${SHARED_PATH}/storage/framework/sessions"
+          mkdir -p "\${SHARED_PATH}/storage/framework/views"
+          mkdir -p "\${SHARED_PATH}/storage/logs"
+          mkdir -p "\${DEPLOY_PATH}/bootstrap/cache"
+
+          echo "=== [2/8] Link shared files ke release baru ==="
+          # Hapus storage bawaan, ganti dengan symlink ke shared
+          rm -rf "\${RELEASE_PATH}/storage"
+          ln -sfn "\${SHARED_PATH}/storage" "\${RELEASE_PATH}/storage"
+          # Link .env
+          ln -sfn "\${SHARED_PATH}/.env" "\${RELEASE_PATH}/.env"
+          # Link bootstrap/cache
+          rm -rf "\${RELEASE_PATH}/bootstrap/cache"
+          ln -sfn "\${SHARED_PATH}/bootstrap/cache" "\${RELEASE_PATH}/bootstrap/cache"
+
+          echo "=== [3/8] Install Composer dependencies (no-dev) ==="
+          cd "\${RELEASE_PATH}"
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-interaction \
+            --no-progress \
+            --classmap-authoritative \
+            --optimize-autoloader
+
+          echo "=== [4/8] Aktifkan maintenance mode ==="
+          if [ "${MAINTENANCE}" = "true" ] && [ -L "\${CURRENT_PATH}" ]; then
+            cd "\${CURRENT_PATH}" && php artisan down --retry=10 --render="errors::503" || true
+          fi
+
+          echo "=== [5/8] Jalankan migrasi database ==="
+          if [ "${SKIP_MIGRATIONS}" = "false" ]; then
+            cd "\${RELEASE_PATH}"
+            php artisan migrate --force --no-interaction
+          else
+            echo "⏭  Migrasi dilewati."
+          fi
+
+          echo "=== [6/8] Optimasi Laravel ==="
+          cd "\${RELEASE_PATH}"
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+          php artisan storage:link --force || true
+
+          echo "=== [7/8] Aktifkan release baru (atomic symlink swap) ==="
+          # Atomic: buat symlink baru dulu, lalu rename (tidak ada downtime)
+          ln -sfn "\${RELEASE_PATH}" "\${DEPLOY_PATH}/current_new"
+          mv -Tf "\${DEPLOY_PATH}/current_new" "\${CURRENT_PATH}"
+
+          echo "=== [8/8] Nonaktifkan maintenance mode ==="
+          cd "\${CURRENT_PATH}"
+          php artisan up || true
+
+          echo ""
+          echo "✅ Deploy selesai: ${RELEASE}"
+          echo "   URL: https://invitation.wahid-elektronik.online"
+
+          # Restart PHP-FPM agar cache lama tidak tersisa
+          sudo systemctl reload php8.1-fpm 2>/dev/null \
+            || sudo systemctl reload php-fpm 2>/dev/null \
+            || sudo service php8.1-fpm reload 2>/dev/null \
+            || echo "⚠️  PHP-FPM reload gagal — lanjutkan manual jika perlu"
+
+          ENDSSH
+
+      # ── Bersihkan release lama (simpan 3 terakhir)
+      - name: Cleanup old releases
+        run: |
+          ssh proxmox-server bash << 'ENDSSH'
+          DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+          cd "${DEPLOY_PATH}/releases"
+          # Hapus semua kecuali 3 release terbaru
+          ls -1t | tail -n +4 | xargs -r rm -rf
+          echo "Releases tersisa: $(ls -1 | wc -l)"
+          ls -1t
+          ENDSSH
+
+      # ── Ringkasan deploy
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## 🚀 Deploy ke Proxmox" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Key | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release | \`${{ steps.release.outputs.name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Oleh | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | https://invitation.wahid-elektronik.online |" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 3. Health check setelah deploy
+  # ─────────────────────────────────────────────────────────────────────────────
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Wait for server to be ready
+        run: sleep 15
+
+      - name: Check site is up
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            https://invitation.wahid-elektronik.online)
+
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
+            echo "✅ Site UP — HTTP $STATUS"
+          else
+            echo "❌ Site DOWN atau error — HTTP $STATUS"
+            exit 1
+          fi
+
+      - name: Check response time
+        run: |
+          TIME=$(curl -s -o /dev/null -w "%{time_total}" \
+            --max-time 30 \
+            https://invitation.wahid-elektronik.online)
+          echo "Response time: ${TIME}s"
