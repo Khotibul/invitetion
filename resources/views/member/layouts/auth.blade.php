@@ -8,10 +8,13 @@
     <meta name="theme-color" content="">
     <meta name="keywords" content="">
     @stack('style')
-	@vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-03d7fa95.css') }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-46c277b6.css') }}"> --}}
-    {{-- <script src="{{ asset('build/assets/member-script-72440df0.js') }}" type="module"></script> --}}
+    {{-- CSS + JS --}}
+    @if(app()->environment('local') && file_exists(public_path('hot')))
+        @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/member-style-KtJH4um1.css') }}">
+        <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-rZ5YENN6.css') }}">
+    @endif
 </head>
 <body class="auth d-flex flex-column min-vh-100 justify-content-center py-5 bg-light">
     <div class="position-fixed top-0 start-0 p-4">

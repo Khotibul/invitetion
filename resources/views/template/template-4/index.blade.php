@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Wedding Invitation - Bugis Emerald</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- @vite removed for hosting compatibility --}}
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600&family=Italianno&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
@@ -944,3 +944,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+

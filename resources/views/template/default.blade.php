@@ -54,9 +54,12 @@
             --secondary_font_size: {{ $data->design->content->size ?? 14 }}px;
         }
     </style>
-	@vite(['resources/css/template/default.css', 'resources/js/template/default.js'])
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/default-97b83278.css') }}"> --}}
-    {{-- <script src="{{ asset('build/assets/default-25a74223.js') }}" type="module"></script> --}}
+	@if(app()->environment('local') && file_exists(public_path('hot')))
+        @vite(['resources/css/template/default.css', 'resources/js/template/default.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/default-CAqs08_C.css') }}">
+        <script src="{{ asset('build/assets/default-DpNtwc8q.js') }}" type="module" defer></script>
+    @endif
 </head>
 <body>
     @if ($data->gift->show===true)

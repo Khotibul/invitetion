@@ -8,10 +8,13 @@
     <meta name="theme-color" content="">
     <meta name="keywords" content="">
     <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
-	@vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-03d7fa95.css') }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-46c277b6.css') }}"> --}}
-    {{-- <script src="{{ asset('build/assets/member-script-72440df0.js') }}" type="module"></script> --}}
+    {{-- CSS + JS --}}
+    @if(app()->environment('local') && file_exists(public_path('hot')))
+        @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/member-style-KtJH4um1.css') }}">
+        <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-rZ5YENN6.css') }}">
+    @endif
     @stack('style')
 </head>
 <body>
@@ -23,6 +26,14 @@
 		@csrf
 	</form>
 	<script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
+    @if(app()->environment('local') && file_exists(public_path('hot')))
+        @vite(['resources/js/member-script.js'])
+    @else
+        <script src="{{ asset('build/assets/vendor-jquery-gzd0YkcT.js') }}" type="module"></script>
+        <script src="{{ asset('build/assets/vendor-bootstrap-f4TNcP9e.js') }}" type="module"></script>
+        <script src="{{ asset('build/assets/vendor-swal-YZDMVk0e.js') }}" type="module"></script>
+        <script src="{{ asset('build/assets/member-script-DHdsZRvy.js') }}" type="module"></script>
+    @endif
     @stack('script')
     <script>
         $(".logout-form").on('click', function(e) {

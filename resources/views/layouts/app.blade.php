@@ -10,9 +10,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.5.5/css/simple-line-icons.min.css">
     @stack('meta')
     <script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
-    @vite(['resources/sass/landing-style-s.scss', 'resources/js/landing-script.js'])
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/landing-style-s-6da5d2b9.css') }}"> --}}
-    {{-- <script src="{{ asset('build/assets/landing-script-09c2e587.js') }}" type="module"></script> --}}
+    @if(app()->environment('local') && file_exists(public_path('hot')))
+        @vite(['resources/sass/landing-style-s.scss', 'resources/js/landing-script.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/landing-style-s-D1xW_aIH.css') }}">
+        <script src="{{ asset('build/assets/vendor-bootstrap-f4TNcP9e.js') }}" type="module"></script>
+        <script src="{{ asset('build/assets/vendor-swal-YZDMVk0e.js') }}" type="module"></script>
+        <script src="{{ asset('build/assets/landing-script-CsUQPqtT.js') }}" type="module"></script>
+    @endif
     @stack('style')
     <style>
         @font-face {
