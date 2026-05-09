@@ -6,64 +6,53 @@ use App\Models\TemplateAssets;
 use Illuminate\Database\Seeder;
 
 /**
- * FontSeeder — tambah/perbarui daftar font untuk pilihan member.
- * Aman dijalankan berulang kali (upsert berdasarkan title+type).
+ * FontSeeder — tambah font pilihan member (di luar font bawaan template).
+ * Font bawaan template sudah di-seed oleh TemplateAssetSeeder.
+ * Aman dijalankan berulang kali (updateOrCreate).
  */
 class FontSeeder extends Seeder
 {
     public function run(): void
     {
         $fonts = [
-            // ── Script / Kaligrafi (cocok untuk nama pasangan)
-            ['title' => 'Caveat',           'content' => 'Caveat'],
-            ['title' => 'Dancing Script',   'content' => 'Dancing Script'],
-            ['title' => 'Great Vibes',      'content' => 'Great Vibes'],
-            ['title' => 'Kaushan Script',   'content' => 'Kaushan Script'],
-            ['title' => 'Pacifico',         'content' => 'Pacifico'],
-            ['title' => 'Satisfy',          'content' => 'Satisfy'],
-            ['title' => 'Sacramento',       'content' => 'Sacramento'],
-            ['title' => 'Courgette',        'content' => 'Courgette'],
-            ['title' => 'Allura',           'content' => 'Allura'],
-            ['title' => 'Alex Brush',       'content' => 'Alex Brush'],
-            ['title' => 'Pinyon Script',    'content' => 'Pinyon Script'],
-            ['title' => 'Tangerine',        'content' => 'Tangerine'],
+            // ── Script / Kaligrafi
+            ['title' => 'Allura',            'content' => 'Allura'],
+            ['title' => 'Pinyon Script',     'content' => 'Pinyon Script'],
+            ['title' => 'Tangerine',         'content' => 'Tangerine'],
+            ['title' => 'Petit Formal Script','content' => 'Petit Formal Script'],
+            ['title' => 'Herr Von Muellerhoff','content' => 'Herr Von Muellerhoff'],
 
-            // ── Serif Elegan (cocok untuk judul formal)
-            ['title' => 'Playfair Display', 'content' => 'Playfair Display'],
-            ['title' => 'Cormorant Garamond','content' => 'Cormorant Garamond'],
-            ['title' => 'Merriweather',     'content' => 'Merriweather'],
-            ['title' => 'Lora',             'content' => 'Lora'],
-            ['title' => 'EB Garamond',      'content' => 'EB Garamond'],
-            ['title' => 'Libre Baskerville','content' => 'Libre Baskerville'],
-            ['title' => 'Crimson Text',     'content' => 'Crimson Text'],
+            // ── Serif Elegan
+            ['title' => 'EB Garamond',       'content' => 'EB Garamond'],
+            ['title' => 'Libre Baskerville', 'content' => 'Libre Baskerville'],
+            ['title' => 'Cardo',             'content' => 'Cardo'],
+            ['title' => 'Spectral',          'content' => 'Spectral'],
+            ['title' => 'Gilda Display',     'content' => 'Gilda Display'],
 
-            // ── Sans-serif Modern (cocok untuk konten/deskripsi)
-            ['title' => 'Raleway',          'content' => 'Raleway'],
-            ['title' => 'Lato',             'content' => 'Lato'],
-            ['title' => 'Poppins',          'content' => 'Poppins'],
-            ['title' => 'Montserrat',       'content' => 'Montserrat'],
-            ['title' => 'Nunito',           'content' => 'Nunito'],
-            ['title' => 'Open Sans',        'content' => 'Open Sans'],
-            ['title' => 'Roboto',           'content' => 'Roboto'],
-            ['title' => 'Josefin Sans',     'content' => 'Josefin Sans'],
-            ['title' => 'Quicksand',        'content' => 'Quicksand'],
+            // ── Sans-serif Modern
+            ['title' => 'Nunito',            'content' => 'Nunito'],
+            ['title' => 'Roboto',            'content' => 'Roboto'],
+            ['title' => 'Josefin Sans',      'content' => 'Josefin Sans'],
+            ['title' => 'Quicksand',         'content' => 'Quicksand'],
+            ['title' => 'DM Sans',           'content' => 'DM Sans'],
+            ['title' => 'Inter',             'content' => 'Inter'],
 
             // ── Display / Dekoratif
-            ['title' => 'Nova Cut',         'content' => 'Nova Cut'],
-            ['title' => 'Righteous',        'content' => 'Righteous'],
-            ['title' => 'Cinzel',           'content' => 'Cinzel'],
-            ['title' => 'Poiret One',       'content' => 'Poiret One'],
-            ['title' => 'Josefin Slab',     'content' => 'Josefin Slab'],
+            ['title' => 'Poiret One',        'content' => 'Poiret One'],
+            ['title' => 'Josefin Slab',      'content' => 'Josefin Slab'],
+            ['title' => 'Italiana',          'content' => 'Italiana'],
+            ['title' => 'Philosopher',       'content' => 'Philosopher'],
 
             // ── Islami / Arab
-            ['title' => 'Amiri',            'content' => 'Amiri'],
-            ['title' => 'Scheherazade New', 'content' => 'Scheherazade New'],
+            ['title' => 'Scheherazade New',  'content' => 'Scheherazade New'],
+            ['title' => 'Noto Naskh Arabic', 'content' => 'Noto Naskh Arabic'],
         ];
 
         foreach ($fonts as $font) {
             TemplateAssets::updateOrCreate(
                 ['type' => 'font', 'title' => $font['title']],
                 [
+                    'type'    => 'font',
                     'content' => $font['content'],
                     'publish' => 'publish',
                     'user_id' => 1,
