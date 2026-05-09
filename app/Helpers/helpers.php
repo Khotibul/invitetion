@@ -2,7 +2,48 @@
 
 use Carbon\Carbon;
 use Intervention\Image\Image;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+
+/**
+ * Buat raw SQL untuk pencarian teks di kolom JSON — kompatibel MySQL & PostgreSQL.
+ *
+ * MySQL  : LOWER(content) LIKE '%...%'
+ * PgSQL  : content::text ILIKE '%...%'
+ *
+ * @param  string $column  Nama kolom (misal: 'content')
+ * @param  string $search  Teks yang dicari
+ * @return string          Raw SQL expression
+ */
+function json_search_raw(string $column, string $search): string
+{
+    $driver = config('database.default');
+    $escaped = addslashes($search);
+
+    if ($driver === 'pgsql') {
+        return "{$column}::text ILIKE '%{$escaped}%'";
+    }
+    // MySQL / MariaDB — LIKE case-insensitive by default pada utf8mb4_unicode_ci
+    return "LOWER({$column}) LIKE LOWER('%{$escaped}%')";
+}
+
+/**
+ * Buat raw SQL untuk pencarian LIKE case-insensitive — kompatibel MySQL & PostgreSQL.
+ *
+ * @param  string $column  Nama kolom
+ * @param  string $search  Teks yang dicari
+ * @return string          Raw SQL expression
+ */
+function ilike_raw(string $column, string $search): string
+{
+    $driver = config('database.default');
+    $escaped = addslashes($search);
+
+    if ($driver === 'pgsql') {
+        return "{$column} ILIKE '%{$escaped}%'";
+    }
+    return "{$column} LIKE '%{$escaped}%'";
+}
 
 function clean_str(?string $data): string
 { // membuat URl format

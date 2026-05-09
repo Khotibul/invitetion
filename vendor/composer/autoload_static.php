@@ -2051,6 +2051,8 @@ class ComposerStaticInit61e4024e4e1116cd11e45bff46485107
         'Cron\\MinutesField' => __DIR__ . '/..' . '/dragonmantank/cron-expression/src/Cron/MinutesField.php',
         'Cron\\MonthField' => __DIR__ . '/..' . '/dragonmantank/cron-expression/src/Cron/MonthField.php',
         'Database\\Factories\\UserFactory' => __DIR__ . '/../..' . '/database/factories/UserFactory.php',
+        'Database\\Seeders\\AllTemplatesSeeder' => __DIR__ . '/../..' . '/database/seeders/AllTemplatesSeeder.php',
+        'Database\\Seeders\\BankSeeder' => __DIR__ . '/../..' . '/database/seeders/BankSeeder.php',
         'Database\\Seeders\\CanvaProTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/CanvaProTemplateSeeder.php',
         'Database\\Seeders\\CanvaStyleTemplateSeeder' => __DIR__ . '/../..' . '/database/seeders/CanvaStyleTemplateSeeder.php',
         'Database\\Seeders\\ContactSeeder' => __DIR__ . '/../..' . '/database/seeders/ContactSeeder.php',

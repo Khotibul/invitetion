@@ -366,10 +366,10 @@
     // Statistik kehadiran
     $invId     = Auth::user()->inv?->id;
     $statHadir = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
-        ->whereRaw("content::text ILIKE '%\"option\":\"yes\"%' OR content::text ILIKE '%\"option\":\"hadir\"%'")
+        ->whereRaw(json_search_raw('content', '"option":"yes"') . ' OR ' . json_search_raw('content', '"option":"hadir"'))
         ->count() : 0;
     $statTidak = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
-        ->whereRaw("content::text NOT ILIKE '%\"option\":\"yes\"%' AND content::text NOT ILIKE '%\"option\":\"hadir\"%'")
+        ->whereRaw('NOT (' . json_search_raw('content', '"option":"yes"') . ' OR ' . json_search_raw('content', '"option":"hadir"') . ')')
         ->count() : 0;
     $statTotal = $statHadir + $statTidak;
 

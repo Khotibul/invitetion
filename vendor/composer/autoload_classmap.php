@@ -1446,6 +1446,8 @@ return array(
     'Cron\\MinutesField' => $vendorDir . '/dragonmantank/cron-expression/src/Cron/MinutesField.php',
     'Cron\\MonthField' => $vendorDir . '/dragonmantank/cron-expression/src/Cron/MonthField.php',
     'Database\\Factories\\UserFactory' => $baseDir . '/database/factories/UserFactory.php',
+    'Database\\Seeders\\AllTemplatesSeeder' => $baseDir . '/database/seeders/AllTemplatesSeeder.php',
+    'Database\\Seeders\\BankSeeder' => $baseDir . '/database/seeders/BankSeeder.php',
     'Database\\Seeders\\CanvaProTemplateSeeder' => $baseDir . '/database/seeders/CanvaProTemplateSeeder.php',
     'Database\\Seeders\\CanvaStyleTemplateSeeder' => $baseDir . '/database/seeders/CanvaStyleTemplateSeeder.php',
     'Database\\Seeders\\ContactSeeder' => $baseDir . '/database/seeders/ContactSeeder.php',

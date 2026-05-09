@@ -75,10 +75,10 @@ class GuestController extends Controller
 
 		$totalGuest  = $invId ? InvitationGuest::where('invitation_id', $invId)->count() : 0;
 		$totalHadir  = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
-			->whereRaw("content::text LIKE '%\"option\":\"yes\"%' OR content::text LIKE '%\"option\":\"hadir\"%'")
+			->whereRaw(json_search_raw('content', '"option":"yes"') . ' OR ' . json_search_raw('content', '"option":"hadir"'))
 			->count() : 0;
 		$totalTidak  = $invId ? Feedback::where('invitation_id', $invId)->where('type', 'present')
-			->whereRaw("content::text NOT LIKE '%\"option\":\"yes\"%' AND content::text NOT LIKE '%\"option\":\"hadir\"%'")
+			->whereRaw('NOT (' . json_search_raw('content', '"option":"yes"') . ' OR ' . json_search_raw('content', '"option":"hadir"') . ')')
 			->count() : 0;
 
 		$bagpack = [
@@ -163,7 +163,7 @@ class GuestController extends Controller
 		$query = $request->get('q', '');
 
 		$guests = InvitationGuest::where('invitation_id', $invId)
-			->where('name', 'ILIKE', "%{$query}%")
+			->whereRaw(ilike_raw('name', $query))
 			->limit(20)
 			->get()
 			->map(function ($g) use ($invId) {
