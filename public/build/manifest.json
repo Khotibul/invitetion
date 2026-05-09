@@ -32,7 +32,7 @@
     "src": "node_modules/boxicons/fonts/boxicons.woff2"
   },
   "resources/css/member-style.css": {
-    "file": "assets/member-style-DKnThSRx.css",
+    "file": "assets/member-style-KtJH4um1.css",
     "src": "resources/css/member-style.css",
     "isEntry": true,
     "name": "member-style",
@@ -41,7 +41,7 @@
     ]
   },
   "resources/css/sneat.css": {
-    "file": "assets/sneat-6NfpdbBd.css",
+    "file": "assets/sneat-D9iDqN5M.css",
     "src": "resources/css/sneat.css",
     "isEntry": true,
     "name": "sneat",

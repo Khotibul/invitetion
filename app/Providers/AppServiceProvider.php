@@ -30,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS di production (penting untuk shared hosting / reverse proxy)
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Paginator::useBootstrap();
 
         // ── Guard: jika tabel belum ada (fresh install / migration belum jalan)
