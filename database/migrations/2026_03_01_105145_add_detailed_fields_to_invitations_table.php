@@ -4,25 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Migration ini sengaja dikosongkan.
+ * Semua kolom yang dibutuhkan sudah ada di migration awal (2023_06_26_070551).
+ * File ini dipertahankan agar urutan migration tidak berubah.
+ */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('invitations', function (Blueprint $table) {
-            //
-        });
+        // no-op
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('invitations', function (Blueprint $table) {
-            //
-        });
+        // no-op
     }
 };

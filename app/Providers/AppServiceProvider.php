@@ -6,7 +6,6 @@ use App\Models\Contact;
 use App\Models\Setting;
 use App\Models\LinkExternal;
 use App\Models\AccountInvoice;
-use App\Database\NeonPostgresConnector;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
@@ -20,8 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Register custom Neon PostgreSQL connector (SNI fix untuk libpq lama)
-        $this->app->bind('db.connector.pgsql', NeonPostgresConnector::class);
+        // Register custom Neon PostgreSQL connector hanya jika koneksi pgsql
+        if (config('database.default') === 'pgsql') {
+            $this->app->bind('db.connector.pgsql', \App\Database\NeonPostgresConnector::class);
+        }
     }
 
     /**
@@ -39,7 +40,6 @@ class AppServiceProvider extends ServiceProvider
 
         // ── Share global data ke semua view
         // Cache 5 menit untuk data statis (setting, contact, social)
-        // payment_waiting tidak di-cache karena harus real-time
         $global = Cache::remember('global_view_data', 300, function () {
             if (!Schema::hasTable('contacts') || !Schema::hasTable('link_externals')) {
                 return $this->emptyGlobal();

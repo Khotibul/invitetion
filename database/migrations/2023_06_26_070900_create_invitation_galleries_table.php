@@ -16,7 +16,7 @@ return new class extends Migration
             $table->enum('type', ['photo', 'video'])->default('photo');
             $table->string('title');
             $table->json('content')->nullable();
-            $table->string('file', 110);
+            $table->string('file', 110)->nullable();
             $table->enum('file_type', ['image', 'video', 'audio', 'pdf'])->default('image');
             $table->text('file_preview')->nullable();
             $table->enum('publish', ['publish', 'draft', 'archive'])->default('draft');

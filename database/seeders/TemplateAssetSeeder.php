@@ -4,65 +4,40 @@ namespace Database\Seeders;
 
 use App\Models\TemplateAssets;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+/**
+ * TemplateAssetSeeder — seed aset dasar template.
+ * Font lengkap ada di FontSeeder.
+ * Seeder ini fokus pada avatar default dan quote default.
+ */
 class TemplateAssetSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        TemplateAssets::insert([
+        // ── Quote default
+        $quotes = [
             [
-                'type'  => 'font',
-                'title' => 'Caveat',
-                'content' => 'Caveat',
-                'publish' => 'publish',
-                'user_id' => 1,
+                'type'    => 'quote',
+                'title'   => 'QS. An-Nur: 32',
+                'content' => 'Dan nikahkanlah orang-orang yang masih membujang di antara kamu, dan juga orang-orang yang layak (menikah) dari hamba-hamba sahayamu yang laki-laki dan perempuan. Jika mereka miskin, Allah akan memberi kemampuan kepada mereka dengan karunia-Nya.',
             ],
             [
-                'type'  => 'font',
-                'title' => 'Dancing Script',
-                'content' => 'Dancing+Script',
-                'publish' => 'publish',
-                'user_id' => 1,
+                'type'    => 'quote',
+                'title'   => 'QS. Ar-Rum: 21',
+                'content' => 'Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.',
             ],
             [
-                'type'  => 'font',
-                'title' => 'Great Vibes',
-                'content' => 'Great+Vibes',
-                'publish' => 'publish',
-                'user_id' => 1,
+                'type'    => 'quote',
+                'title'   => 'QS. Al-Baqarah: 187',
+                'content' => 'Mereka adalah pakaian bagimu, dan kamu adalah pakaian bagi mereka.',
             ],
-            [
-                'type'  => 'font',
-                'title' => 'Kaushan Script',
-                'content' => 'Kaushan+Script',
-                'publish' => 'publish',
-                'user_id' => 1,
-            ],
-            [
-                'type'  => 'font',
-                'title' => 'Nova Cut',
-                'content' => 'Nova+Cut',
-                'publish' => 'publish',
-                'user_id' => 1,
-            ],
-            [
-                'type'  => 'font',
-                'title' => 'Raleway',
-                'content' => 'Raleway',
-                'publish' => 'publish',
-                'user_id' => 1,
-            ],
-            [
-                'type'  => 'font',
-                'title' => 'Righteous',
-                'content' => 'Righteous',
-                'publish' => 'publish',
-                'user_id' => 1,
-            ]
-        ]);
+        ];
+
+        foreach ($quotes as $q) {
+            TemplateAssets::updateOrCreate(
+                ['type' => $q['type'], 'title' => $q['title']],
+                array_merge($q, ['publish' => 'publish', 'user_id' => 1, 'ip_addr' => '127.0.0.1'])
+            );
+        }
     }
 }

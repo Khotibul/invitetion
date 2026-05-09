@@ -4,25 +4,192 @@ namespace Database\Seeders;
 
 use App\Models\Template;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class TemplateSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Template::insert([
-			[
-				'title'		=> 'Blue Splash',
-				'slug'  	=> 'blue-splash',
-				'preset'	=> '{"design":{"title":{"color":"#5576c3","font":"Dancing Script"},"content":{"color":"#7287a1","font":"Raleway"},"button":{"color":"#d9e1f2","background":"#061f5b"},"background":"#eaeef0","template":"1"},"cover":{"name":{"female":"Akhwat","male":"Ikhwan","size":"40","style":"stack"},"content":"Selamat datang","button":"Buka Undangan","description":{"top":"Assalamu`alaikum Warahmatullahi Wabarakatuh","bottom":"Wa`alaikumussalaam Warahmatullahi Wabarakatuh","image":{"method":"avatar","image":"couple.png"}}},"profile":{"instagram":{"male":"ikhwan","female":"akhwat","show":true},"parent":{"male":{"father":"nya","mother":"nya","childhood":"1"},"female":{"father":"nya","mother":"nya","childhood":"2"},"show":true},"name":{"male":"Ikhwan","female":"Akhwat"},"photo":{"male":{"method":"avatar","frame":null,"image":"9d348c30-9331-11ec-b089-ad70ef6b2563.png"},"female":{"method":"avatar","frame":null,"image":"4a1f7960-9331-11ec-8fa8-a3a23f6da840.png"}}},"detail":{"calendar":{"save":{"content":"Setel pengingat","show":false},"date":"2030-04-01","time":"08:30","timezone":"wib"},"countdown":{"show":false,"style":"stack"},"location":{"address":"Lokasi lengkap acara pernikahan","map":"https:\/\/map.google.com\/"},"additional":{"closing":"Terima kasih atas perhatiannya","special":["Raja Arab","Raja Qatar","Raja Bulan"],"show":false}},"quote":{"content":"Dan nikahkanlah orang-orang yang masih membujang di antara kamu, dan juga orang-orang yang layak (menikah) dari hamba-hamba sahayamu yang laki-laki dan perempuan. Jika mereka miskin, Allah akan memberi kemampuan kepada mereka dengan karunia-Nya."},"music":{"title":"Natta Reza - Kekasih Impian","url":"http:\/\/127.0.0.1:8000\/storage\/audio\/nattareza.mp3","show":true},"rsvp":{"title":"Kami tunggu kedatangannya","content":"Beli buah ke pasar baru, Nantikan acara pernikahan kami yg sangat seruuuu","date":"2029-04-01","yes":{"option":"Insyaallah","content":"Syukron sahabat"},"no":{"option":"Afwan Bestie","content":"Gapapa Wahai sahabat"}},"additional":{"live":{"app":"zoom","link":"https:\/\/zoom.live","content":"Ayok nobar","show":false},"protocol":{"code":"23","show":false,"title":"Health Protocol","content":"To all beloved invited guests, are expected to obey"}},"gift":{"show":false,"title":"Amplop Digital","content":"Donasi yang terkumpul akan kami donasikan pada Yayasan yatim piatu","bank":{"name":"Yayasan","code":"123456789","option":"bsi"}},"wishes":{"title":"Kirim Ucapan","content":"Terima kasih","public":false}}',
-				'file'		=> '3WFqZTyop3fO6uxGwqIsMqJwVKJBwBuWyJEEQKl0.jpg',
-				'url'	    => 'default',
-				'grade'	    => 'basic',
-				'publish'	=> 'publish'
-			]
+        $defaultPreset = json_encode([
+            'design' => [
+                'title'      => ['color' => '#000000', 'font' => 'Dancing Script', 'size' => 24],
+                'content'    => ['color' => '#333333', 'font' => 'Raleway', 'size' => 14],
+                'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
+                'background' => '#ffffff',
+                'template'   => null,
+            ],
+            'cover' => [
+                'name'        => ['female' => 'Mempelai Wanita', 'male' => 'Mempelai Pria', 'size' => '48', 'style' => 'default'],
+                'content'     => 'Undangan Pernikahan',
+                'button'      => 'Buka Undangan',
+                'description' => [
+                    'top'    => 'Assalamu\'alaikum Warahmatullahi Wabarakatuh',
+                    'bottom' => 'Wa\'alaikumussalaam Warahmatullahi Wabarakatuh',
+                    'image'  => ['method' => 'none', 'image' => ''],
+                ],
+            ],
+            'profile' => [
+                'name'      => ['male' => 'Mempelai Pria', 'female' => 'Mempelai Wanita'],
+                'photo'     => [
+                    'male'   => ['method' => 'none', 'image' => '', 'frame' => ''],
+                    'female' => ['method' => 'none', 'image' => '', 'frame' => ''],
+                ],
+                'instagram' => ['male' => '', 'female' => '', 'show' => false],
+                'parent'    => [
+                    'show'   => false,
+                    'male'   => ['father' => '', 'mother' => '', 'childhood' => '1'],
+                    'female' => ['father' => '', 'mother' => '', 'childhood' => '1'],
+                ],
+            ],
+            'detail' => [
+                'calendar'   => ['date' => '', 'time' => '09:00', 'timezone' => 'wib', 'save' => ['show' => false, 'content' => 'Simpan Tanggal']],
+                'countdown'  => ['show' => true, 'style' => 'default'],
+                'location'   => ['address' => '', 'map' => ''],
+                'additional' => ['show' => false, 'closing' => '', 'special' => []],
+            ],
+            'quote'  => ['content' => 'Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya.', 'decoration' => ''],
+            'music'  => ['show' => false, 'title' => '', 'url' => ''],
+            'rsvp'   => ['title' => 'Konfirmasi Kehadiran', 'content' => '', 'date' => '', 'yes' => ['option' => 'Hadir', 'content' => 'Terima kasih'], 'no' => ['option' => 'Tidak Hadir', 'content' => 'Terima kasih']],
+            'gift'   => ['show' => false, 'title' => 'Amplop Digital', 'content' => '', 'bank' => ['name' => '', 'code' => '', 'option' => 'bca']],
+            'wishes' => ['title' => 'Ucapan & Doa', 'content' => '', 'public' => true],
+            'additional' => [
+                'live'     => ['show' => false, 'app' => '', 'link' => '', 'content' => ''],
+                'protocol' => ['show' => false, 'code' => [], 'title' => '', 'content' => ''],
+            ],
         ]);
+
+        $templates = [
+            [
+                'title'   => 'The Wedding',
+                'slug'    => 'the-wedding',
+                'url'     => 'the-wedding',
+                'grade'   => 'basic',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'The Wedding Navy',
+                'slug'    => 'the-wedding-navy',
+                'url'     => 'the-wedding-navy',
+                'grade'   => 'basic',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'The Wedding Sage',
+                'slug'    => 'the-wedding-sage',
+                'url'     => 'the-wedding-sage',
+                'grade'   => 'basic',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'The Wedding Pink',
+                'slug'    => 'the-wedding-pink',
+                'url'     => 'the-wedding-pink',
+                'grade'   => 'basic',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'The Wedding Purple',
+                'slug'    => 'the-wedding-purple',
+                'url'     => 'the-wedding-purple',
+                'grade'   => 'basic',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Modern Elegant',
+                'slug'    => 'modern-elegant',
+                'url'     => 'modern-elegant',
+                'grade'   => 'premium',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Minimalist Green',
+                'slug'    => 'minimalist-green',
+                'url'     => 'minimalist-green',
+                'grade'   => 'premium',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Luxury Botanical',
+                'slug'    => 'luxury-botanical',
+                'url'     => 'luxury-botanical',
+                'grade'   => 'premium',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Romantic Garden',
+                'slug'    => 'romantic-garden',
+                'url'     => 'romantic-garden',
+                'grade'   => 'premium',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Tropical Paradise',
+                'slug'    => 'tropical-paradise',
+                'url'     => 'tropical-paradise',
+                'grade'   => 'premium',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Vintage Rustic',
+                'slug'    => 'vintage-rustic',
+                'url'     => 'vintage-rustic',
+                'grade'   => 'exclusive',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Elegant Gold',
+                'slug'    => 'elegant-gold',
+                'url'     => 'elegant-gold',
+                'grade'   => 'exclusive',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Islami Gold',
+                'slug'    => 'islami-gold',
+                'url'     => 'islami-gold',
+                'grade'   => 'exclusive',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'Batik Cream',
+                'slug'    => 'batik-cream',
+                'url'     => 'batik-cream',
+                'grade'   => 'exclusive',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+            [
+                'title'   => 'White Elegance',
+                'slug'    => 'white-elegance',
+                'url'     => 'white-elegance',
+                'grade'   => 'exclusive',
+                'publish' => 'publish',
+                'price'   => 0,
+            ],
+        ];
+
+        foreach ($templates as $tpl) {
+            Template::updateOrCreate(
+                ['slug' => $tpl['slug']],
+                array_merge($tpl, [
+                    'preset'    => $defaultPreset,
+                    'file_type' => 'image',
+                    'user_id'   => 1,
+                    'ip_addr'   => '127.0.0.1',
+                ])
+            );
+        }
     }
 }

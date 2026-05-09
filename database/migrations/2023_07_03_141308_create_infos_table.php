@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('type', 50);
             $table->string('title', 110);
             $table->text('content');
-            $table->string('file', 110);
+            $table->string('file', 110)->nullable();
             $table->enum('file_type', ['image', 'video', 'audio', 'pdf'])->default('image');
             $table->string('ip_addr', 30)->nullable();
             $table->bigInteger('user_id')->index()->nullable()->unsigned();

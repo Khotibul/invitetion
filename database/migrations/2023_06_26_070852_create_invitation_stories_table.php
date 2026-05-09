@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug');
             $table->text('content')->nullable();
-            $table->string('file', 110);
+            $table->string('file', 110)->nullable();
             $table->enum('file_type', ['image', 'video', 'audio', 'pdf'])->default('image');
             $table->enum('publish', ['publish', 'draft', 'archive'])->default('draft');
             $table->bigInteger('invitation_id')->index()->nullable()->unsigned();

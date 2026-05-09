@@ -16,7 +16,7 @@ return new class extends Migration
             $table->enum('type', ['member', 'admin'])->default('member');
             $table->string('name');
             $table->text('content');
-            $table->string('file');
+            $table->string('file')->nullable();
             $table->enum('publish', ['publish', 'draft', 'archive'])->default('draft');
             $table->string('ip_addr', 30)->nullable();
             $table->bigInteger('user_id')->index()->nullable()->unsigned();

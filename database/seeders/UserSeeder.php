@@ -4,28 +4,30 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        User::insert([
-			[
-				'name'		=> 'Asep Nurjaman',
-				'email'		=> 'media.asepnurjaman107@gmail.com',
-				'password' 	=> bcrypt('admin123'),
-				'role'		=> 'developer',
-			],
+        // Developer / super admin
+        User::updateOrCreate(
+            ['email' => 'admin@risadigital.com'],
             [
-				'name'		=> 'Admin',
-				'email'		=> 'admin@gmail.com',
-				'password' 	=> bcrypt('admin123'),
-				'role'		=> 'admin',
-			]
-        ]);
+                'name'     => 'Admin Risa',
+                'password' => Hash::make('Admin@2025!'),
+                'role'     => 'admin',
+            ]
+        );
+
+        // Developer (akses penuh)
+        User::updateOrCreate(
+            ['email' => 'dev@risadigital.com'],
+            [
+                'name'     => 'Developer',
+                'password' => Hash::make('Dev@2025!'),
+                'role'     => 'developer',
+            ]
+        );
     }
 }

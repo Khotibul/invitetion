@@ -17,8 +17,8 @@ return new class extends Migration
             $table->date('date');
             $table->longText('content');
             $table->string('status', 50)->default('PENDING');
-            $table->string('payment_link', 250);
-            $table->string('payment_code', 250);
+            $table->string('payment_link', 250)->nullable();
+            $table->string('payment_code', 250)->nullable();
             $table->bigInteger('package_id')->index()->nullable()->unsigned();
 			$table->foreign('package_id')->references('id')->on('packages')->onUpdate('cascade')->onDelete('cascade');
             $table->string('ip_addr', 30)->nullable();

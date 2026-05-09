@@ -131,10 +131,22 @@ return new class extends Migration
     private function indexExists(string $table, string $indexName): bool
     {
         try {
-            $indexes = \Illuminate\Support\Facades\DB::select(
-                "SELECT indexname FROM pg_indexes WHERE tablename = ? AND indexname = ?",
-                [$table, $indexName]
-            );
+            $connection = config('database.default');
+            if ($connection === 'pgsql') {
+                $indexes = \Illuminate\Support\Facades\DB::select(
+                    "SELECT indexname FROM pg_indexes WHERE tablename = ? AND indexname = ?",
+                    [$table, $indexName]
+                );
+            } else {
+                // MySQL / MariaDB
+                $db = config("database.connections.{$connection}.database");
+                $indexes = \Illuminate\Support\Facades\DB::select(
+                    "SELECT INDEX_NAME FROM information_schema.STATISTICS
+                     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?
+                     LIMIT 1",
+                    [$db, $table, $indexName]
+                );
+            }
             return count($indexes) > 0;
         } catch (\Exception $e) {
             return false;
