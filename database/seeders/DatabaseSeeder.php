@@ -6,10 +6,10 @@ use Illuminate\Database\Seeder;
 
 /**
  * DatabaseSeeder — urutan penting!
- * Seeder yang bergantung pada data lain harus dijalankan setelah dependensinya.
  *
- * Jalankan: php artisan db:seed
- * Reset:    php artisan migrate:fresh --seed
+ * Jalankan fresh:  php artisan migrate:fresh --seed
+ * Jalankan ulang:  php artisan db:seed
+ * Seeder tertentu: php artisan db:seed --class=AllTemplatesSeeder
  */
 class DatabaseSeeder extends Seeder
 {
@@ -22,13 +22,12 @@ class DatabaseSeeder extends Seeder
             // ── 2. Paket langganan
             PackageSeeder::class,
 
-            // ── 3. Template undangan (semua template yang tersedia)
-            TemplateSeeder::class,          // seed semua template sekaligus
-            TheWeddingTemplateSeeder::class, // update preset detail The Wedding
+            // ── 3. Semua template dengan preset lengkap
+            AllTemplatesSeeder::class,
 
-            // ── 4. Aset template
-            TemplateAssetSeeder::class,     // quote default
-            FontSeeder::class,              // 35 font Google
+            // ── 4. Aset template (font, quote)
+            TemplateAssetSeeder::class,
+            FontSeeder::class,
 
             // ── 5. Pengaturan sistem
             SettingSeeder::class,
