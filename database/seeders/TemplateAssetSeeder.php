@@ -87,6 +87,16 @@ class TemplateAssetSeeder extends Seeder
             // Batik Cream
             ['title' => 'Fraunces',         'content' => 'Fraunces'],
             ['title' => 'Plus Jakarta Sans','content' => 'Plus Jakarta Sans'],
+            // template-1 (Gold Luxe)
+            ['title' => 'Jost',                'content' => 'Jost'],
+            // template-2 (Green Minimal)
+            ['title' => 'DM Serif Display',    'content' => 'DM Serif Display'],
+            ['title' => 'DM Sans',             'content' => 'DM Sans'],
+            // template-3 (Rose Blush)
+            ['title' => 'Libre Baskerville',   'content' => 'Libre Baskerville'],
+            ['title' => 'Nunito',              'content' => 'Nunito'],
+            // template-4 (Forest Green)
+            ['title' => 'Inter',               'content' => 'Inter'],
             // Tambahan populer
             ['title' => 'Caveat',           'content' => 'Caveat'],
             ['title' => 'Kaushan Script',   'content' => 'Kaushan Script'],

@@ -4,11 +4,14 @@ namespace Database\Seeders;
 
 use App\Models\Template;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * AllTemplatesSeeder
- * Seed semua 15 template dengan preset lengkap dan akurat
+ * Seed semua 19 template dengan preset lengkap dan akurat
  * sesuai font & warna yang digunakan di masing-masing blade template.
+ *
+ * Jalankan: php artisan db:seed --class=AllTemplatesSeeder
  */
 class AllTemplatesSeeder extends Seeder
 {
@@ -83,14 +86,14 @@ class AllTemplatesSeeder extends Seeder
         ];
     }
 
-    public function run(): void
+    /**
+     * Definisi semua 19 template.
+     */
+    private function templateList(): array
     {
-        // ── Data setiap template: slug, title, url, grade, price, design preset ──
-        $templates = [
-
+        return [
             // ════════════════════════════════════════════════════════════════
-            // THE WEDDING SERIES — Basic
-            // Font: Satisfy (judul), Didact Gothic (konten)
+            // THE WEDDING SERIES — Basic (5 template)
             // ════════════════════════════════════════════════════════════════
             [
                 'title' => 'The Wedding',
@@ -114,7 +117,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'basic',
                 'price' => 0,
                 'design' => [
-                    // Navy Blue & Silver — warna dari CSS override di blade
                     'title'      => ['color' => '#1e3a5f', 'font' => 'Merriweather', 'size' => 28],
                     'content'    => ['color' => '#4a5568', 'font' => 'Didact Gothic', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#1e3a5f'],
@@ -129,7 +131,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'basic',
                 'price' => 0,
                 'design' => [
-                    // Sage Green & Terracotta — #6b8f71 sage, #c4714a terracotta
                     'title'      => ['color' => '#6b8f71', 'font' => 'Satisfy',      'size' => 32],
                     'content'    => ['color' => '#5a7a6a', 'font' => 'Didact Gothic', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#6b8f71'],
@@ -144,7 +145,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'basic',
                 'price' => 0,
                 'design' => [
-                    // Dusty Rose & Blush Pink — #d4a5a5 dusty rose
                     'title'      => ['color' => '#d4a5a5', 'font' => 'Satisfy',      'size' => 32],
                     'content'    => ['color' => '#8a6a6a', 'font' => 'Didact Gothic', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#d4a5a5'],
@@ -159,7 +159,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'basic',
                 'price' => 0,
                 'design' => [
-                    // Royal Purple & Lavender — #6b3fa0 purple, #c9a8e0 lavender
                     'title'      => ['color' => '#6b3fa0', 'font' => 'Satisfy',      'size' => 32],
                     'content'    => ['color' => '#7a6a8a', 'font' => 'Didact Gothic', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#6b3fa0'],
@@ -169,7 +168,7 @@ class AllTemplatesSeeder extends Seeder
             ],
 
             // ════════════════════════════════════════════════════════════════
-            // PREMIUM TEMPLATES
+            // PREMIUM TEMPLATES (7 template)
             // ════════════════════════════════════════════════════════════════
             [
                 'title' => 'Modern Elegant',
@@ -178,8 +177,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'premium',
                 'price' => 0,
                 'design' => [
-                    // Font: Playfair Display (heading), Poppins (body)
-                    // Colors: --color-primary:#2d7a4f, --color-gold:#d4af37
                     'title'      => ['color' => '#2d7a4f', 'font' => 'Playfair Display', 'size' => 28],
                     'content'    => ['color' => '#6b7280', 'font' => 'Poppins',          'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
@@ -194,8 +191,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'premium',
                 'price' => 0,
                 'design' => [
-                    // Font: Cormorant Garamond (heading), Montserrat (body)
-                    // Colors: --forest-green:#2d5016, --sage-green:#9caf88, --cream:#f5f1e8
                     'title'      => ['color' => '#2d5016', 'font' => 'Cormorant Garamond', 'size' => 28],
                     'content'    => ['color' => '#4a6741', 'font' => 'Montserrat',         'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#2d5016'],
@@ -210,8 +205,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'premium',
                 'price' => 0,
                 'design' => [
-                    // Font: Cinzel (heading), Lato (body)
-                    // Colors: --emerald:#2d7a4f, --gold:#d4af37, --ivory:#fffff0
                     'title'      => ['color' => '#2d7a4f', 'font' => 'Cinzel', 'size' => 26],
                     'content'    => ['color' => '#2c3e50', 'font' => 'Lato',   'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
@@ -226,8 +219,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'premium',
                 'price' => 0,
                 'design' => [
-                    // Font: Alex Brush (heading), Raleway (body)
-                    // Colors: --rose-pink:#2d7a4f (overridden green), --sage-green:#8ba888
                     'title'      => ['color' => '#2d7a4f', 'font' => 'Alex Brush', 'size' => 36],
                     'content'    => ['color' => '#4a6741', 'font' => 'Raleway',    'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
@@ -242,8 +233,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'premium',
                 'price' => 0,
                 'design' => [
-                    // Font: Pacifico (heading), Open Sans (body)
-                    // Colors: --tropical-green:#00a86b, --ocean-blue:#0077be, --sand:#f4e4c1
                     'title'      => ['color' => '#00a86b', 'font' => 'Pacifico',  'size' => 28],
                     'content'    => ['color' => '#1a6b50', 'font' => 'Open Sans', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#00a86b'],
@@ -251,9 +240,37 @@ class AllTemplatesSeeder extends Seeder
                     'template'   => null,
                 ],
             ],
+            [
+                'title' => 'Gold Luxe',
+                'slug'  => 'template-1',
+                'url'   => 'template-1',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#c9a84c', 'font' => 'Cormorant Garamond', 'size' => 30],
+                    'content'    => ['color' => '#7a7a7a', 'font' => 'Jost',               'size' => 14],
+                    'button'     => ['color' => '#0f0f0f', 'background' => '#c9a84c'],
+                    'background' => '#faf7f0',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Green Minimal',
+                'slug'  => 'template-2',
+                'url'   => 'template-2',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#2d7a4f', 'font' => 'DM Serif Display', 'size' => 28],
+                    'content'    => ['color' => '#6b7c6d', 'font' => 'DM Sans',          'size' => 14],
+                    'button'     => ['color' => '#1c2b1e', 'background' => '#8fad91'],
+                    'background' => '#f7f9f7',
+                    'template'   => null,
+                ],
+            ],
 
             // ════════════════════════════════════════════════════════════════
-            // EXCLUSIVE TEMPLATES
+            // EXCLUSIVE TEMPLATES (7 template)
             // ════════════════════════════════════════════════════════════════
             [
                 'title' => 'Vintage Rustic',
@@ -262,8 +279,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'exclusive',
                 'price' => 0,
                 'design' => [
-                    // Font: Crimson Text (heading), Lora (body)
-                    // Colors: --vintage-brown:#8b7355, --cream:#f5f1e8, --dark-brown:#5d4e37
                     'title'      => ['color' => '#8b7355', 'font' => 'Crimson Text', 'size' => 28],
                     'content'    => ['color' => '#5d4e37', 'font' => 'Lora',         'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#8b7355'],
@@ -278,10 +293,8 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'exclusive',
                 'price' => 0,
                 'design' => [
-                    // Font: Great Vibes (script), Playfair Display (heading), Montserrat (body)
-                    // Colors: --gold:#d4af37, --dark:#1a1a1a, --cream:#faf8f3
-                    'title'      => ['color' => '#d4af37', 'font' => 'Great Vibes',      'size' => 36],
-                    'content'    => ['color' => '#888888', 'font' => 'Montserrat',        'size' => 14],
+                    'title'      => ['color' => '#d4af37', 'font' => 'Great Vibes', 'size' => 36],
+                    'content'    => ['color' => '#888888', 'font' => 'Montserrat',  'size' => 14],
                     'button'     => ['color' => '#1a1a1a', 'background' => '#d4af37'],
                     'background' => '#1a1a1a',
                     'template'   => null,
@@ -294,8 +307,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'exclusive',
                 'price' => 0,
                 'design' => [
-                    // Font: Amiri (Arabic serif), Lato (body), Great Vibes (accent)
-                    // Colors: --green-dark:#1a4731, --gold:#c9a84c, --cream:#fdf8f0
                     'title'      => ['color' => '#c9a84c', 'font' => 'Amiri', 'size' => 28],
                     'content'    => ['color' => '#2c2c2c', 'font' => 'Lato',  'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#1a4731'],
@@ -310,10 +321,8 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'exclusive',
                 'price' => 0,
                 'design' => [
-                    // Font: Fraunces (heading), Plus Jakarta Sans (body), Great Vibes (accent)
-                    // Colors: --cocoa:#2f2622, --latte:#7c665c, --gold:#b88746, --cream:#fbf6ee
-                    'title'      => ['color' => '#2f2622', 'font' => 'Fraunces',        'size' => 28],
-                    'content'    => ['color' => '#7c665c', 'font' => 'Plus Jakarta Sans','size' => 14],
+                    'title'      => ['color' => '#2f2622', 'font' => 'Fraunces',         'size' => 28],
+                    'content'    => ['color' => '#7c665c', 'font' => 'Plus Jakarta Sans', 'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#b88746'],
                     'background' => '#fbf6ee',
                     'template'   => null,
@@ -326,8 +335,6 @@ class AllTemplatesSeeder extends Seeder
                 'grade' => 'exclusive',
                 'price' => 0,
                 'design' => [
-                    // Font: Great Vibes (script), Playfair Display (heading), Lato (body)
-                    // Colors: --gold:#c9a84c, --dark:#2c2c2c, --cream:#f5f0e8
                     'title'      => ['color' => '#2c2c2c', 'font' => 'Playfair Display', 'size' => 28],
                     'content'    => ['color' => '#6b6b6b', 'font' => 'Lato',             'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#c9a84c'],
@@ -335,30 +342,84 @@ class AllTemplatesSeeder extends Seeder
                     'template'   => null,
                 ],
             ],
+            [
+                'title' => 'Rose Blush',
+                'slug'  => 'template-3',
+                'url'   => 'template-3',
+                'grade' => 'exclusive',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#b5838d', 'font' => 'Libre Baskerville', 'size' => 28],
+                    'content'    => ['color' => '#8a7a7d', 'font' => 'Nunito',            'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#b5838d'],
+                    'background' => '#fdf0f2',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Forest Green',
+                'slug'  => 'template-4',
+                'url'   => 'template-4',
+                'grade' => 'exclusive',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#4a7c59', 'font' => 'Fraunces', 'size' => 28],
+                    'content'    => ['color' => '#6b7c6d', 'font' => 'Inter',    'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#4a7c59'],
+                    'background' => '#f5f0e8',
+                    'template'   => null,
+                ],
+            ],
         ];
+    }
+
+    public function run(): void
+    {
+        $templates = $this->templateList();
+        $inserted  = 0;
+        $updated   = 0;
 
         foreach ($templates as $tplData) {
             $preset = $this->makePreset($tplData['design']);
 
-            $tpl = Template::updateOrCreate(
-                ['slug' => $tplData['slug']],
-                [
-                    'title'     => $tplData['title'],
-                    'url'       => $tplData['url'],
-                    'grade'     => $tplData['grade'],
-                    'price'     => $tplData['price'],
-                    'publish'   => 'publish',
-                    'file'      => $tplData['file'] ?? null,
-                    'file_type' => 'image',
-                    'preset'    => json_encode($preset),
-                    'user_id'   => 1,
-                    'ip_addr'   => '127.0.0.1',
-                ]
-            );
+            // Cek apakah sudah ada (berdasarkan slug)
+            $existing = Template::where('slug', $tplData['slug'])->first();
 
-            // Update template_id di dalam preset setelah dapat ID dari DB
-            $preset['design']['template'] = (string) $tpl->id;
-            Template::whereId($tpl->id)->update(['preset' => json_encode($preset)]);
+            $data = [
+                'title'     => $tplData['title'],
+                'url'       => $tplData['url'],
+                'grade'     => $tplData['grade'],
+                'price'     => $tplData['price'],
+                'publish'   => 'publish',
+                'file_type' => 'image',
+                'user_id'   => 1,
+                'ip_addr'   => '127.0.0.1',
+            ];
+
+            // Hanya set file jika ada
+            if (!empty($tplData['file'])) {
+                $data['file'] = $tplData['file'];
+            }
+
+            if ($existing) {
+                // Update — pertahankan file yang sudah ada jika tidak ada file baru
+                $existing->update(array_merge($data, ['preset' => json_encode($preset)]));
+                $tplId = $existing->id;
+                $updated++;
+            } else {
+                // Insert baru
+                $data['slug']   = $tplData['slug'];
+                $data['preset'] = json_encode($preset);
+                $tpl = Template::create($data);
+                $tplId = $tpl->id;
+                $inserted++;
+            }
+
+            // Update template_id di dalam preset
+            $preset['design']['template'] = (string) $tplId;
+            Template::whereId($tplId)->update(['preset' => json_encode($preset)]);
         }
+
+        $this->command->info("AllTemplatesSeeder: {$inserted} inserted, {$updated} updated. Total: " . ($inserted + $updated));
     }
 }
