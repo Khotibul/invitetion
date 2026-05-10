@@ -35,6 +35,18 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // Pastikan storage symlink ada — buat otomatis jika belum ada
+        // Ini mengatasi masalah "gambar hilang di hosting" karena symlink tidak dibuat
+        $storageLinkPath = public_path('storage');
+        $storageTargetPath = storage_path('app/public');
+        if (!file_exists($storageLinkPath) && is_dir($storageTargetPath)) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('storage:link');
+            } catch (\Throwable $e) {
+                // Gagal buat symlink — tidak fatal, lanjutkan
+            }
+        }
+
         Paginator::useBootstrap();
 
         // ── Guard: jika tabel belum ada (fresh install / migration belum jalan)

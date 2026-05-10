@@ -1,0 +1,46 @@
+APP_NAME="Risa Digital Invitation"
+APP_ENV=production
+APP_KEY=base64:ZW+9E0RQTLW7O62968Q6llwzxUOWVDo9hs5UzwHWq+I=
+APP_DEBUG=false
+APP_URL=https://undanganwedding.risa-achla-invitation.xyz
+ASSET_URL=https://undanganwedding.risa-achla-invitation.xyz
+
+
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+# ─── MySQL (Remote — Server Hosting) ─────────────────────────────────────────
+# Untuk koneksi dari lokal ke server hosting:
+# 1. Aktifkan Remote MySQL di cPanel → tambahkan IP publik lokal kamu
+# 2. Ganti DB_HOST dengan hostname/IP server hosting
+# 3. Cek IP publik lokal: https://whatismyip.com
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=iplayahcpw_invitation
+DB_USERNAME=iplayahcpw_invitation_dev
+DB_PASSWORD=khotibul185
+# ──────────────────────────────────────────────────────────────────────────────
+
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+QUEUE_CONNECTION=sync
+FILESYSTEM_DISK=public
+BROADCAST_DRIVER=log
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@undanganwedding.risa-achla-invitation.xyz"
+MAIL_FROM_NAME="${APP_NAME}"
+
+GOOGLE_CLIENT_ID=190762274336-4jmcgaeuhkh7ol70p2imtn5ig9cfjcsc.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=https://undanganwedding.risa-achla-invitation.xyz/auth/google/callback
+
+TURNSTILE_SITE_KEY=
+TURNSTILE_SITE_SECRET=

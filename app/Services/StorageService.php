@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Storage;
 /**
  * StorageService — wrapper untuk Storage::disk('public').
  * Semua file disimpan di disk public (storage/app/public).
+ *
+ * URL storage di hosting cPanel:
+ * - Symlink: public/storage → storage/app/public
+ * - URL: https://domain.com/storage/filename.jpg
+ *
+ * Pastikan sudah jalankan: php artisan storage:link
  */
 class StorageService
 {
@@ -28,9 +34,15 @@ class StorageService
         return Storage::disk('public')->exists($path);
     }
 
+    /**
+     * Generate URL untuk file di storage/app/public.
+     * Menggunakan APP_URL dari config agar benar di semua environment.
+     */
     public static function url(string $path): string
     {
-        return url('storage/' . ltrim($path, '/'));
+        // Gunakan Storage::disk('public')->url() yang membaca APP_URL dari config
+        // Ini lebih reliable daripada url() helper
+        return Storage::disk('public')->url(ltrim($path, '/'));
     }
 
     public static function disk(): string

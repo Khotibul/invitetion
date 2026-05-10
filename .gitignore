@@ -39,3 +39,4 @@ Thumbs.db
 # ── Diagnostic files (hapus setelah deploy) ───────────────────────────────────
 /public/check-assets.php
 /public/clear-cache.php
+/public/make-storage-link.php

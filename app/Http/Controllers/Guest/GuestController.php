@@ -318,7 +318,7 @@ class GuestController extends Controller
 			->where('invitation_id', Auth::user()->inv->id)
 			->firstOrFail();
 
-		$souvenir->image = $souvenir->file ? url('storage/sm/'.$souvenir->file) : null;
+		$souvenir->image = $souvenir->file ? storage_url('sm/'.$souvenir->file) : null;
 		$souvenir->url   = route('menu.souvenir-delete', $souvenir->id);
 
 		return response()->json($souvenir);

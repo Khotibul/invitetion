@@ -39,6 +39,8 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
+            // URL ini digunakan oleh Storage::disk('public')->url()
+            // Harus match dengan APP_URL di .env
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,

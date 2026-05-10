@@ -6,6 +6,28 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
+ * Generate URL untuk file di storage/app/public — kompatibel lokal & hosting.
+ *
+ * Di lokal  : http://localhost:8000/storage/filename.jpg
+ * Di hosting: https://domain.com/storage/filename.jpg
+ *
+ * Menggunakan Storage::disk('public')->url() yang membaca APP_URL dari config,
+ * sehingga benar di semua environment tanpa bergantung pada symlink manual.
+ *
+ * @param  string $path  Path relatif dari storage/app/public (misal: 'sm/foto.jpg')
+ * @return string        URL lengkap
+ */
+if (!function_exists('storage_url')) {
+    function storage_url(string $path): string
+    {
+        $path = ltrim($path, '/');
+        // Gunakan Storage::disk('public')->url() — ini membaca 'url' dari config/filesystems.php
+        // yang sudah diset ke APP_URL . '/storage'
+        return Storage::disk('public')->url($path);
+    }
+}
+
+/**
  * Buat raw SQL untuk pencarian teks di kolom JSON — kompatibel MySQL & PostgreSQL.
  *
  * MySQL  : LOWER(content) LIKE '%...%'

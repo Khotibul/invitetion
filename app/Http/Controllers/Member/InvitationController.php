@@ -912,7 +912,7 @@ class InvitationController extends Controller
 	public function m_story_show(int $id): JsonResponse
 	{
 		$story = InvitationStory::select('id', 'title', 'content', 'file')->whereId($id)->where('invitation_id', Auth::user()->inv->id)->first();
-		$story->image = url('storage/sm/', $story->file);
+		$story->image = storage_url('sm/'. ($story->file ?? ''));
 		$story->url = route('menu.story-delete', $story->id);
 
 		return response()->json($story);

@@ -420,10 +420,10 @@ class PublicController extends Controller
 		$femaleFrame  = $data->profile->photo->female->frame   ?? '';
 
 		$maleSrc   = (!empty($maleImg)   && $maleMethod   !== 'none')
-			? ($maleMethod   === 'storage' ? url('storage/sm/'.$maleImg)   : url('storage/avatar/'.$maleImg))
+			? ($maleMethod   === 'storage' ? storage_url('sm/'.$maleImg)   : storage_url('avatar/'.$maleImg))
 			: null;
 		$femaleSrc = (!empty($femaleImg) && $femaleMethod !== 'none')
-			? ($femaleMethod === 'storage' ? url('storage/sm/'.$femaleImg) : url('storage/avatar/'.$femaleImg))
+			? ($femaleMethod === 'storage' ? storage_url('sm/'.$femaleImg) : storage_url('avatar/'.$femaleImg))
 			: null;
 
 		// ── Foto sampul
@@ -432,15 +432,15 @@ class PublicController extends Controller
 		if ($coverObj && !empty($coverObj->image ?? '')) {
 			$method = $coverObj->method ?? '';
 			if ($method === 'asset')        $coverSrc = asset($coverObj->image);
-			elseif ($method === 'storage')  $coverSrc = url('storage/sm/'.$coverObj->image);
-			elseif ($method === 'avatar')   $coverSrc = url('storage/avatar/'.$coverObj->image);
-			else                            $coverSrc = url('storage/'.$coverObj->image);
+			elseif ($method === 'storage')  $coverSrc = storage_url('sm/'.$coverObj->image);
+			elseif ($method === 'avatar')   $coverSrc = storage_url('avatar/'.$coverObj->image);
+			else                            $coverSrc = storage_url($coverObj->image);
 		}
 
 		// ── OG image
 		$invFile = \Illuminate\Support\Str::startsWith($invitation->file ?? '', 'template/')
 			? asset($invitation->file)
-			: url('storage/'.($invitation->file ?? ''));
+			: storage_url($invitation->file ?? '');
 		$ogImage = $coverSrc ?? $invFile;
 
 		// ── Lokasi
