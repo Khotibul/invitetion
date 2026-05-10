@@ -11,9 +11,12 @@
 # ── Laravel runtime ───────────────────────────────────────────────────────────
 /bootstrap/cache/
 /storage/*.key
-/storage/app/
-/storage/framework/
+# Framework cache — dibuat otomatis oleh Laravel
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
 /storage/logs/
+# JANGAN exclude storage/app/ — file upload perlu di-commit agar tampil di hosting
 
 # ── node_modules — tidak perlu di-push ────────────────────────────────────────
 /node_modules/

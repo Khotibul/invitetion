@@ -1,3 +1,4 @@
-*
+# Izinkan folder public/ dan semua isinya
 !public/
+!public/**
 !.gitignore

@@ -1,2 +1,5 @@
-*
-!.gitignore
+# Izinkan semua file di storage/app/public/ agar ter-commit ke git
+# dan bisa di-deploy ke hosting
+!*
+!*/
+!**/*
