@@ -72,7 +72,7 @@
         <button type="button" onclick="togglePlay()" style="--icon: url('{{ url('storage/icon/toggle-music.png') }}')">
             <span>play</span>
         </button>
-		<audio id="music-source" src="{{ $data->music->url }}"></audio>
+		<audio id="music-source" src="{{ !empty($data->music->url ?? '') ? storage_url('audio/'.($data->music->url ?? '')) : '' }}"></audio>
     </div>
     @endif
     <section id="cover">

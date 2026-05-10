@@ -348,5 +348,9 @@
         @if($showClosing && $closingText)<p style="font-size:.85rem;opacity:.8;margin-top:.3rem">{{ $closingText }}</p>@endif
         <p style="font-size:.7rem;opacity:.6;margin-top:.5rem">Risa Digital Invitation</p>
     </footer>
+
+{{-- ── Musik Latar ── --}}
+@include('template.partials.music-player')
+
 </body>
 </html>

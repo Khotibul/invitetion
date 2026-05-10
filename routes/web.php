@@ -97,6 +97,7 @@ Route::prefix('dashboard')->middleware('is_member')->group(function () {
 	Route::delete('delete/guest/{id}', [MemberInvite::class, 'm_share_delete'])->name('menu.share-delete');
 	Route::put('create/gallery', [MemberInvite::class, 'm_gallery_add'])->name('menu.gallery-add');
 	Route::post('create/music', [MemberInvite::class, 'm_music_add'])->name('menu.music-add');
+	Route::delete('delete/music', [MemberInvite::class, 'm_music_delete'])->name('menu.music-delete');
     Route::post('storage/upload', [MemberProfile::class, 'strbox_store'])->name('strbox.store');
 	Route::post('storage/list/{mode}', [MemberProfile::class, 'strbox_list'])->name('strbox.list');
 	// account

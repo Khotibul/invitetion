@@ -993,8 +993,18 @@ class InvitationController extends Controller
 		$preset = $this->safePreset();
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
-			'music'    => TemplateAssets::select('title','content')->where('type','music')->whereHas('user', fn($q) => $q->where('role','admin'))->publish()->get(),
-			'my_music' => TemplateAssets::select('title','content')->where('type','music')->where('user_id', Auth::user()->id)->publish()->first(),
+			// Musik dari admin/developer — tampil untuk semua user
+			'music'    => TemplateAssets::select('title','content')
+				->where('type','music')
+				->whereHas('user', fn($q) => $q->whereIn('role', ['admin', 'developer']))
+				->publish()
+				->get(),
+			// Musik pribadi user (hanya untuk paket custom)
+			'my_music' => TemplateAssets::select('title','content')
+				->where('type','music')
+				->where('user_id', Auth::user()->id)
+				->publish()
+				->first(),
 			'custom'   => json_decode($access->pack->content)->{'music'} ?? 'template',
 			'preset'   => $preset->music,
 		];
@@ -1005,34 +1015,65 @@ class InvitationController extends Controller
 	public function m_music_add(Request $request): JsonResponse
 	{
 		$this->validate($request, [
-			'music_title' => 'required',
-			'music_file' => 'required|mimes:mpeg,mp3',
+			'music_title' => 'required|string|max:100',
+			'music_file'  => 'required|file|mimes:mpeg,mp3|max:10240',
+		], [
+			'music_title.required' => 'Judul musik wajib diisi.',
+			'music_file.required'  => 'File musik wajib dipilih.',
+			'music_file.mimes'     => 'File harus berformat MP3.',
+			'music_file.max'       => 'Ukuran file maksimal 10MB.',
 		]);
+
+		$music_name = $request->file('music_file')->hashName();
+		Storage::disk('public')->put('audio/'.$music_name, file_get_contents($request->file('music_file')));
+
 		$preset = [
-			'title' => $request->input('music_title'),
+			'title'   => $request->input('music_title'),
+			'content' => $music_name,
 			'publish' => 'publish',
 			'user_id' => Auth::user()->id,
-			'ip_addr' => $_SERVER['REMOTE_ADDR']
+			'ip_addr' => $_SERVER['REMOTE_ADDR'],
 		];
-		if (!empty($request->music_file)) :
-			$music_name = $request->file('music_file')->hashName();
-			Storage::disk('public')->put('audio/'.$music_name, file_get_contents($request->file('music_file')));
-			$preset['content'] = $music_name;
-			$music = TemplateAssets::where('type', 'music')->where('user_id', Auth::user()->id)->publish();
-			$count = $music->count();
-			if ($count>=1) :
-				$music = $music->first();
-				if (Storage::disk('public')->exists('audio/'.$music->content)) :
-					Storage::disk('public')->delete('audio/'.$music->content);
-				endif;
-				TemplateAssets::whereId($music->id)->update($preset);
-			elseif ($count==0) :
-				$preset['type'] = 'music';
-				TemplateAssets::create($preset);
-			endif;
-		endif;
-		
-		return response()->json([]);
+
+		// Satu user hanya boleh punya 1 musik pribadi — replace jika sudah ada
+		$existing = TemplateAssets::where('type', 'music')->where('user_id', Auth::user()->id)->publish()->first();
+		if ($existing) {
+			// Hapus file lama
+			if (Storage::disk('public')->exists('audio/'.$existing->content)) {
+				Storage::disk('public')->delete('audio/'.$existing->content);
+			}
+			$existing->update($preset);
+		} else {
+			$preset['type'] = 'music';
+			TemplateAssets::create($preset);
+		}
+
+		return response()->json([
+			'toast' => ['icon' => 'success', 'title' => 'Berhasil!', 'text' => 'Musik berhasil diunggah.'],
+		]);
+	}
+
+	public function m_music_delete(Request $request): JsonResponse
+	{
+		$music = TemplateAssets::where('type', 'music')
+			->where('user_id', Auth::user()->id)
+			->publish()
+			->first();
+
+		if (!$music) {
+			return response()->json(['toast' => ['icon' => 'error', 'title' => 'Gagal', 'text' => 'Musik tidak ditemukan.']], 404);
+		}
+
+		// Hapus file dari storage
+		if (Storage::disk('public')->exists('audio/'.$music->content)) {
+			Storage::disk('public')->delete('audio/'.$music->content);
+		}
+
+		$music->delete();
+
+		return response()->json([
+			'toast' => ['icon' => 'success', 'title' => 'Dihapus!', 'text' => 'Musik pribadi berhasil dihapus.'],
+		]);
 	}
 	
 	public function m_rsvp(): Response
@@ -1453,12 +1494,27 @@ class InvitationController extends Controller
 		elseif ($menu=='gallery') :
 			// gallery redirected to menu.gallery-add
 		elseif ($menu=='music') :
-			if ($request->music_show=='on') :
-				$column['music_url'] = 'required';
+			$preset['music']['show'] = ($request->input('music_show') == 'on') ? true : false;
+			// Selalu simpan title & url (agar pilihan musik tidak hilang saat toggle off)
+			if ($request->filled('music_title')) :
 				$preset['music']['title'] = $request->input('music_title');
-				$preset['music']['url'] = $request->input('music_url');
 			endif;
-			$preset['music']['show'] = ($request->input('music_show')=='on') ? true : false;
+			if ($request->filled('music_url')) :
+				// music_url berisi filename saja (bukan full URL)
+				$rawUrl = $request->input('music_url', '');
+				// Bersihkan jika tidak sengaja terkirim sebagai full URL
+				if (filter_var($rawUrl, FILTER_VALIDATE_URL)) :
+					$rawUrl = basename(parse_url($rawUrl, PHP_URL_PATH));
+				endif;
+				$preset['music']['url'] = $rawUrl;
+			endif;
+			// Validasi: hanya wajib isi url jika musik diaktifkan
+			if ($preset['music']['show'] === true && empty($preset['music']['url'])) :
+				return response()->json([
+					'toast'  => ['icon' => 'warning', 'title' => 'Pilih musik dulu', 'text' => 'Aktifkan musik latar setelah memilih musik dari daftar.'],
+					'errors' => ['music_url' => ['Pilih musik terlebih dahulu.']],
+				], 422);
+			endif;
 		elseif ($menu=='rsvp') :
 			$column['rsvp_title'] = 'required';
 			$column['rsvp_content'] = 'required';

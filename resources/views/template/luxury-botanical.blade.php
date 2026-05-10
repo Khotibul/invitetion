@@ -555,5 +555,6 @@
         run();setInterval(run,1000);
     })();
     </script>
+@include('template.partials.music-player')
 </body>
 </html>

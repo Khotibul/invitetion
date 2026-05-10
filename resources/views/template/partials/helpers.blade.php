@@ -111,6 +111,20 @@ if (!isset($femaleName)) {
     // Musik
     $showMusic = ($data->music->show ?? false) === true;
     $musicUrl  = $data->music->url   ?? '';
+    // Konversi filename ke full URL untuk audio src di semua template
+    $musicUrl  = (!empty($musicUrl)) ? storage_url('audio/'.$musicUrl) : '';
+
+    // Live Streaming
+    $showLive    = ($data->additional->live->show     ?? false) === true;
+    $liveApp     = $data->additional->live->app       ?? '';
+    $liveLink    = $data->additional->live->link      ?? '';
+    $liveContent = $data->additional->live->content   ?? '';
+
+    // Protokol Kesehatan
+    $showProtocol    = ($data->additional->protocol->show    ?? false) === true;
+    $protocolCode    = $data->additional->protocol->code     ?? '';
+    $protocolTitle   = $data->additional->protocol->title    ?? '';
+    $protocolContent = $data->additional->protocol->content  ?? '';
 
     // Galeri
     $galleryFiles = (!empty($other['photo']) && !empty($other['photo']->prop->file ?? []))

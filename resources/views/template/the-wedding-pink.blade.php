@@ -258,7 +258,7 @@
 					<img src="{{ asset('template/the-wedding/images/audio/play.png') }}" alt="Play Music" style="width: 20px;">
 				</a>
 				<audio id="bg-music" loop>
-					<source src="{{ $data->music->url ?? '' }}" type="audio/mp3">
+					<source src="{{ !empty($data->music->url ?? '') ? storage_url('audio/'.($data->music->url ?? '')) : '' }}" type="audio/mp3">
 				</audio>
 			</div>
 			<ul class="right-sidebar">
