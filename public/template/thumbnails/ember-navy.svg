@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100" viewBox="0 0 800 1100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f7ff"/>
+      <stop offset="1" stop-color="#e9edf6"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f4b7c"/>
+      <stop offset="1" stop-color="#b8c6e6"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1100" rx="42" fill="url(#bg)"/>
+  <rect x="44" y="44" width="712" height="1012" rx="36" fill="rgba(255,255,255,0.75)" stroke="rgba(0,0,0,0.08)"/>
+  <circle cx="640" cy="210" r="180" fill="url(#accent)" opacity="0.22"/>
+  <circle cx="170" cy="880" r="220" fill="url(#accent)" opacity="0.16"/>
+  <text x="80" y="160" font-family="Georgia, serif" font-size="44" fill="#202a36" opacity="0.8" letter-spacing="3">EMBER INVITES</text>
+  <text x="80" y="235" font-family="Georgia, serif" font-size="78" fill="#2f4b7c">Navy</text>
+  <rect x="80" y="285" width="220" height="6" rx="3" fill="#2f4b7c" opacity="0.55"/>
+  <text x="80" y="360" font-family="Arial, sans-serif" font-size="26" fill="#6a717a">Bold • Classic • Clean</text>
+</svg>
+

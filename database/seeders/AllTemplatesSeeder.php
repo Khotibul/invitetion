@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * AllTemplatesSeeder
- * Seed semua 19 template dengan preset lengkap dan akurat
+ * Seed semua template dengan preset lengkap dan akurat
  * sesuai font & warna yang digunakan di masing-masing blade template.
  *
  * Jalankan: php artisan db:seed --class=AllTemplatesSeeder
@@ -367,6 +367,122 @@ class AllTemplatesSeeder extends Seeder
                     'content'    => ['color' => '#6b7c6d', 'font' => 'Inter',    'size' => 14],
                     'button'     => ['color' => '#ffffff', 'background' => '#4a7c59'],
                     'background' => '#f5f0e8',
+                    'template'   => null,
+                ],
+            ],
+
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            // EMBER INVITES SERIES â€” Premium (8 template)
+            // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            [
+                'title' => 'Ember Rose',
+                'slug'  => 'ember-invites-rose',
+                'url'   => 'ember-invites-rose',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#c86b85', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#c86b85'],
+                    'background' => '#fbf7f2',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Sage',
+                'slug'  => 'ember-invites-sage',
+                'url'   => 'ember-invites-sage',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#4f7c73', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#4f7c73'],
+                    'background' => '#fbf7f2',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Navy',
+                'slug'  => 'ember-invites-navy',
+                'url'   => 'ember-invites-navy',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#2f4b7c', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6a717a', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#2f4b7c'],
+                    'background' => '#f3f5fa',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Lilac',
+                'slug'  => 'ember-invites-lilac',
+                'url'   => 'ember-invites-lilac',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#7a5fa6', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#7a5fa6'],
+                    'background' => '#f7f3fb',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Terracotta',
+                'slug'  => 'ember-invites-terracotta',
+                'url'   => 'ember-invites-terracotta',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#c97044', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#c97044'],
+                    'background' => '#fbf7f2',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Emerald',
+                'slug'  => 'ember-invites-emerald',
+                'url'   => 'ember-invites-emerald',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#1f7a5e', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#1f7a5e'],
+                    'background' => '#f2fbf7',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Sky',
+                'slug'  => 'ember-invites-sky',
+                'url'   => 'ember-invites-sky',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#2f8ccf', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6f6a66', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#2f8ccf'],
+                    'background' => '#f1f8fd',
+                    'template'   => null,
+                ],
+            ],
+            [
+                'title' => 'Ember Charcoal',
+                'slug'  => 'ember-invites-charcoal',
+                'url'   => 'ember-invites-charcoal',
+                'grade' => 'premium',
+                'price' => 0,
+                'design' => [
+                    'title'      => ['color' => '#1f1f1f', 'font' => 'Cormorant Garamond', 'size' => 28],
+                    'content'    => ['color' => '#6c6c6c', 'font' => 'Inter',             'size' => 14],
+                    'button'     => ['color' => '#ffffff', 'background' => '#1f1f1f'],
+                    'background' => '#fbfbfa',
                     'template'   => null,
                 ],
             ],
