@@ -320,6 +320,7 @@
 	<script src="{{ asset('template/the-wedding/js/respond.min.js') }}"></script>
 	<![endif]-->
 
+	@include('template.partials.font-vars')
 </head>
 <body>
 @include('template.partials.preview-banner')

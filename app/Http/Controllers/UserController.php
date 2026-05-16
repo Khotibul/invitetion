@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -71,20 +72,25 @@ class UserController extends Controller
 
             // Badge status aktif (hanya untuk member yang punya akun)
             $activeBadge = '';
-            if ($item->role === 'member' && $item->acc) {
-                $activeBadge = $item->acc->actived == 1
-                    ? "<span class='badge bg-success ms-1'>Aktif</span>"
-                    : "<span class='badge bg-secondary ms-1'>Non-aktif</span>";
+            if ($item->role === 'member') {
+                if (!$item->acc) {
+                    $activeBadge = "<span class='badge bg-info ms-1'>Belum diset</span>";
+                } else {
+                    $activeBadge = ((string) $item->acc->actived === '1')
+                        ? "<span class='badge bg-success ms-1'>Aktif</span>"
+                        : "<span class='badge bg-secondary ms-1'>Non-aktif</span>";
+                }
             }
 
             // Tombol toggle aktif/non-aktif
             $toggleBtn = '';
-            if ($item->acc) {
-                $isActive  = $item->acc->actived == 1;
+            if ($item->role === 'member') {
+                // Jika belum ada account, asumsikan "aktif" (karena login member tidak tergantung Account).
+                $isActive = !$item->acc || ((string) $item->acc->actived === '1');
                 $toggleBtn = "<button type='button' class='btn btn-sm "
                     . ($isActive ? "btn-outline-warning" : "btn-outline-success")
                     . " btn-toggle-active me-1' "
-                    . "data-url='{$toggleUrl}' data-name='{$item->name}' data-active='" . ($item->acc->actived ?? 0) . "' "
+                    . "data-url='{$toggleUrl}' data-name='{$item->name}' data-active='" . ($isActive ? 1 : 0) . "' "
                     . "title='" . ($isActive ? 'Non-aktifkan' : 'Aktifkan') . "'>"
                     . "<i class='bx " . ($isActive ? "bx-user-minus" : "bx-user-check") . "'></i></button>";
             }
@@ -198,22 +204,42 @@ class UserController extends Controller
     /**
      * Toggle aktif / non-aktif akun user (via Account.actived).
      */
-    public function toggleActive(int $id): JsonResponse
+    public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = User::with('acc')->findOrFail($id);
 
-        if (!$user->acc) {
-            return response()->json(['message' => 'Akun user tidak ditemukan.'], 404);
+        // Saat ini toggle aktif/non-aktif hanya berlaku untuk member (Account.actived).
+        if ($user->role !== 'member') {
+            return response()->json(['message' => 'Status aktif/non-aktif hanya berlaku untuk akun member.'], 422);
         }
 
-        $newStatus = $user->acc->actived == 1 ? 0 : 1;
+        // Cegah admin menonaktifkan akunnya sendiri via panel.
+        if (Auth::id() === $user->id) {
+            return response()->json(['message' => 'Tidak bisa mengubah status akun sendiri.'], 403);
+        }
+
+        if (!$user->acc) {
+            // Buat record Account minimal agar status aktif/non-aktif bisa dikelola.
+            $user->acc()->create([
+                'content'       => json_encode(['phone' => null, 'address' => null]),
+                'file'          => 'avatar.png',
+                'actived'       => '1',
+                'guestbook'     => '0',
+                'package_id'    => null,
+                'invitation_id' => $user->inv?->id,
+                'ip_addr'       => $request->ip(),
+            ]);
+            $user->load('acc');
+        }
+
+        $newStatus = ((string) $user->acc->actived === '1') ? '0' : '1';
         $user->acc->update(['actived' => $newStatus]);
 
-        $label = $newStatus == 1 ? 'diaktifkan' : 'dinon-aktifkan';
+        $label = $newStatus === '1' ? 'diaktifkan' : 'dinon-aktifkan';
 
         return response()->json([
             'message' => "Akun '{$user->name}' berhasil {$label}.",
-            'actived' => $newStatus,
+            'actived' => (int) $newStatus,
         ]);
     }
 

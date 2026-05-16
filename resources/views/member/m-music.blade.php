@@ -4,9 +4,12 @@
     $presetUrl   = $data->preset->url   ?? '';
     $presetTitle = $data->preset->title ?? '';
     $presetShow  = ($data->preset->show === true);
-    // Cek apakah file audio preset ada di storage
-    $hasPreset   = !empty($presetUrl)
-                   && \Illuminate\Support\Facades\Storage::disk('public')->exists('audio/'.$presetUrl);
+    $isExternal  = !empty($presetUrl) && filter_var($presetUrl, FILTER_VALIDATE_URL);
+    $presetSrc   = $isExternal ? $presetUrl : (!empty($presetUrl) ? storage_url('audio/'.$presetUrl) : '');
+    // Cek apakah file audio preset ada di storage (untuk format filename), untuk URL lama cukup cek tidak kosong
+    $hasPreset   = $isExternal
+        ? !empty($presetUrl)
+        : (!empty($presetUrl) && \Illuminate\Support\Facades\Storage::disk('public')->exists('audio/'.$presetUrl));
 @endphp
 @section('content')
 <section class="position-relative py-3">
@@ -55,7 +58,7 @@
 
                         @if($hasPreset)
                         <audio id="current-audio"
-                               src="{{ storage_url('audio/'.$presetUrl) }}"
+                               src="{{ $presetSrc }}"
                                controls controlsList="nodownload noplaybackrate"
                                class="w-100" style="height:36px"></audio>
                         @else
@@ -69,7 +72,7 @@
                         <input type="hidden" name="music_title" id="inp-music-title"
                                value="{{ $presetTitle }}">
                         <input type="hidden" name="music_url"   id="inp-music-url"
-                               value="{{ $presetUrl }}">
+                               value="{{ $isExternal ? '' : $presetUrl }}">
                     </div>
 
                     <button type="submit" class="btn btn-success w-100">

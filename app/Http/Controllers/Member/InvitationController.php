@@ -992,6 +992,7 @@ class InvitationController extends Controller
 		$menu   = $this->menu['music'];
 		$preset = $this->safePreset();
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+		$musicMode = $this->currentMusicMode($access);
 		$bagpack = [
 			// Musik dari admin/developer — tampil untuk semua user
 			'music'    => TemplateAssets::select('title','content')
@@ -1005,7 +1006,7 @@ class InvitationController extends Controller
 				->where('user_id', Auth::user()->id)
 				->publish()
 				->first(),
-			'custom'   => json_decode($access->pack->content)->{'music'} ?? 'template',
+			'custom'   => $musicMode,
 			'preset'   => $preset->music,
 		];
 		$data = json_decode(json_encode($bagpack));
@@ -1014,6 +1015,13 @@ class InvitationController extends Controller
 
 	public function m_music_add(Request $request): JsonResponse
 	{
+		$musicMode = $this->currentMusicMode();
+		if ($musicMode !== 'custom') {
+			return response()->json([
+				'toast' => ['icon' => 'error', 'title' => 'Tidak diizinkan', 'text' => 'Paket kamu belum mendukung upload musik sendiri.'],
+			], 403);
+		}
+
 		$this->validate($request, [
 			'music_title' => 'required|string|max:100',
 			'music_file'  => 'required|file|mimes:mpeg,mp3|max:10240',
@@ -1055,6 +1063,13 @@ class InvitationController extends Controller
 
 	public function m_music_delete(Request $request): JsonResponse
 	{
+		$musicMode = $this->currentMusicMode();
+		if ($musicMode !== 'custom') {
+			return response()->json([
+				'toast' => ['icon' => 'error', 'title' => 'Tidak diizinkan', 'text' => 'Paket kamu belum mendukung musik pribadi.'],
+			], 403);
+		}
+
 		$music = TemplateAssets::where('type', 'music')
 			->where('user_id', Auth::user()->id)
 			->publish()
@@ -1494,6 +1509,7 @@ class InvitationController extends Controller
 		elseif ($menu=='gallery') :
 			// gallery redirected to menu.gallery-add
 		elseif ($menu=='music') :
+			$musicMode = $this->currentMusicMode();
 			$preset['music']['show'] = ($request->input('music_show') == 'on') ? true : false;
 			// Selalu simpan title & url (agar pilihan musik tidak hilang saat toggle off)
 			if ($request->filled('music_title')) :
@@ -1508,6 +1524,15 @@ class InvitationController extends Controller
 				endif;
 				$preset['music']['url'] = $rawUrl;
 			endif;
+
+			// Validasi pilihan musik sesuai paket (template/custom) hanya saat musik diaktifkan
+			$chosen = (string) ($preset['music']['url'] ?? '');
+			if ($preset['music']['show'] === true && !empty($chosen) && !$this->isMusicChoiceAllowed($chosen, $musicMode)) {
+				return response()->json([
+					'toast'  => ['icon' => 'error', 'title' => 'Musik tidak valid', 'text' => 'Musik yang dipilih tidak tersedia untuk paket kamu.'],
+					'errors' => ['music_url' => ['Musik yang dipilih tidak tersedia.']],
+				], 422);
+			}
 			// Validasi: hanya wajib isi url jika musik diaktifkan
 			if ($preset['music']['show'] === true && empty($preset['music']['url'])) :
 				return response()->json([
@@ -1592,5 +1617,48 @@ class InvitationController extends Controller
 		$response = ['toast'=>['icon'=>'success','title'=>'Disimpan!','text'=>'Perubahan telah disimpan.'],'page'=>'idle'];
 
 		return response()->json($response);
+	}
+
+	private function currentMusicMode(?AccountInvoice $access = null): string
+	{
+		$access ??= AccountInvoice::select('package_id')->with('pack')->current()->first();
+		$mode = 'template';
+
+		if ($access && $access->pack && !empty($access->pack->content)) {
+			$decoded = json_decode($access->pack->content);
+			$mode = $decoded?->music ?? 'template';
+		}
+
+		return in_array($mode, ['custom', 'template'], true) ? $mode : 'template';
+	}
+
+	private function isMusicChoiceAllowed(string $filename, string $musicMode): bool
+	{
+		$filename = trim($filename);
+		if ($filename === '') return true;
+
+		// Wajib ada file fisiknya, karena player memakai storage_url('audio/...')
+		if (!Storage::disk('public')->exists('audio/'.$filename)) {
+			return false;
+		}
+
+		$query = TemplateAssets::where('type', 'music')
+			->where('content', $filename)
+			->publish();
+
+		if ($musicMode === 'template') {
+			// Hanya musik dari admin/developer
+			return $query
+				->whereHas('user', fn($q) => $q->whereIn('role', ['admin', 'developer']))
+				->exists();
+		}
+
+		// custom: boleh musik admin/developer atau musik pribadi user
+		return $query
+			->where(function ($q) {
+				$q->where('user_id', Auth::user()->id)
+					->orWhereHas('user', fn($u) => $u->whereIn('role', ['admin', 'developer']));
+			})
+			->exists();
 	}
 }

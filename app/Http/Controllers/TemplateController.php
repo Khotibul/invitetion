@@ -258,8 +258,13 @@ class TemplateController extends Controller
 			$column['type'] = 'frame';
 			$column['content'] = $file_name;
 		elseif ($slug=='music') :
-			// $this->validate($request, ['file' => 'required|mimes:application/octet-stream,audio/mpeg,mpga,mp3,wav']);
-			$this->validate($request, ['file' => 'required']);
+			$this->validate($request, [
+				'file' => 'required|file|mimes:mpeg,mp3|max:10240',
+			], [
+				'file.required' => '<code>file</code> harus diisi.',
+				'file.mimes'    => 'File harus berformat MP3.',
+				'file.max'      => 'Ukuran file maksimal 10MB.',
+			]);
 			$file_name = $request->file('file')->hashName();
 			Storage::disk('public')->put('audio/'.$file_name, file_get_contents($request->file('file')));
 			$column['type'] = 'music';

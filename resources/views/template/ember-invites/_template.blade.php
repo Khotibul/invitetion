@@ -283,6 +283,7 @@
         footer{padding:3.2rem 1.5rem;text-align:center;color:var(--muted);font-size:.9rem}
         footer b{color:var(--ink)}
     </style>
+    @include('template.partials.font-vars')
 </head>
 <body>
     @include('template.partials.preview-banner')

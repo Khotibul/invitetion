@@ -60,6 +60,7 @@
         <link rel="stylesheet" href="{{ asset('build/assets/default-CAqs08_C.css') }}">
         <script src="{{ asset('build/assets/default-DpNtwc8q.js') }}" type="module" defer></script>
     @endif
+    @include('template.partials.font-vars')
 </head>
 <body>
     @if ($data->gift->show===true)

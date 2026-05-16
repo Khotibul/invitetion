@@ -159,7 +159,12 @@
 
             @if($isEdit)
             {{-- Status Aktif Card (hanya untuk member yang punya akun) --}}
-            @if($user->acc)
+            @if(($user->role ?? null) === 'member')
+            @php
+                // Jika belum ada account, asumsikan aktif (login member tidak tergantung Account).
+                $isActive = !isset($user->acc) || !$user->acc || (string)($user->acc->actived ?? '1') === '1';
+                $isUnset  = !isset($user->acc) || !$user->acc;
+            @endphp
             <div class="card border-0 shadow-sm mt-3">
                 <div class="card-body px-4 py-3">
                     <h6 class="mb-3 small fw-semibold text-muted text-uppercase">
@@ -167,7 +172,12 @@
                     </h6>
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            @if($user->acc->actived == 1)
+                            @if($isUnset)
+                                <span class="badge bg-info fs-6 px-3 py-2">
+                                    <i class="bx bx-info-circle me-1"></i> Belum diset
+                                </span>
+                                <p class="text-muted small mt-1 mb-0">Secara default akun dianggap aktif. Kamu bisa non-aktifkan untuk memblokir akses dashboard.</p>
+                            @elseif($isActive)
                                 <span class="badge bg-success fs-6 px-3 py-2">
                                     <i class="bx bx-check-circle me-1"></i> Aktif
                                 </span>
@@ -180,19 +190,12 @@
                             @endif
                         </div>
                         <div>
-                            @if($user->acc->actived == 1)
-                            <button type="button" class="btn btn-outline-warning btn-sm btn-toggle-status"
+                            <button type="button" class="btn btn-sm btn-toggle-status {{ $isActive ? 'btn-outline-warning' : 'btn-outline-success' }}"
                                     data-url="{{ route('user-management.toggle-active', $user->id) }}"
-                                    data-active="1" data-name="{{ $user->name }}">
-                                <i class="bx bx-user-minus me-1"></i> Non-aktifkan
+                                    data-active="{{ $isActive ? 1 : 0 }}" data-name="{{ $user->name }}">
+                                <i class="bx {{ $isActive ? 'bx-user-minus' : 'bx-user-check' }} me-1"></i>
+                                {{ $isActive ? 'Non-aktifkan' : 'Aktifkan' }}
                             </button>
-                            @else
-                            <button type="button" class="btn btn-outline-success btn-sm btn-toggle-status"
-                                    data-url="{{ route('user-management.toggle-active', $user->id) }}"
-                                    data-active="0" data-name="{{ $user->name }}">
-                                <i class="bx bx-user-check me-1"></i> Aktifkan
-                            </button>
-                            @endif
                         </div>
                     </div>
                 </div>

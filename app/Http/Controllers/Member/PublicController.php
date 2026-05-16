@@ -499,8 +499,14 @@ class PublicController extends Controller
 		// ── Musik
 		$showMusic = ($data->music->show ?? false) === true;
 		$_rawMusicUrl = $data->music->url ?? '';
-		// Konversi filename ke full URL — preset menyimpan filename saja (e.g. "abc123.mp3")
-		$musicUrl  = (!empty($_rawMusicUrl)) ? storage_url('audio/'.$_rawMusicUrl) : '';
+		// Konversi "url" ke full URL:
+		// - format baru: filename saja (e.g. "abc123.mp3") -> storage_url('audio/...')
+		// - format lama: full URL -> pakai apa adanya
+		if (!empty($_rawMusicUrl) && filter_var($_rawMusicUrl, FILTER_VALIDATE_URL)) {
+			$musicUrl = $_rawMusicUrl;
+		} else {
+			$musicUrl = (!empty($_rawMusicUrl)) ? storage_url('audio/'.$_rawMusicUrl) : '';
+		}
 
 		// ── Galeri
 		$galleryFiles = (!empty($other['photo']) && !empty($other['photo']->prop->file ?? []))

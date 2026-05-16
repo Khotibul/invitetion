@@ -58,6 +58,20 @@ class AccountController extends Controller
 		if (Auth::attempt($credentials)) {
 			$request->session()->regenerate();
 
+			// Jika akun member dinonaktifkan oleh admin, jangan izinkan login.
+			$user = Auth::user();
+			if ($user && $user->role === 'member') {
+				$user->loadMissing('acc');
+				if ($user->acc && (string) $user->acc->actived !== '1') {
+					Auth::logout();
+					$request->session()->invalidate();
+					$request->session()->regenerateToken();
+					return back()->withErrors([
+						'email' => 'Akun kamu sedang non-aktif. Silakan hubungi admin.',
+					]);
+				}
+			}
+
 			return redirect()->route('member.main');
 		}
 
