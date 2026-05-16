@@ -191,6 +191,7 @@ class InvitationController extends Controller
 		if (!is_array($templateLimit) || empty($templateLimit)) {
 			$templateLimit = ['basic'];
 		}
+		$exclusiveUnlocked = in_array('exclusive', $templateLimit, true);
 
 		// Ambil semua paket publish beserta harga untuk ditampilkan di dashboard
 		$allPackages = Package::select('id','title','slug','price','grade','content')
@@ -228,12 +229,39 @@ class InvitationController extends Controller
 
 		$data = json_decode(json_encode($bagpack));
 		$conditional = [
-			'e-invitation' => $conditional_menu['e-invitation'] ?? false,
-			'story'        => $conditional_menu['story']        ?? false,
-			'event'        => $conditional_menu['event']        ?? false,
+			'e-invitation' => $exclusiveUnlocked ? true : ($conditional_menu['e-invitation'] ?? false),
+			'story'        => $exclusiveUnlocked ? true : ($conditional_menu['story']        ?? false),
+			'event'        => $exclusiveUnlocked ? true : ($conditional_menu['event']        ?? false),
 		];
 
 		return response()->view('member.dashboard', compact('menu', 'data', 'conditional'));
+	}
+
+	private function exclusiveUnlocked(?AccountInvoice $access = null): bool
+	{
+		$access ??= $this->activation;
+		if (!$access || !$access->pack || empty($access->pack->content ?? null)) return false;
+
+		$content = json_decode($access->pack->content, true);
+		$limit = $content['template'] ?? ['basic'];
+		if (!is_array($limit)) $limit = (array) $limit;
+
+		return in_array('exclusive', $limit, true);
+	}
+
+	private function canUseFeature(string $key): bool
+	{
+		if ($this->exclusiveUnlocked()) return true;
+		$pack = json_decode($this->activation->pack->content ?? '{}', true) ?? [];
+		return ($pack[$key] ?? false) === true;
+	}
+
+	private function denyFeature(string $key): JsonResponse
+	{
+		return response()->json([
+			'toast' => ['icon' => 'warning', 'title' => 'Fitur terkunci', 'text' => 'Fitur ini belum tersedia di paket kamu.'],
+			'feature' => $key,
+		], 403);
 	}
 
 	/**
@@ -446,7 +474,10 @@ class InvitationController extends Controller
 				'template'   => $inv->template_id ?? null,
 				'title'      => ['color' => '#000000', 'font' => 'Arial', 'size' => 24],
 				'content'    => ['color' => '#333333', 'font' => 'Arial', 'size' => 14],
+				'script'     => ['font' => 'Great Vibes', 'size' => 32],
 				'background' => '#ffffff',
+				'background_model' => 'solid',
+				'background2' => '#ffffff',
 				'button'     => ['color' => '#ffffff', 'background' => '#2d7a4f'],
 			],
 			'cover' => [
@@ -525,14 +556,19 @@ class InvitationController extends Controller
 		if (!isset($d->template))   $d->template   = $inv->template_id ?? null;
 		if (!isset($d->title))      $d->title       = (object)['color'=>'#000000','font'=>'Arial','size'=>24];
 		if (!isset($d->content))    $d->content     = (object)['color'=>'#333333','font'=>'Arial','size'=>14];
+		if (!isset($d->script))     $d->script      = (object)['font'=>'Great Vibes','size'=>32];
 		if (!isset($d->background)) $d->background  = '#ffffff';
+		if (!isset($d->background_model)) $d->background_model = 'solid';
+		if (!isset($d->background2)) $d->background2 = $d->background;
 		if (!isset($d->button))     $d->button      = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
 		// Backward compat: preset lama tidak punya size
 		if (!isset($d->title->size))   $d->title->size   = 24;
 		if (!isset($d->content->size)) $d->content->size = 14;
+		if (!isset($d->script->size))  $d->script->size  = 32;
 		// Backward compat: preset lama tidak punya font
 		if (!isset($d->title->font))   $d->title->font   = 'Arial';
 		if (!isset($d->content->font)) $d->content->font = 'Arial';
+		if (!isset($d->script->font))  $d->script->font  = 'Great Vibes';
 
 		// cover
 		if (!isset($raw->cover)) $raw->cover = (object)[];
@@ -709,14 +745,20 @@ class InvitationController extends Controller
 
 	public function m_event(): Response|RedirectResponse
 	{
-		if (json_decode($this->activation->pack->content, true)['event'] ?? false) :
+		$pack = json_decode($this->activation->pack->content ?? '{}', true) ?? [];
+		if ($this->exclusiveUnlocked() || ($pack['event'] ?? false)) :
 			$menu = $this->menu['event'];
 			$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+			$exclusive = $this->exclusiveUnlocked($access);
 			$bagpack = [
 				'style' => ['deafult' => 'Bawaan', 'none' => 'Sembunyikan'],
 				'event' => InvitationEvent::select('id', 'title', 'content', 'publish')->where('invitation_id', Auth::user()->inv->id)->get(),
 				'limitEvent' => (json_decode($access->pack->content)->{'event-count'}=='unlimited') ? "∞" : json_decode($access->pack->content)->{'event-count'},
 			];
+			// Rapikan simbol infinity + unlock unlimited untuk paket exclusive.
+			if ($exclusive || (json_decode($access->pack->content)->{'event-count'} ?? null) === 'unlimited') {
+				$bagpack['limitEvent'] = '∞';
+			}
 			$data = json_decode(json_encode($bagpack));
 
 			return response()->view('member.m-event', compact('menu', 'data'));
@@ -727,7 +769,9 @@ class InvitationController extends Controller
 
 	public function m_event_add(Request $request): JsonResponse
 	{
+		if (!$this->canUseFeature('event')) return $this->denyFeature('event');
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+		$exclusive = $this->exclusiveUnlocked($access);
 		$column = [
 			'event_title' => 'required',
 			'event_content' => 'required',
@@ -764,7 +808,9 @@ class InvitationController extends Controller
 			'user_id' => Auth::user()->id
 		];
 		$check_event = InvitationEvent::where('invitation_id', Auth::user()->inv->id)->count();
-		$limit_event = (json_decode($access->pack->content)->{'event-count'}=='unlimited') ? 500 : json_decode($access->pack->content)->{'event-count'};
+		$limit_event = $exclusive
+			? 500
+			: ((json_decode($access->pack->content)->{'event-count'}=='unlimited') ? 500 : json_decode($access->pack->content)->{'event-count'});
 		if ($check_event<$limit_event) :
 			InvitationEvent::create($preset);
 			$response = ['toast'=>['icon'=>'success', 'title'=>'Disimpan!', 'text'=>'Acara '.$request->event_title.' telah ditambahkan.'], 'page' => 'reload'];
@@ -777,6 +823,7 @@ class InvitationController extends Controller
 
 	public function m_event_edit(Request $request, int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('event')) return $this->denyFeature('event');
 		$column = [
 			'event_title' => 'required',
 			'event_content' => 'required',
@@ -818,6 +865,7 @@ class InvitationController extends Controller
 
 	public function m_event_delete(int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('event')) return $this->denyFeature('event');
 		InvitationEvent::whereId($id)->delete();
 
 		return response()->json(['deleted']);
@@ -825,6 +873,7 @@ class InvitationController extends Controller
 
 	public function m_event_show(int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('event')) return $this->denyFeature('event');
 		$event = InvitationEvent::select('id', 'title', 'content')->whereId($id)->where('invitation_id', Auth::user()->inv->id)->first();
 		$event->content = json_decode($event->content);
 		$event->url = route('menu.event-delete', $event->id);
@@ -834,14 +883,20 @@ class InvitationController extends Controller
 
 	public function m_story(): Response|RedirectResponse
 	{
-		if (json_decode($this->activation->pack->content, true)['story'] ?? false) :
+		$pack = json_decode($this->activation->pack->content ?? '{}', true) ?? [];
+		if ($this->exclusiveUnlocked() || ($pack['story'] ?? false)) :
 			$menu = $this->menu['story'];
 			$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+			$exclusive = $this->exclusiveUnlocked($access);
 			$bagpack = [
 				'style'  => ['deafult' => 'Bawaan', 'none' => 'Sembunyikan'],
 				'story' => InvitationStory::select('id', 'title', 'content', 'publish')->where('invitation_id', Auth::user()->inv->id)->get(),
 				'limitStory' => (json_decode($access->pack->content)->{'story-count'}=='unlimited') ? "∞" : json_decode($access->pack->content)->{'story-count'},
 			];
+			// Rapikan simbol infinity + unlock unlimited untuk paket exclusive.
+			if ($exclusive || (json_decode($access->pack->content)->{'story-count'} ?? null) === 'unlimited') {
+				$bagpack['limitStory'] = '∞';
+			}
 			$data = json_decode(json_encode($bagpack));
 
 			return response()->view('member.m-story', compact('menu', 'data'));
@@ -852,7 +907,9 @@ class InvitationController extends Controller
 
 	public function m_story_add(Request $request): JsonResponse
 	{
+		if (!$this->canUseFeature('story')) return $this->denyFeature('story');
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
+		$exclusive = $this->exclusiveUnlocked($access);
 		$column = [
 			'story_title' => 'required',
 			'story_content' => 'required'
@@ -870,7 +927,9 @@ class InvitationController extends Controller
 		];
 		
 		$check_story = InvitationStory::where('invitation_id', Auth::user()->inv->id)->count();
-		$limit_story = (json_decode($access->pack->content)->{'story-count'}=='unlimited') ? 500 : json_decode($access->pack->content)->{'story-count'};
+		$limit_story = $exclusive
+			? 500
+			: ((json_decode($access->pack->content)->{'story-count'}=='unlimited') ? 500 : json_decode($access->pack->content)->{'story-count'});
 		if ($check_story<$limit_story) :
 			InvitationStory::create($preset);
 			$response = ['toast'=>['icon'=>'success', 'title'=>'Disimpan!', 'text'=>'Cerita '.$request->story_title.' telah ditambahkan.'], 'page' => 'reload'];
@@ -883,6 +942,7 @@ class InvitationController extends Controller
 
 	public function m_story_edit(Request $request, int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('story')) return $this->denyFeature('story');
 		$column = [
 			'story_title' => 'required',
 			'story_content' => 'required'
@@ -904,6 +964,7 @@ class InvitationController extends Controller
 
 	public function m_story_delete(int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('story')) return $this->denyFeature('story');
 		InvitationStory::whereId($id)->delete();
 
 		return response()->json(['hapus']);
@@ -911,6 +972,7 @@ class InvitationController extends Controller
 
 	public function m_story_show(int $id): JsonResponse
 	{
+		if (!$this->canUseFeature('story')) return $this->denyFeature('story');
 		$story = InvitationStory::select('id', 'title', 'content', 'file')->whereId($id)->where('invitation_id', Auth::user()->inv->id)->first();
 		$story->image = storage_url('sm/'. ($story->file ?? ''));
 		$story->url = route('menu.story-delete', $story->id);
@@ -1107,7 +1169,7 @@ class InvitationController extends Controller
 		$access = AccountInvoice::select('package_id')->with('pack')->current()->first();
 		$bagpack = [
 			'protocol'   => TemplateAssets::select('id','title','content')->where('type','protocol')->publish()->get(),
-			'liveAccess' => json_decode($access->pack->content)->{'live-stream'} ?? false,
+			'liveAccess' => $this->exclusiveUnlocked($access) ? true : (json_decode($access->pack->content)->{'live-stream'} ?? false),
 			'preset'     => $preset->additional,
 		];
 		$data = json_decode(json_encode($bagpack));
@@ -1117,7 +1179,7 @@ class InvitationController extends Controller
 	public function m_einvitation(): Response|RedirectResponse
 	{
 		$packContent = Auth::user()->invoice[0]->pack->content ?? null;
-		if ($packContent && json_decode($packContent)->{'e-invitation'} === true) :
+		if ($this->exclusiveUnlocked() || ($packContent && json_decode($packContent)->{'e-invitation'} === true)) :
 			$menu   = $this->menu['e-invitation'];
 			$preset = $this->safePreset();
 			$inv    = Auth::user()->inv;
@@ -1167,7 +1229,7 @@ class InvitationController extends Controller
 	public function m_einvitation_edit(Request $request): JsonResponse|RedirectResponse
 	{
 		$packContent = Auth::user()->invoice[0]->pack->content ?? null;
-		if ($packContent && json_decode($packContent)->{'e-invitation'} === true) :
+		if ($this->exclusiveUnlocked() || ($packContent && json_decode($packContent)->{'e-invitation'} === true)) :
 			list($type, $imgData) = explode(';', $request->base64data);
 			list(, $imgData)      = explode(',', $imgData);
 			$imgData = base64_decode($imgData);
@@ -1272,11 +1334,12 @@ class InvitationController extends Controller
 		return response()->json(['toast' => ['icon' => 'success', 'title' => 'Tamu dihapus'], 'page' => 'reload']);
 	}
 
-	public function save_setting(Request $request, string $menu): JsonResponse
+	public function save_setting(Request $request, string $menu): JsonResponse|RedirectResponse
 	{
 		$recent_inv = Invitation::select('id', 'preset')->whereId(Auth::user()->inv->id)->firstOrFail();
 		$save_inv_column = [];
 		$column = [];
+		$wantsJson = $request->expectsJson() || $request->ajax();
 
 		// Decode preset sebagai array, merge dengan default agar semua key ada
 		$raw = json_decode($recent_inv->preset ?? '{}', true) ?? [];
@@ -1288,13 +1351,19 @@ class InvitationController extends Controller
 			$column['design_title_color'] = 'required';
 			$column['design_content_color'] = 'required';
 			$column['design_background'] = 'required';
+			$column['design_background_model'] = 'required|in:solid,gradient,dots,grid,waves';
+			$column['design_background2'] = 'nullable|required_if:design_background_model,gradient';
 			$column['design_button_background'] = 'required';
 			$column['design_button_color'] = 'required';
 			$column['design_title_font'] = 'required';
 			$column['design_content_font'] = 'required';
+			$column['design_script_font'] = 'required';
 			$allowed_template = Template::select('id', 'grade')->whereId($request->input('design_template'))->publish()->first();
 			if (!$allowed_template) :
-				return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Template tidak tersedia.']]);
+				if (!$wantsJson) {
+					return redirect()->back()->withErrors(['design_template' => 'Template tidak tersedia.'])->withInput();
+				}
+				return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Template tidak tersedia.']], 404);
 			endif;
 			// new preset
 			if (isitsame($request->input('design_template'), $preset['design']['template'])===false) :
@@ -1310,19 +1379,26 @@ class InvitationController extends Controller
 					$preset['design']['template'] = $request->input('design_template');
 					Invitation::whereId(Auth::user()->inv->id)->update(['template_id'=>$request->input('design_template')]);
 				else :
-					return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Access denied!!']]);
+					if (!$wantsJson) {
+						return redirect()->back()->withErrors(['design_template' => 'Access denied.'])->withInput();
+					}
+					return response()->json(['toast'=>['icon'=>'error','title'=>'>_<','text'=>'Access denied!!']], 403);
 				endif;
 			endif;
 			$preset['design']['title']['color']   = $request->input('design_title_color');
 			$preset['design']['content']['color']  = $request->input('design_content_color');
 			$preset['design']['background']        = $request->input('design_background');
+			$preset['design']['background_model']  = $request->input('design_background_model', 'solid');
+			$preset['design']['background2']       = $request->input('design_background2', $preset['design']['background'] ?? '#ffffff');
 			$preset['design']['button']['background'] = $request->input('design_button_background');
 			$preset['design']['button']['color']   = $request->input('design_button_color');
 			$preset['design']['title']['font']     = $request->input('design_title_font');
 			$preset['design']['content']['font']   = $request->input('design_content_font');
+			$preset['design']['script']['font']    = $request->input('design_script_font');
 			// Ukuran font — clamp ke range yang aman
 			$preset['design']['title']['size']   = max(12, min(72, (int) $request->input('design_title_size', 24)));
 			$preset['design']['content']['size'] = max(10, min(32, (int) $request->input('design_content_size', 14)));
+			$preset['design']['script']['size']  = max(18, min(72, (int) $request->input('design_script_size', 32)));
 		elseif ($menu=='cover') :
 			$column['cover_name_female'] = 'required';
 			$column['cover_name_male']   = 'required';
@@ -1384,10 +1460,14 @@ class InvitationController extends Controller
 			// Simpan langsung — skip validate di bawah karena sudah divalidasi
 			$save_inv_column['preset'] = json_encode($preset);
 			$recent_inv->update($save_inv_column);
-			return response()->json([
+			$resp = [
 				'toast' => ['icon' => 'success', 'title' => 'Disimpan!', 'text' => 'Sampul undangan berhasil disimpan.'],
 				'page'  => 'idle',
-			]);
+			];
+			if (!$wantsJson) {
+				return redirect()->back()->with('success', $resp['toast']['text']);
+			}
+			return response()->json($resp);
 		elseif ($menu=='profile') :
 			$column['profile_name_male'] = 'required';
 			$column['profile_name_female'] = 'required';
@@ -1466,10 +1546,14 @@ class InvitationController extends Controller
 			// Simpan dan return langsung — sama seperti cover
 			$save_inv_column['preset'] = json_encode($preset);
 			$recent_inv->update($save_inv_column);
-			return response()->json([
+			$resp = [
 				'toast' => ['icon' => 'success', 'title' => 'Disimpan!', 'text' => 'Profil pasangan berhasil disimpan.'],
 				'page'  => 'idle',
-			]);
+			];
+			if (!$wantsJson) {
+				return redirect()->back()->with('success', $resp['toast']['text']);
+			}
+			return response()->json($resp);
 		elseif ($menu=='detail') :
 			$column['detail_calendar_date'] = 'required';
 			$column['detail_calendar_time'] = 'required';
@@ -1528,17 +1612,25 @@ class InvitationController extends Controller
 			// Validasi pilihan musik sesuai paket (template/custom) hanya saat musik diaktifkan
 			$chosen = (string) ($preset['music']['url'] ?? '');
 			if ($preset['music']['show'] === true && !empty($chosen) && !$this->isMusicChoiceAllowed($chosen, $musicMode)) {
-				return response()->json([
+				$payload = [
 					'toast'  => ['icon' => 'error', 'title' => 'Musik tidak valid', 'text' => 'Musik yang dipilih tidak tersedia untuk paket kamu.'],
 					'errors' => ['music_url' => ['Musik yang dipilih tidak tersedia.']],
-				], 422);
+				];
+				if (!$wantsJson) {
+					return redirect()->back()->withErrors($payload['errors'])->withInput();
+				}
+				return response()->json($payload, 422);
 			}
 			// Validasi: hanya wajib isi url jika musik diaktifkan
 			if ($preset['music']['show'] === true && empty($preset['music']['url'])) :
-				return response()->json([
+				$payload = [
 					'toast'  => ['icon' => 'warning', 'title' => 'Pilih musik dulu', 'text' => 'Aktifkan musik latar setelah memilih musik dari daftar.'],
 					'errors' => ['music_url' => ['Pilih musik terlebih dahulu.']],
-				], 422);
+				];
+				if (!$wantsJson) {
+					return redirect()->back()->withErrors($payload['errors'])->withInput();
+				}
+				return response()->json($payload, 422);
 			endif;
 		elseif ($menu=='rsvp') :
 			$column['rsvp_title'] = 'required';
@@ -1615,6 +1707,10 @@ class InvitationController extends Controller
 		$save_inv_column['preset'] = json_encode($preset);
 		$recent_inv->update($save_inv_column);
 		$response = ['toast'=>['icon'=>'success','title'=>'Disimpan!','text'=>'Perubahan telah disimpan.'],'page'=>'idle'];
+
+		if (!$wantsJson) {
+			return redirect()->back()->with('success', $response['toast']['text']);
+		}
 
 		return response()->json($response);
 	}

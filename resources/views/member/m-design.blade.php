@@ -8,6 +8,32 @@
         @method('put')
         <div class="row g-3">
 
+            {{-- ── Overview template terpilih ── --}}
+            <div class="col-12">
+                <div class="bg-white shadow rounded p-3">
+                    @php $activeTemp = Auth::user()->inv?->temp; @endphp
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <h4 class="mb-1">Overview Template</h4>
+                            <div class="text-muted small">Lihat template yang sedang dipakai. Setelah ubah warna/font, klik <b>Simpan</b> untuk menerapkan.</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-semibold small">{{ $activeTemp->title ?? '—' }}</div>
+                            @if($activeTemp)
+                                <a class="small text-decoration-none" href="{{ route('preview-template.index', $activeTemp->slug) }}" target="_blank">
+                                    <i class="bx bx-link-external me-1"></i>Preview template
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="ratio ratio-16x9 rounded overflow-hidden border" style="background:#f8f9fa">
+                            <iframe src="{{ route('member.preview') }}" title="Preview Undangan" loading="lazy"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ── Pilih Template ── --}}
             <div class="col-12">
                 <div class="bg-white shadow rounded p-3">
@@ -126,6 +152,32 @@
                             </label>
                         </div>
                     </div>
+                    @php
+                        $bgModel = $data->preset->background_model ?? 'solid';
+                        $bg2     = $data->preset->background2 ?? ($data->preset->background ?? '#ffffff');
+                    @endphp
+                    <div class="select-tab border-bottom">
+                        <div><var dir="design_background_model">Model latar</var></div>
+                        <div>
+                            <select name="design_background_model" id="design_background_model" class="form-select">
+                                @foreach ([
+                                    'solid'    => 'Solid',
+                                    'gradient' => 'Gradient',
+                                    'dots'     => 'Dots',
+                                    'grid'     => 'Grid',
+                                    'waves'    => 'Waves',
+                                ] as $k => $label)
+                                    <option value="{{ $k }}" @selected($bgModel === $k)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <div class="mt-2 d-none" id="bg2_wrap">
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="text-muted">Warna 2</small>
+                                    <input type="color" name="design_background2" id="design_background2" value="{{ $bg2 }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="select-tab border-bottom">
                         <div><var dir="design_button_color">Warna tombol</var></div>
                         <div>
@@ -155,6 +207,8 @@
                         $contentFont = $data->preset->content->font ?? 'Arial';
                         $contentSize = (int)($data->preset->content->size ?? 14);
                         $contentColor= $data->preset->content->color?? '#333333';
+                        $scriptFont  = $data->preset->script->font  ?? 'Great Vibes';
+                        $scriptSize  = (int)($data->preset->script->size ?? 32);
                     @endphp
 
                     {{-- Font Judul --}}
@@ -216,6 +270,37 @@
                         <div>
                             <input type="range" name="design_content_size" id="design_content_size"
                                    class="form-range" value="{{ $contentSize }}" min="10" max="32" step="1">
+                        </div>
+                    </div>
+
+                    {{-- Font Script --}}
+                    <div class="select-tab border-top pt-3 mt-3 border-bottom">
+                        <div><var dir="design_script_font">Font aksen (script)</var></div>
+                        <div>
+                            <select name="design_script_font" id="design_script_font" class="form-select">
+                                @foreach ($fontItems as $item)
+                                @php
+                                    $fContent = is_object($item) ? $item->content : $item['content'];
+                                    $fTitle   = is_object($item) ? $item->title   : $item['title'];
+                                @endphp
+                                <option value="{{ $fContent }}" @selected($scriptFont === $fContent)>{{ $fTitle }}</option>
+                                @endforeach
+                            </select>
+                            <div id="preview_script_font" class="font-preview mt-2 script"
+                                 style="font-family:'{{ $scriptFont }}',cursive;font-size:{{ $scriptSize }}px;color:{{ $titleColor }}">
+                                Nama Mempelai
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Ukuran Font Script --}}
+                    <div class="select-tab">
+                        <div>
+                            <var dir="design_script_size">Ukuran script: <b id="lbl_script_size">{{ $scriptSize }}</b>px</var>
+                        </div>
+                        <div>
+                            <input type="range" name="design_script_size" id="design_script_size"
+                                   class="form-range" value="{{ $scriptSize }}" min="18" max="72" step="2">
                         </div>
                     </div>
                 </div>
@@ -290,6 +375,13 @@ $(function() {
         $('#preview_content_font').css('font-family', "'" + font + "', sans-serif");
     });
 
+    // Preview font script
+    $('#design_script_font').on('change', function() {
+        var font = $(this).val();
+        loadFont(font);
+        $('#preview_script_font').css('font-family', "'" + font + "', cursive");
+    });
+
     // ── Slider ukuran judul
     $('#design_title_size').on('input', function() {
         var sz = $(this).val();
@@ -304,13 +396,30 @@ $(function() {
         $('#preview_content_font').css('font-size', sz + 'px');
     });
 
+    // Slider ukuran script
+    $('#design_script_size').on('input', function() {
+        var sz = $(this).val();
+        $('#lbl_script_size').text(sz);
+        $('#preview_script_font').css('font-size', sz + 'px');
+    });
+
     // ── Sinkronkan warna preview dengan color picker
     $('#design_title_color').on('input', function() {
         $('#preview_title_font').css('color', $(this).val());
+        $('#preview_script_font').css('color', $(this).val());
     });
     $('#design_content_color').on('input', function() {
         $('#preview_content_font').css('color', $(this).val());
     });
+
+    // Background model: tampilkan warna 2 hanya untuk gradient
+    function syncBgModel() {
+        var model = $('#design_background_model').val();
+        if (model === 'gradient') $('#bg2_wrap').removeClass('d-none');
+        else $('#bg2_wrap').addClass('d-none');
+    }
+    $('#design_background_model').on('change', syncBgModel);
+    syncBgModel();
 });
 </script>
 @endpush

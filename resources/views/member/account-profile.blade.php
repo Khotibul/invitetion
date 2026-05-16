@@ -39,15 +39,20 @@
 		<div class="col-md-3 border-right">
 			<div class="bg-white rounded shadow-sm d-flex flex-column align-items-center text-center p-3">
 				<figure class="img-profile">
-					<img class="rounded-circle my-2" src="@if (Auth::user()->acc)
-						@if (Auth::user()->third_party=='google')
-						{{ Auth::user()->acc->file }}
-						@else
-						{{ url('storage/'.Auth::user()->acc->file) }}
-						@endif
-					@else
-						{{ 'https://via.placeholder.com/150' }}
-					@endif">
+					@php
+						$avatarFile = Auth::user()->acc?->file ?? null;
+						$isUrl = !empty($avatarFile) && filter_var($avatarFile, FILTER_VALIDATE_URL);
+						if ($isUrl) {
+							$avatarSrc = $avatarFile;
+						} elseif (!empty($avatarFile)) {
+							$avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->exists('sm/'.$avatarFile)
+								? url('storage/sm/'.$avatarFile)
+								: url('storage/'.$avatarFile);
+						} else {
+							$avatarSrc = 'https://via.placeholder.com/150';
+						}
+					@endphp
+					<img class="rounded-circle my-2" src="{{ $avatarSrc }}">
 					@if (isexpired($activation, $data['active'] ?? 0)===false)
 					<button type="button" data-bs-toggle="modal" data-bs-target="#storage">
 						<i class="bx bx-edit"></i>

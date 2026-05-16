@@ -339,11 +339,18 @@ class PublicController extends Controller
 		$d = $data->design;
 		if (!isset($d->title))      $d->title      = (object)['color'=>'#000000','font'=>'Arial','size'=>24];
 		if (!isset($d->content))    $d->content    = (object)['color'=>'#333333','font'=>'Arial','size'=>14];
+		if (!isset($d->script))     $d->script     = (object)['font'=>'Great Vibes','size'=>32];
 		if (!isset($d->background)) $d->background = '#ffffff';
+		if (!isset($d->background_model)) $d->background_model = 'solid';
+		if (!isset($d->background2)) $d->background2 = $d->background;
 		if (!isset($d->button))     $d->button     = (object)['color'=>'#ffffff','background'=>'#2d7a4f'];
 		// Pastikan size ada (backward compat untuk preset lama)
 		if (!isset($d->title->size))   $d->title->size   = 24;
 		if (!isset($d->content->size)) $d->content->size = 14;
+		if (!isset($d->script->size))  $d->script->size  = 32;
+		if (!isset($d->script->font))  $d->script->font  = 'Great Vibes';
+		if (!isset($d->title->font))   $d->title->font   = 'Arial';
+		if (!isset($d->content->font)) $d->content->font = 'Arial';
 
 		// cover
 		if (!isset($data->cover))                       $data->cover = (object)[];

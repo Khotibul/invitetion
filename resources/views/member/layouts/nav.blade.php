@@ -8,7 +8,21 @@
 			<ul class="navbar-nav mb-2 mb-lg-0">
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-						<img src="{{ Auth::user()->acc ? ((Auth::user()->third_party=='google') ? Auth::user()->acc->file : url('storage/xs/'.Auth::user()->acc->file)) : 'https://via.placeholder.com/40' }}" class="me-2" alt="avatar" @style('height:40px;width:40px;object-fit:cover')>
+						@php
+							$avatarFile = Auth::user()->acc?->file ?? null;
+							$isUrl = !empty($avatarFile) && filter_var($avatarFile, FILTER_VALIDATE_URL);
+							// Prefer thumbnail (xs) untuk file lokal, fallback ke file asli jika xs tidak ada.
+							if ($isUrl) {
+								$avatarSrc = $avatarFile;
+							} elseif (!empty($avatarFile)) {
+								$avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->exists('xs/'.$avatarFile)
+									? url('storage/xs/'.$avatarFile)
+									: url('storage/'.$avatarFile);
+							} else {
+								$avatarSrc = 'https://via.placeholder.com/40';
+							}
+						@endphp
+						<img src="{{ $avatarSrc }}" class="me-2" alt="avatar" @style('height:40px;width:40px;object-fit:cover')>
 						<span>{{ Auth::user()->name }}</span>
 					</a>
 					<ul class="dropdown-menu rounded animate slideIn" aria-labelledby="navbarDropdown">

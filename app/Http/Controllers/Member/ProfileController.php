@@ -65,35 +65,50 @@ class ProfileController extends Controller
 		return response()->view('member.account-profile', compact('account', 'data'));
 	}
 
-	public function profile_update(Request $request): JsonResponse
+	public function profile_update(Request $request): JsonResponse|RedirectResponse
 	{
 		$this->validate($request, [
-			'name' => 'required',
-			'email' => 'required',
-			'phone' => 'required',
-			'address' => 'required'
+			'name'    => 'required|string|max:100',
+			'email'   => 'required|email',
+			'phone'   => 'nullable|string|max:30',
+			'address' => 'nullable|string|max:255',
+			'file'    => 'nullable|string|max:255',
 		]);
 		User::find(Auth::user()->id)->update([
 			'name' => $request->name,
 			'email' => $request->email
 		]);
-        
-        if (Auth::user()->acc) {
-            Account::find(Auth::user()->acc->id)->update([
-                'content' => json_encode(['phone' => $request->phone, 'address' => $request->address]),
-                'file' => $request->file ?? 'default.png'
-            ]);
-        } else {
-             Account::create([
-                'user_id' => Auth::user()->id,
-                'content' => json_encode(['phone' => $request->phone, 'address' => $request->address]),
-                'file' => $request->file ?? 'default.png',
-                'actived' => '1', // Default active
-                'guestbook' => '0' // Default guestbook
-            ]);
-        }
+
+		// file bisa berupa URL (google) atau filename storage
+		$fileValue = (string) $request->input('file', '');
+		if ($fileValue === '') {
+			$fileValue = Auth::user()->acc?->file ?? 'default.png';
+		}
+
+		$payload = [
+			'content' => json_encode([
+				'phone'   => $request->input('phone'),
+				'address' => $request->input('address'),
+			]),
+			'file' => $fileValue,
+		];
+
+		if (Auth::user()->acc) {
+			Account::find(Auth::user()->acc->id)->update($payload);
+		} else {
+			Account::create($payload + [
+				'user_id'   => Auth::user()->id,
+				'actived'   => '1', // Default active
+				'guestbook' => '0', // Default guestbook
+			]);
+		}
 
 		$response = ['toast' => ['icon' => 'success', 'title' => 'Profil disimpan', 'text' => 'Profile baru kamu disimpan.']];
+
+		// Jika submit tanpa AJAX/JSON, jangan tampilkan raw JSON di browser.
+		if (!$request->expectsJson() && !$request->ajax()) {
+			return redirect()->route('profile')->with('success', $response['toast']['text'] ?? 'Profil disimpan.');
+		}
 
 		return response()->json($response);
 	}

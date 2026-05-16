@@ -54,9 +54,20 @@ $(function () {
 
 	// ── DataTables ─────────────────────────────────────────────────────────────
 	var dataTables;
-	if ($('.dataTables').length > 0) {
-		let columnsMode = $('.dataTables').data('columns'),
-			action      = $('.dataTables').data('list'),
+	function initMemberDataTables() {
+		// Guard: jangan sampai script berhenti kalau plugin DataTables belum ter-load
+		if (!$('.dataTables').length) return;
+		if (!$.fn || typeof $.fn.DataTable !== 'function') return;
+
+		// Hindari double init
+		if ($.fn.DataTable.isDataTable && $.fn.DataTable.isDataTable('.dataTables')) {
+			dataTables = $('.dataTables').DataTable();
+			return;
+		}
+
+		var $table      = $('.dataTables').first(),
+			columnsMode = $table.data('columns'),
+			action      = $table.data('list'),
 			csrf        = $('meta[name=csrf-token]').attr('content');
 
 		let columns = [
@@ -76,7 +87,7 @@ $(function () {
 			];
 		}
 
-		dataTables = $('.dataTables').DataTable({
+		dataTables = $table.DataTable({
 			responsive:   true,
 			ordering:     false,
 			lengthChange: false,
@@ -112,6 +123,9 @@ $(function () {
 		$('.dataTables_info').addClass('small');
 		$('.dataTables_paginate').addClass('small');
 	}
+	// Coba init sekarang, dan ulangi saat window load (untuk kasus script DataTables dipush setelah file ini)
+	initMemberDataTables();
+	$(window).on('load', function () { initMemberDataTables(); });
 
 	// ── File upload button ─────────────────────────────────────────────────────
 	if ($('.btn_upload').length > 0) {
@@ -296,24 +310,24 @@ $(function () {
 			beforeSend: function () {
 				$('sup[role=alert]').remove();
 				// Tampilkan info toast saat mulai
-				Toast.fire({ icon: 'info', title: 'Menyimpan...' });
+				Toast.fire({ icon: 'info', title: 'Proses simpan...' });
 				// Ubah tombol ke loading state
 				$submit.find('i').removeClass(origIcon).addClass('bx-loader bx-spin');
-				$submit.find('span').text('Menyimpan...');
+				$submit.find('span').text('Proses simpan...');
 				$submit.prop('disabled', true);
 			},
 
 			success: function (response) {
 				// Reset tombol
 				$submit.find('i').removeClass('bx-loader bx-spin').addClass('bx-check');
-				$submit.find('span').text('Tersimpan!');
+				$submit.find('span').text('Berhasil disimpan');
 				$submit.prop('disabled', false);
 
 				// Tampilkan toast sukses
-				var toastData = response.toast || { icon: 'success', title: 'Disimpan!' };
+				var toastData = response.toast || { icon: 'success', title: 'Berhasil disimpan' };
 				Toast.fire({
 					icon:  toastData.icon  || 'success',
-					title: toastData.title || 'Disimpan!',
+					title: toastData.title || 'Berhasil disimpan',
 					text:  toastData.text  || '',
 				});
 
