@@ -42,3 +42,8 @@ Thumbs.db
 /public/check-assets.php
 /public/clear-cache.php
 /public/make-storage-link.php
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
