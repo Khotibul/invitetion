@@ -210,11 +210,13 @@
 			<span class="menu-header-text"></span>
 		</li>
 		<li class="menu-item">
-			<a href="{{ route('logout') }}" class="menu-link text-decoration-none text-white bg-danger" 
-			onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-				<i class="menu-icon tf-icons bx bx-exit"></i>
-				<div data-i18n="Logout">{{ __('Logout') }}</div>
-			</a>
+			<form method="POST" action="{{ route('admin.logout') }}" class="m-0">
+				@csrf
+				<button type="submit" class="menu-link text-decoration-none text-white bg-danger border-0 w-100">
+					<i class="menu-icon tf-icons bx bx-exit"></i>
+					<div data-i18n="Logout">{{ __('Logout') }}</div>
+				</button>
+			</form>
 		</li>
 	</ul>
 </aside>

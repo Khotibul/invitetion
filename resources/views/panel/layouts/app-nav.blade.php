@@ -42,13 +42,12 @@
 						<div class="dropdown-divider"></div>
 					</li>
 					<li>
-						<a class="dropdown-item" href="{{ route('logout') }}"
-							onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-							<i class="bx bx-log-out me-2"></i>
-							<span>{{ Str::title('keluar') }}</span>
-						</a>
-						<form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+						<form method="POST" action="{{ route('admin.logout') }}" class="m-0 p-0">
 							@csrf
+							<button type="submit" class="dropdown-item">
+								<i class="bx bx-log-out me-2"></i>
+								<span>{{ Str::title('keluar') }}</span>
+							</button>
 						</form>
 					</li>
 				</ul>

@@ -12,6 +12,7 @@
                     $invSlug = Auth::user()->inv->slug ?? '';
                     $baseLink = $invSlug ? route('invitation.index', $invSlug) : '#';
                     $publishStatus = Auth::user()->inv->publish ?? 'draft';
+                    $coupleName = implode(' & ', json_decode(Auth::user()->inv->title ?? '[]', true) ?? ['-', '-']);
                 @endphp
                 @if($publishStatus !== 'publish')
                 <div class="alert alert-warning py-2 small mb-2">
@@ -37,6 +38,37 @@
                        target="_blank" class="btn btn-sm btn-success">
                         <i class="bx bxl-whatsapp me-1"></i> Bagikan via WhatsApp
                     </a>
+                </div>
+
+                <hr class="my-3">
+                <h6 class="mb-2"><i class="bx bxl-whatsapp me-1 text-success"></i> Smart WhatsApp</h6>
+                <p class="text-muted small mb-2">Ketik nama penerima, sistem akan membuat pesan WhatsApp lengkap + link personal.</p>
+                <div class="row g-2">
+                    <div class="col-md-7">
+                        <label for="wa_guest_name" class="form-label small">Nama Penerima</label>
+                        <input type="text" id="wa_guest_name" class="form-control form-control-sm"
+                               placeholder="Contoh: Ust. Mu'atok Bil Kahfi, S.Pd.">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="wa_salutation" class="form-label small">Sapaan</label>
+                        <input type="text" id="wa_salutation" class="form-control form-control-sm" value="Yth."
+                               placeholder="Yth.">
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <label for="wa_message_preview" class="form-label small">Preview Pesan</label>
+                    <textarea id="wa_message_preview" class="form-control form-control-sm" rows="10" readonly></textarea>
+                </div>
+                <div class="mt-2 d-flex gap-2 flex-wrap">
+                    <a id="wa_share_btn" href="#" target="_blank" class="btn btn-sm btn-success disabled" aria-disabled="true">
+                        <i class="bx bxl-whatsapp me-1"></i> Bagikan via WhatsApp
+                    </a>
+                    <button type="button" id="wa_copy_message" class="btn btn-sm btn-outline-primary" disabled>
+                        <i class="bx bx-copy me-1"></i> Salin Pesan
+                    </button>
+                    <button type="button" id="wa_copy_link" class="btn btn-sm btn-outline-secondary" disabled>
+                        <i class="bx bx-link me-1"></i> Salin Link Detail
+                    </button>
                 </div>
             </div>
         </div>
@@ -136,6 +168,107 @@
 @push('script')
 <script>
 $(function() {
+    const baseLink = @json($baseLink);
+    const coupleName = @json($coupleName);
+
+    function buildDetailLink(guestName) {
+        if (!baseLink || baseLink === '#') return '#';
+        const separator = baseLink.includes('?') ? '&' : '?';
+        return baseLink + separator + 'nama=' + encodeURIComponent(guestName);
+    }
+
+    function buildWaMessage(salutation, guestName, detailLink) {
+        const sal = (salutation || '').toString().trim();
+        const greet = (sal ? (sal + ' ') : '') + guestName.trim();
+        return (
+            greet + "\n\n" +
+            "Assalamualikum Wr. Wb\n\n" +
+            "Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami *" + coupleName + "*\n" +
+            "mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami.\n\n" +
+            "*Detail Acara:*\n" +
+            detailLink + "\n\n" +
+            "Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami\n\n" +
+            "Terimakasih kami sampaikan Bapak/Ibu/Sdr/i.\n\n" +
+            "Wassalamualaikum Wr.Wb\n" +
+            " *" + coupleName + "*"
+        );
+    }
+
+    function setDisabled(el, disabled) {
+        if (!el) return;
+        el.prop('disabled', !!disabled);
+    }
+
+    function setLinkDisabled($el, disabled) {
+        if (!$el || !$el.length) return;
+        if (disabled) {
+            $el.addClass('disabled').attr('aria-disabled', 'true');
+        } else {
+            $el.removeClass('disabled').attr('aria-disabled', 'false');
+        }
+    }
+
+    async function copyToClipboard(text) {
+        if (!text) return false;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch (e) {}
+
+        // Fallback (HTTP / older browser)
+        const $tmp = $('<textarea readonly style="position:absolute;left:-9999px;top:-9999px"></textarea>').val(text);
+        $('body').append($tmp);
+        $tmp[0].select();
+        try {
+            document.execCommand('copy');
+            $tmp.remove();
+            return true;
+        } catch (e) {
+            $tmp.remove();
+            return false;
+        }
+    }
+
+    function refreshSmartWa() {
+        const guestName = ($('#wa_guest_name').val() || '').toString().trim();
+        const salutation = ($('#wa_salutation').val() || '').toString();
+        const $shareBtn = $('#wa_share_btn');
+        const $copyMsg = $('#wa_copy_message');
+        const $copyLink = $('#wa_copy_link');
+        const $preview = $('#wa_message_preview');
+
+        if (!guestName || baseLink === '#') {
+            $preview.val('');
+            $shareBtn.attr('href', '#');
+            setLinkDisabled($shareBtn, true);
+            setDisabled($copyMsg, true);
+            setDisabled($copyLink, true);
+            return;
+        }
+
+        const detailLink = buildDetailLink(guestName);
+        const message = buildWaMessage(salutation, guestName, detailLink);
+        $preview.val(message);
+
+        const waUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
+        $shareBtn.attr('href', waUrl);
+        setLinkDisabled($shareBtn, false);
+        setDisabled($copyMsg, false);
+        setDisabled($copyLink, false);
+
+        $copyMsg.off('click.smartwa').on('click.smartwa', function() {
+            copyToClipboard(message);
+        });
+        $copyLink.off('click.smartwa').on('click.smartwa', function() {
+            copyToClipboard(detailLink);
+        });
+    }
+
+    $('#wa_guest_name, #wa_salutation').on('input', refreshSmartWa);
+    refreshSmartWa();
+
     $(".add-guest").on('submit', function(e) {
         e.preventDefault();
         var form = $(this);

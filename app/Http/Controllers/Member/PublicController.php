@@ -124,6 +124,19 @@ class PublicController extends Controller
 			$other['guest'] = $guest ? json_decode($guest->name, true) : null;
 		}
 
+		// Guest personalization - fallback dari query param "nama"
+		// Contoh: /{slug}?nama=Ust.%20Mu'atok%20Bil%20Kahfi,%20S.Pd.
+		if (empty($other['guest'])) {
+			$guestNameParam = (string) request()->get('nama', '');
+			$guestNameParam = trim(strip_tags($guestNameParam));
+			if ($guestNameParam !== '') {
+				$other['guest'] = [
+					'name'     => mb_substr($guestNameParam, 0, 100),
+					'location' => null,
+				];
+			}
+		}
+
 		$templateUrl = $invitation->temp?->url ?? 'default';
 
 		if (!\Illuminate\Support\Facades\View::exists('template.'.$templateUrl)) {

@@ -52,10 +52,13 @@
 						</li>
 						<li><hr class="dropdown-divider"></li>
 						<li>
-							<a class="dropdown-item logout-form" href="#">
-								<i class="bx bx-log-out"></i>
-								<span>Keluar</span>
-							</a>
+							<form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
+								@csrf
+								<button type="submit" class="dropdown-item">
+									<i class="bx bx-log-out"></i>
+									<span>Keluar</span>
+								</button>
+							</form>
 						</li>
 					</ul>
 				</li>

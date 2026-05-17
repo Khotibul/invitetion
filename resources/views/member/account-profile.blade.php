@@ -138,10 +138,13 @@
             @endif
 			<hr>
 			@endif
-			<button type="button" class="btn btn-danger w-100 logout-form">
-				<i class="bx bx-log-out"></i>
-				<span>Keluar</span>
-			</button>
+			<form method="POST" action="{{ route('logout') }}" class="m-0">
+				@csrf
+				<button type="submit" class="btn btn-danger w-100">
+					<i class="bx bx-log-out"></i>
+					<span>Keluar</span>
+				</button>
+			</form>
 			<ul class="list-inlined list-unstyled my-2">
 				<li>
 					<a href="{{ route('info', '1') }}">Kebijakan &amp; ketentuan</a>
