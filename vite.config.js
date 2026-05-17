@@ -2,23 +2,23 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import path from 'path';
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
-    plugins: [
-        laravel({
-            input: [
-                'resources/css/sneat.css',
-                'resources/js/sneat.js',
-                'resources/css/member-style.css',
-                'resources/sass/member-style-s.scss',
-                'resources/js/member-script.js',
-                'resources/sass/landing-style-s.scss',
-                'resources/js/landing-script.js',
-                'resources/css/template/default.css',
-                'resources/js/template/default.js',
-            ],
-            refresh: true,
-        }),
-    ],
+    plugins: [laravel({
+        input: [
+            'resources/css/sneat.css',
+            'resources/js/sneat.js',
+            'resources/css/member-style.css',
+            'resources/sass/member-style-s.scss',
+            'resources/js/member-script.js',
+            'resources/sass/landing-style-s.scss',
+            'resources/js/landing-script.js',
+            'resources/css/template/default.css',
+            'resources/js/template/default.js',
+        ],
+        refresh: true,
+    }), cloudflare()],
 
     resolve: {
         alias: {
