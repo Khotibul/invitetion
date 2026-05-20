@@ -54,8 +54,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
     <meta name="theme-color" content="{{ $t->accent }}">
-    <meta property="og:title" content="Wedding of {{ $femaleName }} &amp; {{ $maleName }}">
-    <meta property="og:image" content="{{ $ogImage }}">
+    @include('template.partials.og-meta')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Great+Vibes&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">

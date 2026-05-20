@@ -20,10 +20,12 @@
 			}
 		}
 		$coverImageFile = $coverImageFile ?? $invitationFile;
+		$thumbImage = $ogImage ?? $coverImageFile ?? $invitationFile;
 		$set = [
-			'title'   => "Wedding of ".$invitation->title." | The Wedding",
-			'file'    => $invitationFile,
-			'content' => Carbon::parse($data->detail->calendar->date ?? now()->toDateString())->formatLocalized('%A, %d %B %Y'),
+			'title'   => "The Wedding of ".$invitation->title." | The Wedding",
+			'file'    => $thumbImage,
+			'content' => Carbon::parse($data->detail->calendar->date ?? now()->toDateString())->formatLocalized('%A, %d %B %Y')
+				. '. Tanpa Mengurangi Rasa Hormat, Kami Bermaksud Mengundang Bapak/Ibu/Saudara/i, Pada Acara Pernikahan Kami',
 		];
 	@endphp
 	<meta charset="utf-8">

@@ -171,6 +171,18 @@
 			<i class="bx bx-chevron-left bx-sm align-middle"></i>
 		</a>
 	</div>
+
+	<div class="admin-menu-search-wrap px-3 pb-2 pt-2">
+		<div class="admin-menu-search" role="search" aria-label="Cari menu admin">
+			<i class="bx bx-search fs-5 text-muted"></i>
+			<input id="adminMenuFilter" type="text" placeholder="Cari menu (Ctrl+K)" autocomplete="off" inputmode="search">
+			<button type="button" id="adminMenuFilterClear" class="d-none" aria-label="Bersihkan pencarian">
+				<i class="bx bx-x fs-4"></i>
+			</button>
+		</div>
+		<div id="adminMenuNoResults" class="admin-menu-no-results d-none">Tidak ada menu yang cocok.</div>
+	</div>
+
 	<div class="menu-inner-shadow"></div>
 	<ul class="menu-inner py-1">
 		@foreach($menu as $nav)

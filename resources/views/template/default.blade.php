@@ -18,17 +18,7 @@
 	<meta name="author" content="inovindo">
 	<meta name="keywords" content="">
 	<meta name="theme-color" content="{{ $data->design->title->color }}">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ request()->fullUrl() }}">
-    <meta property="og:title" content="{{ $set['title'] }}">
-    <meta property="og:description" content="{{ $set['content'] }}">
-    <meta property="og:image" content="{{ $set['file'] }}">
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request()->fullUrl() }}">
-    <meta property="twitter:title" content="{{ $set['title'] }}">
-    <meta property="twitter:description" content="{{ $set['content'] }}">
-    <meta property="twitter:image" content="{{ $set['file'] }}">
+    @include('template.partials.og-meta')
     <title>{{ $set['title'] }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>

@@ -1,0 +1,176 @@
+:root {
+  --admin-glass: rgba(255, 255, 255, 0.72);
+  --admin-glass-border: rgba(17, 24, 39, 0.08);
+  --admin-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.35);
+  --admin-accent: #696cff; /* fallback jika theme-default tidak expose var */
+  --admin-radius: 14px;
+}
+
+/* Topbar lebih modern (glass + sticky) */
+#layout-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--admin-glass-border);
+  border-radius: calc(var(--admin-radius) + 4px);
+  box-shadow: var(--admin-shadow);
+}
+
+/* Search input di topbar */
+.admin-top-search {
+  background: var(--admin-glass);
+  border: 1px solid var(--admin-glass-border);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.admin-top-search:focus-within {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.35);
+  border-color: rgba(105, 108, 255, 0.25);
+}
+.admin-top-search input {
+  min-width: 260px;
+}
+@media (max-width: 1199.98px) {
+  .admin-top-search input {
+    min-width: 170px;
+  }
+}
+@media (max-width: 575.98px) {
+  .admin-top-search {
+    display: none;
+  }
+}
+
+/* Sidebar: lebih clean + hover + active indicator */
+#layout-menu.layout-menu {
+  border-right: 1px solid rgba(17, 24, 39, 0.06);
+}
+#layout-menu .app-brand {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+}
+#layout-menu .app-brand .app-brand-logo i {
+  background: linear-gradient(135deg, rgba(105, 108, 255, 0.15), rgba(255, 255, 255, 0));
+  border-radius: 14px;
+  padding: 0.35rem;
+}
+
+#layout-menu .admin-menu-search-wrap {
+  position: sticky;
+  top: 64px;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.66));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+}
+#layout-menu .admin-menu-search {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#layout-menu .admin-menu-search input {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  width: 100%;
+  font-size: 0.9rem;
+}
+#layout-menu .admin-menu-search button {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+}
+#layout-menu .admin-menu-no-results {
+  padding: 0.75rem 1rem 0.5rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+#layout-menu .menu-inner > .menu-header {
+  margin-top: 0.75rem;
+  opacity: 0.9;
+}
+#layout-menu .menu-link {
+  border-radius: 12px;
+  margin: 0.15rem 0.7rem;
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+#layout-menu .menu-item.active > .menu-link,
+#layout-menu .menu-item.open > .menu-link {
+  background: rgba(105, 108, 255, 0.12) !important;
+  box-shadow: 0 12px 26px -20px rgba(105, 108, 255, 0.6);
+}
+#layout-menu .menu-link:hover {
+  transform: translateX(2px);
+  background: rgba(17, 24, 39, 0.04);
+}
+#layout-menu .menu-item.active > .menu-link::before {
+  content: "";
+  position: absolute;
+  left: 0.25rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(105, 108, 255, 0.95);
+}
+#layout-menu .menu-link {
+  position: relative;
+}
+
+/* Filter mode: anim halus */
+.admin-menu-hidden {
+  display: none !important;
+}
+
+/* Mini sidebar toggle (desktop) */
+html.admin-menu-mini #layout-menu {
+  width: 4.5rem !important;
+}
+html.admin-menu-mini #layout-menu .menu-header-text,
+html.admin-menu-mini #layout-menu .menu-link div,
+html.admin-menu-mini #layout-menu .admin-menu-search-wrap,
+html.admin-menu-mini #layout-menu .app-brand-text {
+  display: none !important;
+}
+html.admin-menu-mini #layout-menu .menu-link {
+  justify-content: center;
+  margin: 0.15rem 0.4rem;
+}
+html.admin-menu-mini #layout-menu .menu-icon {
+  margin-right: 0 !important;
+}
+html.admin-menu-mini .layout-page {
+  padding-left: 4.5rem !important;
+}
+
+/* Better focus rings */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(105, 108, 255, 0.25);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+

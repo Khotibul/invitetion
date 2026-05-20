@@ -5,8 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Wedding of {{ $femaleNickname }} &amp; {{ $maleNickname }} | Risa Digital Invitation</title>
-<meta property="og:image" content="{{ $ogImage }}">
-<meta property="og:title" content="Wedding of {{ $femaleNickname }} & {{ $maleNickname }}">
+@include('template.partials.og-meta')
 <meta name="theme-color" content="#b5838d">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

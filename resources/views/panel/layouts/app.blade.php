@@ -7,11 +7,30 @@
 	<title>@yield('title')</title>
 	<link rel="shortcut icon" href="{{ url('sneat/img/favicon.png') }}" type="image/x-icon">
     {{-- CSS — pakai asset() langsung agar kompatibel semua hosting --}}
-    @if(app()->environment('local') && file_exists(public_path('hot')))
-        @vite(['resources/css/sneat.css', 'resources/js/sneat.js'])
-    @else
-        <link rel="stylesheet" href="{{ asset('build/assets/sneat-D9iDqN5M.css') }}">
-    @endif
+	@php
+		/**
+		 * NOTE:
+		 * Jika `public/hot` tertinggal, `@vite()` akan mencoba load Vite dev-server
+		 * yang belum tentu running -> panel jadi "polosan" (CSS/JS tidak ter-load).
+		 * Untuk panel admin, pakai `public/build/manifest.json` jika tersedia.
+		 */
+		$__manifestPath = public_path('build/manifest.json');
+		$__manifest = (file_exists($__manifestPath))
+			? json_decode((string) file_get_contents($__manifestPath), true)
+			: null;
+		$__sneatCss = $__manifest['resources/css/sneat.css']['file'] ?? null;
+		$__sneatJs  = $__manifest['resources/js/sneat.js']['file']  ?? null;
+	@endphp
+	@if($__sneatCss)
+		<link rel="stylesheet" href="{{ asset('build/'.$__sneatCss) }}">
+	@endif
+	@php
+		$__adminUiCss = 'css/admin-ui.css';
+		$__adminUiJs  = 'js/admin-ui.js';
+		$__adminUiCssV = @filemtime(public_path($__adminUiCss)) ?: time();
+		$__adminUiJsV  = @filemtime(public_path($__adminUiJs)) ?: time();
+	@endphp
+	<link rel="stylesheet" href="{{ asset($__adminUiCss).'?v='.$__adminUiCssV }}">
 	@stack('style')
 </head>
 <body>
@@ -27,13 +46,10 @@
 	</div>
 	{{-- Scripts --}}
 	<script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
-    @if(app()->environment('local') && file_exists(public_path('hot')))
-        @vite(['resources/js/sneat.js'])
-    @else
-        <script src="{{ asset('build/assets/vendor-bootstrap-f4TNcP9e.js') }}" type="module"></script>
-        <script src="{{ asset('build/assets/vendor-swal-YZDMVk0e.js') }}" type="module"></script>
-        <script src="{{ asset('build/assets/sneat-iDp9ln3u.js') }}" type="module"></script>
-    @endif
+	@if($__sneatJs)
+		<script src="{{ asset('build/'.$__sneatJs) }}" type="module"></script>
+	@endif
+	<script src="{{ asset($__adminUiJs).'?v='.$__adminUiJsV }}" defer></script>
 	@stack('script')
 </body>
 </html>

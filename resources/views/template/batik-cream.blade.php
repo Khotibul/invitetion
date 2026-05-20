@@ -5,9 +5,7 @@
 ﻿<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Undangan Pernikahan {{ $maleNickname }} &amp; {{ $femaleNickname }}</title>
-<meta property="og:title" content="Undangan Pernikahan {{ $maleName }} &amp; {{ $femaleName }}">
-<meta property="og:image" content="{{ $ogImage }}">
-<meta property="og:description" content="Kami mengundang kehadiran Anda di hari bahagia kami">
+@include('template.partials.og-meta')
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">

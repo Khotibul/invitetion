@@ -7,8 +7,16 @@
 
 	<div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
 		<!-- Search -->
-		<div class="navbar-nav align-items-center">
-			<div class="nav-item d-flex align-items-center">
+		<div class="navbar-nav align-items-center gap-2">
+			<div class="nav-item d-none d-xl-flex align-items-center">
+				<a href="javascript:void(0)" class="nav-link px-0" id="adminMenuMiniToggle" title="Mini sidebar">
+					<i class="bx bx-dock-left bx-sm"></i>
+				</a>
+			</div>
+			<div class="nav-item d-flex align-items-center admin-top-search">
+				<i class="bx bx-search fs-4 lh-0 text-muted"></i>
+				<input id="adminTopSearch" type="text" class="form-control border-0 shadow-none bg-transparent ps-2"
+					   placeholder="Cari menu (Ctrl+K)" autocomplete="off" inputmode="search">
 			</div>
 		</div>
 		<!-- /Search -->
