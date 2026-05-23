@@ -8,6 +8,7 @@ use App\Models\Strbox;
 use App\Models\Setting;
 use App\Models\Template;
 use App\Models\Invitation;
+use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\AccountInvoice;
@@ -57,6 +58,22 @@ class SettingController extends Controller
 		$pendingCount    = \Illuminate\Support\Facades\Cache::remember('admin_pending_count', 120, fn() => AccountInvoice::whereStatus('PENDING')->count());
 		$invitationCount = \Illuminate\Support\Facades\Cache::remember('admin_invitation_count', 120, fn() => Invitation::count());
 		$templateCount   = \Illuminate\Support\Facades\Cache::remember('admin_template_count', 300, fn() => Template::count());
+		$packageCount    = \Illuminate\Support\Facades\Cache::remember('admin_package_count', 300, fn() => Package::count());
+		$userCount       = \Illuminate\Support\Facades\Cache::remember('admin_user_count', 300, fn() => User::count());
+
+		$recentTemplates = \Illuminate\Support\Facades\Cache::remember('admin_recent_templates', 300, function () {
+			return Template::select('id', 'title', 'slug', 'file', 'file_type', 'grade', 'price', 'publish', 'created_at')
+				->orderByDesc('created_at')
+				->limit(6)
+				->get();
+		});
+
+		$recentActivities = \Illuminate\Support\Facades\Cache::remember('admin_recent_activities', 120, function () {
+			return Activity::select('id', 'log_name', 'description', 'subject_type', 'event', 'created_at', 'causer_id')
+				->orderByDesc('created_at')
+				->limit(8)
+				->get();
+		});
 
 		$transaction = [
 			[
@@ -85,10 +102,29 @@ class SettingController extends Controller
 				'url'   => route('template.index'),
 				'data'  => $templateCount,
 			],
+			[
+				'icon'  => 'bx bx-package',
+				'title' => 'paket',
+				'url'   => route('package.index'),
+				'data'  => $packageCount,
+			],
+			[
+				'icon'  => 'bx bx-group',
+				'title' => 'pengguna',
+				'url'   => route('user-management.index'),
+				'data'  => $userCount,
+			],
 		];
 		$data = ['title' => 'Dasbor'];
 
-		return response()->view('panel.index', compact('data', 'greating', 'dashboard', 'transaction'));
+		return response()->view('panel.index', compact(
+			'data',
+			'greating',
+			'dashboard',
+			'transaction',
+			'recentTemplates',
+			'recentActivities',
+		));
 	}
 
     //** Storage */ 

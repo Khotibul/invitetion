@@ -1,490 +1,394 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risa Digital Invitation - Undangan Digital Elegant</title>
-<!-- Preconnect ke Google Fonts untuk mempercepat loading font -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- DNS prefetch untuk resource eksternal -->
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --green:#2d7a4f;--green-dark:#1d5a3f;--green-light:#e8f5ee;
-  --gold:#d4af37;--white:#fff;--text:#1d5a3f;
-}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden}
-h1,h2,h3{font-family:'Playfair Display',serif}
-img{display:block;max-width:100%}
-a{text-decoration:none}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ config('app.name', 'Aura Invitations') }} - Undangan Digital Elegant</title>
 
-/* ── NAVBAR ── */
-.navbar{
-  position:fixed;top:0;left:0;width:100%;z-index:9999;
-  padding:1rem 1.5rem;
-  display:flex;align-items:center;justify-content:space-between;
-  transition:background .3s,box-shadow .3s,padding .3s;
-}
-.navbar.scrolled{
-  background:var(--white);
-  box-shadow:0 2px 20px rgba(0,0,0,.1);
-  padding:.75rem 1.5rem;
-}
-.nav-brand{
-  font-family:'Playfair Display',serif;
-  font-size:1.25rem;font-weight:700;
-  color:var(--white);transition:color .3s;
-  white-space:nowrap;
-}
-.navbar.scrolled .nav-brand{color:var(--green)}
-.nav-links{display:flex;align-items:center;gap:1.5rem}
-.nav-links a{color:var(--white);font-weight:500;font-size:.9rem;transition:color .3s}
-.navbar.scrolled .nav-links a{color:var(--text)}
-.nav-links a:hover{color:var(--gold)}
-.nav-btn{
-  padding:.5rem 1.4rem;border-radius:50px;
-  background:var(--white);color:var(--green)!important;
-  font-weight:600;font-size:.85rem;transition:all .3s;
-}
-.navbar.scrolled .nav-btn{background:var(--green);color:var(--white)!important}
-.nav-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.15)}
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.4/css/boxicons.min.css">
 
-/* Hamburger */
-.nav-toggle{
-  display:none;flex-direction:column;justify-content:center;
-  gap:5px;cursor:pointer;padding:4px;background:none;border:none;
-}
-.nav-toggle span{
-  display:block;width:24px;height:2px;
-  background:var(--white);border-radius:2px;transition:all .3s;
-}
-.navbar.scrolled .nav-toggle span{background:var(--green)}
-.nav-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-.nav-toggle.open span:nth-child(2){opacity:0;transform:scaleX(0)}
-.nav-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+	@php
+		$__appName = config('app.name', 'Aura Invitations');
+		$__portalCss = 'css/portal-aura.css';
+		$__portalJs  = 'js/portal-aura.js';
+		$__portalCssV = @filemtime(public_path($__portalCss)) ?: time();
+		$__portalJsV  = @filemtime(public_path($__portalJs)) ?: time();
 
-/* Mobile overlay menu */
-.nav-mobile{
-  display:none;position:fixed;inset:0;
-  background:var(--green-dark);z-index:9998;
-  flex-direction:column;align-items:center;justify-content:center;
-  gap:2rem;padding:2rem;
-}
-.nav-mobile.open{display:flex}
-.nav-mobile a{
-  color:var(--white);font-size:1.4rem;font-weight:600;
-  font-family:'Playfair Display',serif;transition:color .3s;
-}
-.nav-mobile a:hover{color:var(--gold)}
-.nav-mobile .nav-btn-mobile{
-  padding:.8rem 2.5rem;border-radius:50px;
-  background:var(--white);color:var(--green)!important;
-  font-size:1rem;font-weight:700;
-}
+		$__templates = $data['templates'] ?? collect();
+		$__packages  = $data['packages'] ?? collect();
 
-/* ── HERO ── */
-.hero{
-  min-height:100vh;
-  background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);
-  display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:6rem 1.5rem 3rem;
-  position:relative;overflow:hidden;
-}
-.hero::before,.hero::after{
-  content:'';position:absolute;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);
-  animation:float 20s infinite ease-in-out;
-}
-.hero::before{width:500px;height:500px;top:-100px;right:-100px}
-.hero::after{width:400px;height:400px;bottom:-50px;left:-50px;animation-duration:25s;animation-direction:reverse}
-@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-30px)}}
-.hero-content{position:relative;z-index:1;max-width:700px;animation:fadeInUp 1.2s ease}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-.hero-logo{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:700;color:var(--white);margin-bottom:.8rem;line-height:1.2}
-.hero-tagline{font-size:clamp(.95rem,2.5vw,1.3rem);color:rgba(255,255,255,.9);margin-bottom:2.5rem;line-height:1.6}
-.cta-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
-.btn{padding:.85rem 2rem;border-radius:50px;font-weight:600;font-size:.9rem;transition:all .3s;display:inline-block}
-.btn-white{background:var(--white);color:var(--green)}
-.btn-white:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(255,255,255,.3)}
-.btn-outline-white{border:2px solid var(--white);color:var(--white)}
-.btn-outline-white:hover{background:var(--white);color:var(--green)}
-.btn-green{background:var(--green);color:var(--white)}
-.btn-green:hover{background:var(--green-dark);transform:translateY(-2px)}
+		$__heroTpl = $__templates->first();
+		$__heroImg = '';
+		if ($__heroTpl && !empty($__heroTpl->file ?? '')) {
+			$__heroImg = \Illuminate\Support\Str::startsWith($__heroTpl->file, 'template/')
+				? asset($__heroTpl->file)
+				: url('storage/'.$__heroTpl->file);
+		}
 
-/* ── SECTIONS ── */
-.section{padding:5rem 1.5rem}
-.container{max-width:1200px;margin:0 auto}
-.section-head{text-align:center;margin-bottom:3rem}
-.section-head h2{font-size:clamp(1.7rem,4vw,2.6rem);color:var(--green);margin-bottom:.5rem}
-.section-head p{font-size:.95rem;color:#666;max-width:580px;margin:0 auto}
+		$__featuredPkg = $__packages->firstWhere('slug', 'premium')
+			?? $__packages->sortByDesc('grade')->values()->get(1)
+			?? $__packages->get(0);
+	@endphp
 
-/* ── FEATURES ── */
-.features{background:var(--green-light)}
-.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
-.feature-card{background:var(--white);padding:2rem;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(45,122,79,.08);transition:transform .3s}
-.feature-card:hover{transform:translateY(-6px)}
-.feature-icon{font-size:2.5rem;margin-bottom:1rem}
-.feature-card h3{font-size:1.2rem;color:var(--green);margin-bottom:.5rem}
-.feature-card p{color:#666;font-size:.88rem;line-height:1.6}
-
-/* ── TEMPLATES ── */
-.templates{background:var(--white)}
-.templates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-.template-card{border-radius:14px;overflow:hidden;box-shadow:0 6px 25px rgba(0,0,0,.09);transition:transform .3s,box-shadow .3s;background:var(--white)}
-.template-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(45,122,79,.18)}
-.template-image{width:100%;height:220px;overflow:hidden;position:relative}
-.template-image img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
-.template-card:hover .template-image img{transform:scale(1.07)}
-.template-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--white);font-size:.85rem;letter-spacing:1px;text-transform:uppercase;gap:.5rem}
-.template-badge{position:absolute;top:10px;right:10px;background:var(--gold);color:var(--white);font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:.25rem .7rem;border-radius:50px}
-.template-info{padding:1.2rem 1.5rem;border-top:3px solid var(--green-light)}
-.template-info h4{font-size:1.1rem;color:var(--green);margin-bottom:.2rem}
-.template-grade{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem}
-.btn-preview{display:inline-flex;align-items:center;gap:.3rem;padding:.45rem 1.2rem;border:2px solid var(--green);color:var(--green);border-radius:50px;font-size:.78rem;font-weight:600;transition:all .3s}
-.btn-preview:hover{background:var(--green);color:var(--white)}
-
-/* ── PRICING ── */
-.pricing{background:var(--green-light)}
-.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;align-items:start}
-.pricing-card{background:var(--white);padding:2.5rem 2rem;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(45,122,79,.1);transition:transform .3s;position:relative}
-.pricing-card:hover{transform:translateY(-6px)}
-.pricing-card.featured{border:3px solid var(--gold)}
-.pricing-card.featured::before{content:'Terpopuler';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--white);font-size:.7rem;font-weight:700;letter-spacing:1px;padding:.3rem 1rem;border-radius:50px;text-transform:uppercase}
-.pricing-card h3{font-size:1.5rem;color:var(--green);margin-bottom:.3rem}
-.pricing-grade{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
-.price{font-size:2.4rem;font-weight:700;color:var(--green);margin:.8rem 0}
-.price-sub{font-size:.78rem;color:#888;margin-top:-.5rem;margin-bottom:.5rem}
-.price-features{list-style:none;margin:1.2rem 0;text-align:left}
-.price-features li{padding:.5rem 0;border-bottom:1px solid #eee;font-size:.85rem;color:#555;display:flex;align-items:center;gap:.4rem}
-.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
-.price-features li.no::before{content:'✗';color:#ccc}
-.price-features li.no{color:#bbb}
-
-/* ── TESTIMONIALS ── */
-.testimonials{background:var(--white)}
-.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
-.testimonial-card{background:var(--green-light);padding:2rem;border-radius:14px;box-shadow:0 4px 15px rgba(45,122,79,.08)}
-.testimonial-text{font-style:italic;color:#444;line-height:1.7;margin-bottom:1rem;font-size:.93rem}
-.testimonial-author{font-weight:600;color:var(--green);font-size:.88rem}
-
-/* ── CTA ── */
-.cta-section{padding:5rem 1.5rem;background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);text-align:center;color:var(--white)}
-.cta-section h2{font-size:clamp(1.7rem,4vw,2.6rem);margin-bottom:1rem}
-.cta-section p{font-size:.95rem;opacity:.9;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto}
-
-/* ── FOOTER ── */
-footer{background:var(--green-dark);color:rgba(255,255,255,.8);padding:3rem 1.5rem;text-align:center}
-.footer-links{display:flex;justify-content:center;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
-.footer-links a{color:rgba(255,255,255,.7);font-size:.88rem;transition:color .3s}
-.footer-links a:hover{color:var(--gold)}
-footer p{font-size:.82rem;opacity:.6}
-
-/* ── RESPONSIVE ── */
-@media(max-width:768px){
-  .nav-links{display:none}
-  .nav-toggle{display:flex}
-
-  .hero{padding:5rem 1.2rem 3rem}
-  .cta-buttons{flex-direction:column;align-items:center}
-  .cta-buttons .btn{width:100%;max-width:280px;text-align:center}
-
-  .section{padding:3.5rem 1.2rem}
-  .section-head{margin-bottom:2rem}
-
-  .features-grid{grid-template-columns:1fr 1fr}
-  .feature-card{padding:1.5rem 1rem}
-  .feature-icon{font-size:2rem}
-
-  .templates-grid{grid-template-columns:1fr}
-  .template-image{height:200px}
-
-  .pricing-grid{grid-template-columns:1fr}
-  .pricing-card.featured{transform:none}
-
-  .testimonials-grid{grid-template-columns:1fr}
-
-  .footer-links{gap:1rem}
-}
-@media(max-width:480px){
-  .features-grid{grid-template-columns:1fr}
-  .hero-logo{font-size:1.7rem}
-  .nav-brand{font-size:1.1rem}
-}
-</style>
+	<link rel="stylesheet" href="{{ asset($__portalCss).'?v='.$__portalCssV }}">
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar" id="mainNav">
-  <a href="{{ url('/') }}" class="nav-brand">&#128154; Risa Digital Invitation</a>
+<header class="aura-nav" id="auraNav">
+	<div class="container">
+		<div class="aura-nav-inner">
+			<a href="{{ url('/') }}" class="aura-brand" aria-label="Home">
+				<span class="aura-brand-mark"><i class="bx bx-sparkles"></i></span>
+				<span>{{ $__appName }}</span>
+			</a>
 
-  <div class="nav-links">
-    <a href="#templates">Template</a>
-    <a href="#pricing">Harga</a>
-    @if(Route::has('login'))
-      @auth
-        <a href="{{ url('/dashboard') }}" class="nav-btn">Dashboard</a>
-      @else
-        <a href="{{ route('login') }}">Masuk</a>
-        @if(Route::has('register'))
-          <a href="{{ route('register') }}" class="nav-btn">Daftar</a>
-        @endif
-      @endauth
-    @endif
-  </div>
+			<nav class="aura-links" aria-label="Menu">
+				<a href="#features">Features</a>
+				<a href="#templates">Templates</a>
+				<a href="#pricing">Pricing</a>
+				<a href="#showcase">Showcase</a>
+				@auth
+					<a href="{{ url('/dashboard') }}" class="aura-btn primary">Dashboard</a>
+				@else
+					<a href="{{ route('signin') }}">Login</a>
+					<a href="{{ route('signup') }}" class="aura-btn primary">Get Started</a>
+				@endauth
+			</nav>
 
-  <button class="nav-toggle" id="navToggle" aria-label="Buka menu">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
+			<button class="aura-hamburger" id="auraMobileOpen" aria-label="Buka menu">
+				<i class="bx bx-menu"></i>
+			</button>
+		</div>
+	</div>
+</header>
 
-<!-- MOBILE MENU -->
-<div class="nav-mobile" id="navMobile">
-  <a href="#templates" class="nav-mobile-link">Template</a>
-  <a href="#pricing" class="nav-mobile-link">Harga</a>
-  @if(Route::has('login'))
-    @auth
-      <a href="{{ url('/dashboard') }}" class="nav-btn-mobile">Dashboard</a>
-    @else
-      <a href="{{ route('login') }}" class="nav-mobile-link">Masuk</a>
-      @if(Route::has('register'))
-        <a href="{{ route('register') }}" class="nav-btn-mobile">Daftar Gratis</a>
-      @endif
-    @endauth
-  @endif
+<div class="aura-mobile" id="auraMobile" aria-hidden="true">
+	<div class="aura-mobile-panel" role="dialog" aria-modal="true" aria-label="Menu">
+		<div class="aura-mobile-head">
+			<div class="aura-brand">
+				<span class="aura-brand-mark"><i class="bx bx-sparkles"></i></span>
+				<span>{{ $__appName }}</span>
+			</div>
+			<button class="aura-hamburger" id="auraMobileClose" aria-label="Tutup menu">
+				<i class="bx bx-x"></i>
+			</button>
+		</div>
+		<div class="aura-mobile-links">
+			<a href="#features" data-aura-close>Features</a>
+			<a href="#templates" data-aura-close>Templates</a>
+			<a href="#pricing" data-aura-close>Pricing</a>
+			<a href="#showcase" data-aura-close>Showcase</a>
+		</div>
+		<div class="aura-mobile-actions">
+			@auth
+				<a href="{{ url('/dashboard') }}" class="aura-btn primary" data-aura-close>Dashboard</a>
+			@else
+				<a href="{{ route('signin') }}" class="aura-btn" data-aura-close>Login</a>
+				<a href="{{ route('signup') }}" class="aura-btn primary" data-aura-close>Get Started</a>
+			@endauth
+		</div>
+	</div>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-content">
-    <h1 class="hero-logo">&#128154; Risa Digital Invitation</h1>
-    <p class="hero-tagline">Undangan Digital Elegant untuk Momen Spesial Anda</p>
-    <div class="cta-buttons">
-      <a href="{{ route('register') }}" class="btn btn-white">Mulai Sekarang</a>
-      <a href="#templates" class="btn btn-outline-white">Lihat Template</a>
-    </div>
-  </div>
-</section>
+<main>
+	<section class="aura-hero">
+		<div class="container">
+			<div class="aura-hero-grid">
+				<div class="aura-reveal">
+					<div class="aura-badge">REDEFINING ELEGANCE</div>
+					<h1 class="aura-h1">
+						Beautifully crafted <em>digital moments</em> for your special day.
+					</h1>
+					<p class="aura-lead">
+						Effortless planning meets high-end design. Create, send, and track luxury invitations that leave a lasting impression.
+					</p>
+					<div class="aura-hero-actions">
+						<a class="aura-btn primary" href="{{ auth()->check() ? url('/dashboard') : route('signup') }}">
+							<i class="bx bx-plus-circle"></i> Buat Undangan Sekarang
+						</a>
+						<a class="aura-btn" href="#templates">
+							<i class="bx bx-slideshow"></i> Lihat Demo
+						</a>
+					</div>
+				</div>
 
-<!-- FEATURES -->
-<section class="section features">
-  <div class="container">
-    <div class="section-head">
-      <h2>Kenapa Memilih Kami?</h2>
-      <p>Fitur lengkap untuk undangan digital yang sempurna</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card"><div class="feature-icon">&#127912;</div><h3>Template Kekinian</h3><p>Pilihan template modern dan elegant yang dapat disesuaikan dengan tema acara Anda</p></div>
-      <div class="feature-card"><div class="feature-icon">&#128241;</div><h3>Responsive Design</h3><p>Tampil sempurna di semua perangkat, dari smartphone hingga desktop</p></div>
-      <div class="feature-card"><div class="feature-icon">&#9889;</div><h3>Loading Cepat</h3><p>Optimasi performa untuk pengalaman pengguna yang maksimal</p></div>
-      <div class="feature-card"><div class="feature-icon">&#128248;</div><h3>Gallery Unlimited</h3><p>Upload foto sebanyak yang Anda inginkan tanpa batasan</p></div>
-      <div class="feature-card"><div class="feature-icon">&#9993;</div><h3>RSVP System</h3><p>Kelola konfirmasi kehadiran tamu dengan mudah dan praktis</p></div>
-      <div class="feature-card"><div class="feature-icon">&#127873;</div><h3>Gift Registry</h3><p>Informasi hadiah dan rekening untuk kemudahan tamu</p></div>
-    </div>
-  </div>
-</section>
+				<div class="aura-showcase aura-reveal" style="--delay:.08s">
+					<div class="aura-frame">
+						<div class="aura-frame-inner">
+							<div class="aura-phone">
+								<div class="aura-phone-screen">
+									@if($__heroImg)
+										<img src="{{ $__heroImg }}" alt="Preview template" loading="lazy">
+									@else
+										<div class="aura-phone-placeholder">
+											<div class="aura-phone-ph-title">Your Preview</div>
+											<div class="aura-phone-ph-sub">Template elegan, mobile-first</div>
+										</div>
+									@endif
+									<div class="aura-float">
+										<i class="bx bx-check-circle"></i>
+										<div>
+											<b>RSVP</b>
+											<small>Confirmed</small>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="aura-stat" aria-hidden="true">
+								<i class="bx bx-user-voice"></i>
+								<div>
+									<b>5.000+</b>
+									<small>Pasangan mempercayai kami</small>
+								</div>
+							</div>
+							<div style="display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center">
+								<span class="aura-badge"><i class="bx bx-bolt-circle"></i> Fast Setup</span>
+								<span class="aura-badge"><i class="bx bx-mobile"></i> Mobile-first</span>
+								<span class="aura-badge"><i class="bx bx-lock"></i> Secure</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
-<!-- TEMPLATES -->
-<section id="templates" class="section templates">
-  <div class="container">
-    <div class="section-head">
-      <h2>Template Pilihan</h2>
-      <p>Desain modern dan elegant untuk berbagai jenis acara</p>
-    </div>
-    <div class="templates-grid">
-      @foreach($data['templates'] as $item)
-      <div class="template-card">
-        <div class="template-image">
-          @if($item->file && \Illuminate\Support\Str::startsWith($item->file, 'template/'))
-            <img src="{{ asset($item->file) }}" alt="{{ $item->title }}" loading="lazy">
-          @elseif($item->file)
-            <img src="{{ url('storage/'.$item->file) }}" alt="{{ $item->title }}" loading="lazy">
-          @else
-            @php
-              static $gi=0;
-              $grads=['linear-gradient(135deg,#2d7a4f,#3d9a6f)','linear-gradient(135deg,#8b7355,#5d4e37)','linear-gradient(135deg,#8ba888,#4a6741)','linear-gradient(135deg,#00a86b,#0077be)','linear-gradient(135deg,#2c2c2c,#555)','linear-gradient(135deg,#9caf88,#2d5016)'];
-              $grad=$grads[$gi%count($grads)];$gi++;
-            @endphp
-            <div class="template-placeholder" style="background:{{ $grad }}">
-              <span style="font-size:2rem">&#128141;</span>
-              <span>{{ $item->title }}</span>
-            </div>
-          @endif
-          <span class="template-badge">{{ ucfirst($item->grade ?? 'free') }}</span>
-        </div>
-        <div class="template-info">
-          <h4>{{ $item->title }}</h4>
-          <p class="template-grade">{{ ucfirst($item->grade ?? 'free') }}</p>
-          <a href="{{ route('preview-template.index', $item->slug) }}" class="btn-preview">&#128065; Preview</a>
-        </div>
-      </div>
-      @endforeach
-    </div>
-  </div>
-</section>
+	<section id="features" class="aura-section">
+		<div class="container aura-center">
+			<h2 class="aura-h2 aura-reveal">Everything you need, <span class="alt">simplified.</span></h2>
+			<p class="aura-sub aura-reveal" style="--delay:.05s">Fitur lengkap untuk membuat, membagikan, dan memantau undangan digital dengan elegan.</p>
+			<div class="aura-divider aura-reveal" style="--delay:.08s"></div>
 
-<!-- PRICING -->
-<section id="pricing" class="section pricing">
-  <div class="container">
-    <div class="section-head">
-      <h2>Paket Harga</h2>
-      <p>Pilih paket yang sesuai dengan kebutuhan Anda</p>
-    </div>
-    <div class="pricing-grid">
-      @php
-        $featuredGrades = ['premium', 'basic']; // prioritas featured
-        $packages = $data['packages'] ?? collect();
-        $featuredSlug = $packages->sortByDesc('grade')->first()?->slug ?? '';
-        // Tandai paket tengah/terpopuler: paket dengan grade tertinggi kedua atau premium
-        $featuredPkg = $packages->firstWhere('slug', 'premium')
-            ?? $packages->firstWhere('grade', 2)
-            ?? $packages->get(1);
-      @endphp
-      @forelse($packages as $pkg)
-      @php
-        $isFeatured = $featuredPkg && $pkg->id === $featuredPkg->id;
-        $tplList    = (array)($pkg->features['template'] ?? ['basic']);
-        $guestLabel = ($pkg->features['guest'] === 'unlimited' || $pkg->features['guest'] == 0)
-            ? 'Tamu Unlimited' : ($pkg->features['guest'].' Tamu');
-        $photoLabel = ($pkg->features['gallery_photo'] === 'unlimited' || $pkg->features['gallery_photo'] == 0)
-            ? 'Galeri Unlimited' : ('Galeri '.$pkg->features['gallery_photo'].' Foto');
-        $activeLabel = $pkg->features['active'].' Hari Aktif';
-        $tplLabel   = implode(' + ', array_map('ucfirst', $tplList)).' Template';
-      @endphp
-      <div class="pricing-card {{ $isFeatured ? 'featured' : '' }}">
-        <h3>{{ $pkg->title }}</h3>
-        <p class="pricing-grade">{{ implode(' · ', array_map('ucfirst', $tplList)) }}</p>
-        <div class="price">{{ $pkg->price_formatted }}</div>
-        @if($pkg->price > 0)
-        <p class="price-sub">sekali bayar</p>
-        @endif
-        <ul class="price-features">
-          <li>{{ $tplLabel }}</li>
-          <li>{{ $guestLabel }}</li>
-          <li>{{ $photoLabel }}</li>
-          <li>{{ $activeLabel }}</li>
-          @if($pkg->features['story'])
-          <li>Love Story</li>
-          @else
-          <li class="no">Love Story</li>
-          @endif
-          @if($pkg->features['gift'])
-          <li>Amplop Digital</li>
-          @else
-          <li class="no">Amplop Digital</li>
-          @endif
-          @if($pkg->features['e_invitation'])
-          <li>E-Invitation</li>
-          @else
-          <li class="no">E-Invitation</li>
-          @endif
-          @if($pkg->features['smart_wa'])
-          <li>Smart WhatsApp</li>
-          @else
-          <li class="no">Smart WhatsApp</li>
-          @endif
-        </ul>
-        <a href="{{ route('signup') }}" class="btn btn-green">
-          {{ $pkg->price == 0 ? 'Coba Gratis' : 'Pilih Paket' }}
-        </a>
-      </div>
-      @empty
-      {{-- Fallback jika database kosong --}}
-      <div class="pricing-card">
-        <h3>Starter</h3><div class="price">Rp 99K</div>
-        <ul class="price-features"><li>Template Basic</li><li>50 Tamu</li><li>90 Hari Aktif</li></ul>
-        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
-      </div>
-      <div class="pricing-card featured">
-        <h3>Basic</h3><div class="price">Rp 149K</div>
-        <ul class="price-features"><li>Template Basic + Premium</li><li>100 Tamu</li><li>180 Hari Aktif</li></ul>
-        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
-      </div>
-      <div class="pricing-card">
-        <h3>Premium</h3><div class="price">Rp 249K</div>
-        <ul class="price-features"><li>Semua Template</li><li>Tamu Unlimited</li><li>365 Hari Aktif</li></ul>
-        <a href="{{ route('signup') }}" class="btn btn-green">Pilih Paket</a>
-      </div>
-      @endforelse
-    </div>
-  </div>
-</section>
+			<div class="aura-grid">
+				<div class="aura-card aura-reveal" style="grid-column:span 7;--delay:.10s">
+					<div class="aura-card-icon"><i class="bx bx-check-shield"></i></div>
+					<h3>Real-time RSVP Tracker</h3>
+					<p>Pantau konfirmasi hadir, jumlah tamu, dan respons secara instan untuk kebutuhan acara.</p>
+					<div class="mini-table" aria-hidden="true">
+						<div class="mini-row"><span>Sarah &amp; James</span><span class="chip ok">Attending</span></div>
+						<div class="mini-row"><span>Michael Chen</span><span class="chip">Pending</span></div>
+						<div class="mini-row"><span>Elena Rodriguez</span><span class="chip ok">Attending</span></div>
+					</div>
+				</div>
+				<div class="aura-card aura-reveal" style="grid-column:span 5;--delay:.16s">
+					<div class="aura-card-icon"><i class="bx bx-music"></i></div>
+					<h3>Ambient Music</h3>
+					<p>Tambah musik latar yang halus agar undangan terasa lebih hidup dan emosional.</p>
+					<div class="mini-player" aria-hidden="true">
+						<div class="mini-player-top">
+							<span class="dot"></span><span class="dot"></span><span class="dot"></span>
+							<span class="mini-track">Wedding Overture</span>
+						</div>
+						<div class="mini-bar"><span style="width:62%"></span></div>
+						<div class="mini-player-meta"><small>1:12</small><small>2:04</small></div>
+					</div>
+				</div>
+				<div class="aura-card aura-reveal" style="grid-column:span 4;--delay:.22s">
+					<div class="aura-card-icon"><i class="bx bx-map"></i></div>
+					<h3>Integrated Maps</h3>
+					<p>Lokasi acara dengan tautan peta agar tamu mudah menuju tempat.</p>
+				</div>
+				<div class="aura-card aura-reveal" style="grid-column:span 4;--delay:.28s">
+					<div class="aura-card-icon"><i class="bx bx-gift"></i></div>
+					<h3>Digital Gift Registry</h3>
+					<p>Amplop digital lengkap dengan tombol salin untuk kemudahan tamu.</p>
+				</div>
+				<div class="aura-card aura-reveal" style="grid-column:span 4;--delay:.34s">
+					<div class="aura-card-icon"><i class="bx bx-images"></i></div>
+					<h3>Gallery & Story</h3>
+					<p>Tampilkan momen terbaik dan kisah cinta Anda dalam satu halaman.</p>
+				</div>
+				<div class="aura-card aura-reveal aura-rsvp-live" style="grid-column:span 12;--delay:.40s">
+					<div class="aura-live-head">
+						<div>
+							<div class="aura-live-title">Real-time RSVP</div>
+							<div class="aura-live-sub">Track every confirmation as it happens with instant notifications.</div>
+						</div>
+						<div class="aura-live-stat">
+							<span class="aura-live-pill"><i class="bx bx-bell"></i> Live</span>
+							<b>78%</b>
+						</div>
+					</div>
+					<div class="aura-live-bar"><span data-aura-progress="78"></span></div>
+				</div>
+			</div>
+		</div>
+	</section>
 
-<!-- TESTIMONIALS -->
-<section class="section testimonials">
-  <div class="container">
-    <div class="section-head">
-      <h2>Testimoni</h2>
-      <p>Apa kata mereka yang sudah menggunakan layanan kami</p>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card"><p class="testimonial-text">"Undangan digitalnya sangat elegant dan mudah digunakan. Tamu-tamu kami sangat terkesan!"</p><p class="testimonial-author">- Sarah &amp; Ahmad</p></div>
-      <div class="testimonial-card"><p class="testimonial-text">"Template yang disediakan sangat modern dan sesuai dengan tema pernikahan kami. Highly recommended!"</p><p class="testimonial-author">- Dina &amp; Rizky</p></div>
-      <div class="testimonial-card"><p class="testimonial-text">"Pelayanan yang cepat dan responsif. Undangan jadi dalam waktu singkat dengan hasil yang memuaskan."</p><p class="testimonial-author">- Maya &amp; Budi</p></div>
-    </div>
-  </div>
-</section>
+	<section id="templates" class="aura-section">
+		<div class="container">
+			<div class="aura-center aura-reveal">
+				<h2 class="aura-h2">Curated Themes</h2>
+				<p class="aura-sub">Pilih dari koleksi template elegan yang siap dipakai untuk berbagai gaya acara.</p>
+				<div class="aura-divider"></div>
+			</div>
 
-<!-- CTA -->
-<section class="cta-section">
-  <div class="container">
-    <h2>Siap Membuat Undangan Digital Anda?</h2>
-    <p>Mulai sekarang dan buat undangan yang berkesan untuk momen spesial Anda</p>
-    <a href="{{ route('register') }}" class="btn btn-white">Daftar Gratis</a>
-  </div>
-</section>
+			<div class="aura-grid">
+				@foreach($__templates as $idx => $item)
+					@php
+						$thumb = '';
+						if ($item->file && \Illuminate\Support\Str::startsWith($item->file, 'template/')) $thumb = asset($item->file);
+						elseif ($item->file) $thumb = url('storage/'.$item->file);
+					@endphp
+					<div class="aura-card tpl-card aura-reveal" style="grid-column:span 4;--delay:{{ 0.06 + ($idx*0.03) }}s">
+						<div class="tpl-thumb">
+							@if($thumb)
+								<img src="{{ $thumb }}" alt="{{ $item->title }}" loading="lazy">
+							@endif
+							<span class="tpl-badge">{{ strtoupper($item->grade ?? 'BASIC') }}</span>
+						</div>
+						<div class="tpl-body">
+							<div class="tpl-title">{{ $item->title }}</div>
+							<div class="tpl-meta">
+								<span><i class="bx bx-palette"></i> {{ ucfirst($item->grade ?? 'basic') }}</span>
+								<span><i class="bx bx-mobile"></i> Responsive</span>
+							</div>
+							<div class="tpl-actions">
+								<a href="{{ route('preview-template.index', $item->slug) }}" class="aura-btn secondary">
+									<i class="bx bx-show"></i> Preview
+								</a>
+								<a href="{{ route('signup') }}" class="aura-btn primary">
+									<i class="bx bx-plus-circle"></i> Use
+								</a>
+							</div>
+						</div>
+					</div>
+				@endforeach
+			</div>
+		</div>
+	</section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-content">
-    <div class="footer-links">
-      <a href="#">Tentang Kami</a>
-      <a href="#templates">Template</a>
-      <a href="#pricing">Harga</a>
-      <a href="#">Kontak</a>
-      <a href="#">FAQ</a>
-    </div>
-    <p>&copy; {{ date('Y') }} Risa Digital Invitation. All Rights Reserved.</p>
-    <p style="margin-top:.5rem">Made with &#128154; in Indonesia</p>
-  </div>
-</footer>
+	<section id="pricing" class="aura-section">
+		<div class="container">
+			<div class="aura-center aura-reveal">
+				<h2 class="aura-h2">Simple, Transparent Pricing</h2>
+				<p class="aura-sub">Pilih paket yang sesuai kebutuhan Anda dan upgrade kapan saja.</p>
+				<div class="aura-divider"></div>
+			</div>
 
-<script>
-// Navbar scroll effect
-var nav = document.getElementById('mainNav');
-window.addEventListener('scroll', function(){
-  nav.classList.toggle('scrolled', window.scrollY > 50);
-});
+			<div class="pricing-wrap aura-reveal" style="--delay:.06s">
+				<div class="price-grid">
+					@foreach($__packages as $i => $pkg)
+						@php
+							$isFeatured = $__featuredPkg && ($pkg->id === $__featuredPkg->id);
+							$tplList = (array)($pkg->features['template'] ?? ['basic']);
+							$guestLabel = ($pkg->features['guest'] === 'unlimited' || $pkg->features['guest'] == 0) ? 'Tamu Unlimited' : ($pkg->features['guest'].' Tamu');
+							$photoLabel = ($pkg->features['gallery_photo'] === 'unlimited' || $pkg->features['gallery_photo'] == 0) ? 'Galeri Unlimited' : ($pkg->features['gallery_photo'].' Foto Galeri');
+							$activeLabel = ($pkg->features['active'] == 0) ? 'Aktif Selamanya' : ($pkg->features['active'].' Hari Aktif');
+						@endphp
+						<div class="price-card aura-reveal {{ $isFeatured ? 'featured' : '' }}" style="--delay:{{ 0.06 + ($i*0.05) }}s">
+							<div class="price-top">
+								<h3 class="price-name">{{ $pkg->title }}</h3>
+								@if($isFeatured)
+									<span class="price-pill">MOST POPULAR</span>
+								@endif
+							</div>
+							<div class="price">
+								{{ $pkg->price_formatted }}
+								@if(($pkg->price ?? 0) > 0)<small>/paket</small>@endif
+							</div>
+							<ul class="price-features">
+								<li><i class="bx bx-layer"></i> Template: {{ implode(', ', array_map('ucfirst', $tplList)) }}</li>
+								<li><i class="bx bx-user"></i> {{ $guestLabel }}</li>
+								<li><i class="bx bx-images"></i> {{ $photoLabel }}</li>
+								<li><i class="bx bx-time-five"></i> {{ $activeLabel }}</li>
+								<li><i class="bx {{ ($pkg->features['gift'] ?? false) ? 'bx-check-circle' : 'bx-x-circle' }}"></i> Amplop Digital</li>
+								<li><i class="bx {{ ($pkg->features['smart_wa'] ?? false) ? 'bx-check-circle' : 'bx-x-circle' }}"></i> Smart WhatsApp</li>
+							</ul>
+							<div class="price-cta">
+								<a class="aura-btn {{ $isFeatured ? 'primary' : '' }}" href="{{ route('signup') }}">
+									{{ ($pkg->price ?? 0) == 0 ? 'Coba Gratis' : 'Pilih Paket' }}
+								</a>
+							</div>
+						</div>
+					@endforeach
+				</div>
+			</div>
+		</div>
+	</section>
 
-// Hamburger toggle
-var toggle = document.getElementById('navToggle');
-var mobile = document.getElementById('navMobile');
-function closeMenu(){
-  toggle.classList.remove('open');
-  mobile.classList.remove('open');
-  document.body.style.overflow = '';
-}
-toggle.addEventListener('click', function(){
-  var isOpen = mobile.classList.toggle('open');
-  toggle.classList.toggle('open', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-});
-// Close on link click
-document.querySelectorAll('.nav-mobile-link, .nav-btn-mobile').forEach(function(el){
-  el.addEventListener('click', closeMenu);
-});
-// Close on outside click
-mobile.addEventListener('click', function(e){
-  if(e.target === mobile) closeMenu();
-});
-// Close on Escape
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape') closeMenu();
-});
-</script>
+	<section id="showcase" class="aura-section">
+		<div class="container aura-center">
+			<h2 class="aura-h2 aura-reveal">Loved by Couples</h2>
+			<p class="aura-sub aura-reveal" style="--delay:.05s">Testimoni singkat dari pasangan yang menggunakan undangan digital.</p>
+			<div class="aura-divider aura-reveal" style="--delay:.08s"></div>
+
+			<div class="test-grid">
+				<div class="aura-card test-card aura-reveal" style="--delay:.10s">
+					<div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+					<p class="test-quote">"Undangannya elegan banget. RSVP & ucapan langsung rapi, kami jadi lebih tenang."</p>
+					<div class="test-user">
+						<div class="test-avatar">A</div>
+						<div><b>Anindya &amp; Reyhan</b><small>Jakarta</small></div>
+					</div>
+				</div>
+				<div class="aura-card test-card aura-reveal" style="--delay:.16s">
+					<div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+					<p class="test-quote">"Template-nya premium dan mudah disesuaikan. Tamu juga bilang tampilannya mewah."</p>
+					<div class="test-user">
+						<div class="test-avatar">S</div>
+						<div><b>Sarah &amp; Ahmad</b><small>Bandung</small></div>
+					</div>
+				</div>
+				<div class="aura-card test-card aura-reveal" style="--delay:.22s">
+					<div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+					<p class="test-quote">"Fitur peta & amplop digitalnya membantu banget. Prosesnya cepat dan support responsif."</p>
+					<div class="test-user">
+						<div class="test-avatar">M</div>
+						<div><b>Maya &amp; Budi</b><small>Surabaya</small></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="aura-section">
+		<div class="container">
+			<div class="cta-dark aura-reveal">
+				<h2>Start Your Digital Journey Today</h2>
+				<p>Mulai buat undangan digital yang elegan, mudah dibagikan, dan siap dipantau dengan fitur lengkap.</p>
+				<a href="{{ route('signup') }}" class="aura-btn primary">
+					<i class="bx bx-right-arrow-alt"></i> Buat Undangan Sekarang
+				</a>
+			</div>
+
+			<footer class="aura-footer">
+				<div class="aura-footer-grid">
+					<div>
+						<div class="aura-brand" style="margin-bottom:.5rem">
+							<span class="aura-brand-mark"><i class="bx bx-sparkles"></i></span>
+							<span>{{ $__appName }}</span>
+						</div>
+						<div style="max-width:56ch;color:rgba(23,23,23,.62);line-height:1.75">
+							Crafted digital invitations that feel as special as your big day.
+						</div>
+						<div class="aura-copy">&copy; {{ date('Y') }} Risa Digital Invitation.</div>
+					</div>
+					<div>
+						<h4>Company</h4>
+						<a href="#features">About</a>
+						<a href="#templates">Templates</a>
+						<a href="#pricing">Pricing</a>
+					</div>
+					<div>
+						<h4>Support</h4>
+						@auth
+							<a href="{{ url('/dashboard') }}">Dashboard</a>
+						@else
+							<a href="{{ route('signin') }}">Login</a>
+						@endauth
+						<a href="{{ route('signup') }}">Get Started</a>
+						<a href="#showcase">Testimonials</a>
+					</div>
+				</div>
+			</footer>
+		</div>
+	</section>
+</main>
+
+<script src="{{ asset($__portalJs).'?v='.$__portalJsV }}" defer></script>
 </body>
 </html>

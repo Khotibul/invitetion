@@ -155,5 +155,69 @@
       setMini(next);
     });
   }
-})();
 
+  // Reveal animations (dashboard + cards)
+  const revealEls = qa(".admin-reveal");
+  if (revealEls.length) {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      revealEls.forEach((el) => el.classList.add("is-visible"));
+    } else if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("is-visible");
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { root: null, threshold: 0.12 }
+      );
+      revealEls.forEach((el) => io.observe(el));
+    } else {
+      revealEls.forEach((el) => el.classList.add("is-visible"));
+    }
+  }
+
+  // Count-up KPIs
+  const countEls = qa(".admin-count[data-count]");
+  function formatInt(n) {
+    try {
+      return new Intl.NumberFormat("id-ID").format(n);
+    } catch (_) {
+      return String(n);
+    }
+  }
+  function animateCount(el) {
+    const target = parseInt(el.getAttribute("data-count") || "0", 10) || 0;
+    const duration = 800;
+    const start = performance.now();
+    const from = 0;
+    function step(t) {
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = Math.round(from + (target - from) * eased);
+      el.textContent = formatInt(v);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if (countEls.length) {
+    if ("IntersectionObserver" in window) {
+      const ioCount = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              animateCount(e.target);
+              ioCount.unobserve(e.target);
+            }
+          });
+        },
+        { root: null, threshold: 0.3 }
+      );
+      countEls.forEach((el) => ioCount.observe(el));
+    } else {
+      countEls.forEach((el) => animateCount(el));
+    }
+  }
+})();
