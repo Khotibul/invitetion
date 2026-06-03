@@ -31,6 +31,8 @@
 		$__featuredPkg = $__packages->firstWhere('slug', 'premium')
 			?? $__packages->sortByDesc('grade')->values()->get(1)
 			?? $__packages->get(0);
+		$__loginUrl = route('login');
+		$__registerUrl = route('register');
 	@endphp
 
 	<link rel="stylesheet" href="{{ asset($__portalCss).'?v='.$__portalCssV }}">
@@ -53,8 +55,8 @@
 				@auth
 					<a href="{{ url('/dashboard') }}" class="aura-btn primary">Dashboard</a>
 				@else
-					<a href="{{ route('signin') }}">Login</a>
-					<a href="{{ route('signup') }}" class="aura-btn primary">Get Started</a>
+					<a href="{{ $__loginUrl }}">Login</a>
+					<a href="{{ $__registerUrl }}" class="aura-btn primary">Get Started</a>
 				@endauth
 			</nav>
 
@@ -86,8 +88,8 @@
 			@auth
 				<a href="{{ url('/dashboard') }}" class="aura-btn primary" data-aura-close>Dashboard</a>
 			@else
-				<a href="{{ route('signin') }}" class="aura-btn" data-aura-close>Login</a>
-				<a href="{{ route('signup') }}" class="aura-btn primary" data-aura-close>Get Started</a>
+				<a href="{{ $__loginUrl }}" class="aura-btn" data-aura-close>Login</a>
+				<a href="{{ $__registerUrl }}" class="aura-btn primary" data-aura-close>Get Started</a>
 			@endauth
 		</div>
 	</div>
@@ -106,7 +108,7 @@
 						Effortless planning meets high-end design. Create, send, and track luxury invitations that leave a lasting impression.
 					</p>
 					<div class="aura-hero-actions">
-						<a class="aura-btn primary" href="{{ auth()->check() ? url('/dashboard') : route('signup') }}">
+						<a class="aura-btn primary" href="{{ auth()->check() ? url('/dashboard') : $__registerUrl }}">
 							<i class="bx bx-plus-circle"></i> Buat Undangan Sekarang
 						</a>
 						<a class="aura-btn" href="#templates">
@@ -250,7 +252,7 @@
 								<a href="{{ route('preview-template.index', $item->slug) }}" class="aura-btn secondary">
 									<i class="bx bx-show"></i> Preview
 								</a>
-								<a href="{{ route('signup') }}" class="aura-btn primary">
+								<a href="{{ $__registerUrl }}" class="aura-btn primary">
 									<i class="bx bx-plus-circle"></i> Use
 								</a>
 							</div>
@@ -299,7 +301,7 @@
 								<li><i class="bx {{ ($pkg->features['smart_wa'] ?? false) ? 'bx-check-circle' : 'bx-x-circle' }}"></i> Smart WhatsApp</li>
 							</ul>
 							<div class="price-cta">
-								<a class="aura-btn {{ $isFeatured ? 'primary' : '' }}" href="{{ route('signup') }}">
+								<a class="aura-btn {{ $isFeatured ? 'primary' : '' }}" href="{{ $__registerUrl }}">
 									{{ ($pkg->price ?? 0) == 0 ? 'Coba Gratis' : 'Pilih Paket' }}
 								</a>
 							</div>
@@ -350,7 +352,7 @@
 			<div class="cta-dark aura-reveal">
 				<h2>Start Your Digital Journey Today</h2>
 				<p>Mulai buat undangan digital yang elegan, mudah dibagikan, dan siap dipantau dengan fitur lengkap.</p>
-				<a href="{{ route('signup') }}" class="aura-btn primary">
+				<a href="{{ $__registerUrl }}" class="aura-btn primary">
 					<i class="bx bx-right-arrow-alt"></i> Buat Undangan Sekarang
 				</a>
 			</div>
@@ -378,9 +380,9 @@
 						@auth
 							<a href="{{ url('/dashboard') }}">Dashboard</a>
 						@else
-							<a href="{{ route('signin') }}">Login</a>
+							<a href="{{ $__loginUrl }}">Login</a>
 						@endauth
-						<a href="{{ route('signup') }}">Get Started</a>
+						<a href="{{ $__registerUrl }}">Get Started</a>
 						<a href="#showcase">Testimonials</a>
 					</div>
 				</div>
