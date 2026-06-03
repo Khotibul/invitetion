@@ -1,0 +1,260 @@
+:root{
+  --member-aura-bg:#fbf6ec;
+  --member-aura-ink:#171717;
+  --member-aura-muted:rgba(23,23,23,.62);
+  --member-aura-border:rgba(17,24,39,.10);
+  --member-aura-gold:#d1ab3e;
+  --member-aura-gold-dark:#caa033;
+  --member-aura-shadow:0 22px 60px -40px rgba(0,0,0,.55);
+}
+
+body{padding-top:72px}
+body.member-aura-lock{overflow:hidden}
+
+.member-aura-container{
+  width:min(1120px,100%);
+  margin:0 auto;
+  padding:0 1.25rem;
+}
+
+.member-aura-nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:1100;
+  background:rgba(251,246,236,.78);
+  border-bottom:1px solid rgba(17,24,39,.06);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:box-shadow .2s ease,background .2s ease;
+}
+.member-aura-nav.scrolled{
+  background:rgba(255,255,255,.86);
+  box-shadow:0 18px 40px -32px rgba(0,0,0,.45);
+}
+.member-aura-inner{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+.member-aura-brand{
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  color:var(--member-aura-ink);
+  text-decoration:none;
+  font-weight:800;
+  letter-spacing:0;
+  min-width:0;
+}
+.member-aura-brand:hover{color:var(--member-aura-ink)}
+.member-aura-brand>span:last-child{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.member-aura-brand-mark{
+  width:34px;height:34px;
+  border-radius:12px;
+  border:1px solid rgba(17,24,39,.08);
+  background:linear-gradient(135deg,rgba(209,171,62,.24),rgba(255,255,255,0));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+.member-aura-brand-mark i{color:#a07f1f;font-size:1.15rem}
+
+.member-aura-links{
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+  color:rgba(23,23,23,.72);
+}
+.member-aura-links a,
+.member-aura-user{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  min-height:40px;
+  padding:.45rem .65rem;
+  border-radius:10px;
+  color:inherit;
+  text-decoration:none;
+  font-size:.9rem;
+  font-weight:700;
+  transition:background .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.member-aura-links a:hover,
+.member-aura-user:hover{
+  background:rgba(17,24,39,.04);
+  color:rgba(23,23,23,.92);
+}
+.member-aura-links a.active,
+.member-aura-user.active{
+  background:rgba(209,171,62,.16);
+  color:rgba(23,23,23,.94);
+}
+.member-aura-links i{font-size:1.05rem}
+
+.member-aura-actions{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+.member-aura-user{
+  padding:.35rem .65rem .35rem .4rem;
+  max-width:210px;
+}
+.member-aura-user img,
+.member-aura-profile img{
+  width:34px;height:34px;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(17,24,39,.08);
+  background:#fff;
+  flex:0 0 auto;
+}
+.member-aura-user span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.member-aura-menu-btn{
+  width:44px;height:44px;
+  border-radius:14px;
+  border:1px solid rgba(17,24,39,.10);
+  background:rgba(255,255,255,.75);
+  color:rgba(23,23,23,.82);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  transition:background .18s ease,transform .18s ease;
+}
+.member-aura-menu-btn:hover{background:#fff;transform:translateY(-1px)}
+.member-aura-menu-btn i{font-size:1.35rem}
+
+.member-aura-mobile{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  display:none;
+  background:rgba(0,0,0,.45);
+}
+.member-aura-mobile.open{display:block}
+.member-aura-panel{
+  position:absolute;
+  top:0;right:0;bottom:0;
+  width:min(380px,92vw);
+  padding:1rem;
+  overflow-y:auto;
+  background:rgba(255,255,255,.94);
+  border-left:1px solid rgba(17,24,39,.10);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transform:translateX(100%);
+  transition:transform .25s ease;
+}
+.member-aura-mobile.open .member-aura-panel{transform:translateX(0)}
+.member-aura-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  margin-bottom:.75rem;
+}
+.member-aura-panel-head .member-aura-menu-btn{display:flex}
+.member-aura-profile{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  padding:.75rem;
+  border-radius:14px;
+  border:1px solid rgba(17,24,39,.08);
+  background:rgba(251,246,236,.72);
+  color:var(--member-aura-ink);
+  text-decoration:none;
+}
+.member-aura-profile:hover{color:var(--member-aura-ink)}
+.member-aura-profile strong,
+.member-aura-profile small{
+  display:block;
+  max-width:240px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.member-aura-profile small{color:var(--member-aura-muted);font-size:.78rem}
+.member-aura-panel-section{margin-top:1rem}
+.member-aura-panel-section>span{
+  display:block;
+  margin:0 0 .45rem .2rem;
+  color:var(--member-aura-muted);
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.member-aura-panel-links{
+  display:grid;
+  gap:.4rem;
+}
+.member-aura-panel-links.compact{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.member-aura-panel-links a,
+.member-aura-logout button{
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  min-width:0;
+  padding:.75rem .8rem;
+  border-radius:14px;
+  border:1px solid rgba(17,24,39,.08);
+  background:rgba(255,255,255,.76);
+  color:var(--member-aura-ink);
+  text-decoration:none;
+  font-weight:750;
+  line-height:1.1;
+}
+.member-aura-panel-links a span,
+.member-aura-logout span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.member-aura-panel-links a i,
+.member-aura-logout i{font-size:1.15rem;flex:0 0 auto}
+.member-aura-panel-links a.active{
+  border-color:rgba(209,171,62,.34);
+  background:rgba(209,171,62,.18);
+}
+.member-aura-logout{
+  margin-top:1rem;
+}
+.member-aura-logout button{
+  width:100%;
+  border-color:rgba(220,53,69,.18);
+  background:rgba(220,53,69,.08);
+  color:#b02a37;
+  cursor:pointer;
+}
+
+.nav-holder{display:none!important}
+
+@media (max-width:991.98px){
+  body{padding-top:66px}
+  .member-aura-inner{min-height:66px}
+  .member-aura-links,
+  .member-aura-user{display:none}
+  .member-aura-menu-btn{display:flex}
+  .member-aura-brand{font-size:1rem}
+}
+
+@media (max-width:420px){
+  .member-aura-container{padding:0 .9rem}
+  .member-aura-panel-links.compact{grid-template-columns:1fr}
+  .member-aura-panel{width:94vw}
+}

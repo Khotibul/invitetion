@@ -8,13 +8,7 @@
     <meta name="theme-color" content="">
     <meta name="keywords" content="">
     @stack('style')
-    {{-- CSS + JS --}}
-    @if(app()->environment('local') && file_exists(public_path('hot')))
-        @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss', 'resources/js/member-script.js'])
-    @else
-        <link rel="stylesheet" href="{{ asset('build/assets/member-style-KtJH4um1.css') }}">
-        <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-rZ5YENN6.css') }}">
-    @endif
+    @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss'])
 </head>
 <body class="auth d-flex flex-column min-vh-100 justify-content-center py-5 bg-light">
     <div class="position-fixed top-0 start-0 p-4">
@@ -26,6 +20,7 @@
         @yield('content')
     </div>
 	<script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
+    @vite(['resources/js/member-script.js'])
     @stack('script')
 </body>
 </html>

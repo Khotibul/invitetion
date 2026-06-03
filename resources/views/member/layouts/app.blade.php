@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +10,15 @@
     <meta name="keywords" content="">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Kaushan+Script&family=Nova+Cut&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
-    {{-- CSS — pakai asset() langsung agar kompatibel semua hosting --}}
-    @if(app()->environment('local') && file_exists(public_path('hot')))
-        @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss'])
-    @else
-        <link rel="stylesheet" href="{{ asset('build/assets/member-style-KtJH4um1.css') }}">
-        <link rel="stylesheet" href="{{ asset('build/assets/member-style-s-rZ5YENN6.css') }}">
-    @endif
+    <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800&family=Kaushan+Script&family=Nova+Cut&family=Playfair+Display:wght@400;600;700&family=Raleway&family=Righteous&display=swap" rel="stylesheet">
+    @vite(['resources/css/member-style.css', 'resources/sass/member-style-s.scss'])
+    @php
+        $__memberAuraCss = 'css/member-aura-nav.css';
+        $__memberAuraJs  = 'js/member-aura-nav.js';
+        $__memberAuraCssV = @filemtime(public_path($__memberAuraCss)) ?: time();
+        $__memberAuraJsV  = @filemtime(public_path($__memberAuraJs)) ?: time();
+    @endphp
+    <link rel="stylesheet" href="{{ asset($__memberAuraCss).'?v='.$__memberAuraCssV }}">
     @stack('style')
 </head>
 <body>
@@ -26,18 +27,11 @@
         @yield('content')
     </div>
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-		@csrf
-	</form>
-    {{-- jQuery + scripts di akhir body --}}
+        @csrf
+    </form>
     <script src="{{ asset('modules/jquery/jquery.min.js') }}"></script>
-    @if(app()->environment('local') && file_exists(public_path('hot')))
-        @vite(['resources/js/member-script.js'])
-    @else
-        <script src="{{ asset('build/assets/vendor-jquery-gzd0YkcT.js') }}" type="module"></script>
-        <script src="{{ asset('build/assets/vendor-bootstrap-f4TNcP9e.js') }}" type="module"></script>
-        <script src="{{ asset('build/assets/vendor-swal-YZDMVk0e.js') }}" type="module"></script>
-        <script src="{{ asset('build/assets/member-script-DHdsZRvy.js') }}" type="module"></script>
-    @endif
+    @vite(['resources/js/member-script.js'])
+    <script src="{{ asset($__memberAuraJs).'?v='.$__memberAuraJsV }}" defer></script>
     @stack('script')
 </body>
 </html>

@@ -265,9 +265,17 @@ class PublicController extends Controller
 			'temp'  => $template,
 		];
 
+		$templateUrl = $template->url;
+		if (!\Illuminate\Support\Facades\View::exists('template.'.$templateUrl)) {
+			$templateUrl = 'default';
+		}
+
 		$helpers = $this->resolveHelperVars($data, $invitation, $other);
 
-		return response()->view('template.'.$template->url, array_merge(compact('data', 'invitation', 'other'), $helpers));
+		return response()->view(
+			'template.'.$templateUrl,
+			array_merge(compact('data', 'invitation', 'other'), $helpers, ['isTemplateReview' => true])
+		);
 	}
 
 	// Preview undangan member — bypass middleware InvitationController
