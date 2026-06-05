@@ -183,8 +183,18 @@ class BankController extends Controller
      */
     public function destroy(Request $request, string $id): JsonResponse
 	{
-		$ids = explode(',', $request->id);
+		$ids = collect(explode(',', (string) $request->input('id', $id)))
+			->filter(fn ($value) => filled($value))
+			->values()
+			->all();
 		$ids_count = count($ids);
+		if ($ids_count === 0) {
+			return response()->json([
+				'toast'		=> ['icon' => 'error', 'title' => ucfirst('galat'), 'html' => 'Tidak ada bank yang dipilih.'],
+				'redirect'	=> ['type' => 'nothing']
+			], 422);
+		}
+
 		Bank::whereIn('id', $ids)->delete();
 
 		return response()->json([

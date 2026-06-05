@@ -83,7 +83,7 @@ class AccountInvoiceController extends Controller
      */
     public function create()
     {
-        //
+        return redirect()->route('invoice-transaction.index');
     }
 
     /**
@@ -91,7 +91,7 @@ class AccountInvoiceController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return redirect()->route('invoice-transaction.index');
     }
 
     /**
@@ -195,8 +195,18 @@ class AccountInvoiceController extends Controller
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $ids       = explode(',', $request->id);
+        $ids       = collect(explode(',', (string) $request->input('id', $id)))
+            ->filter(fn ($value) => filled($value))
+            ->values()
+            ->all();
         $ids_count = count($ids);
+
+        if ($ids_count === 0) {
+            return response()->json([
+                'toast'    => ['icon' => 'error', 'title' => 'Galat', 'html' => 'Tidak ada transaksi yang dipilih.'],
+                'redirect' => ['type' => 'nothing'],
+            ], 422);
+        }
 
         foreach (AccountInvoice::whereIn('id', $ids)->get() as $item) {
             $content = json_decode($item->content);

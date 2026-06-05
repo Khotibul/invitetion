@@ -20,6 +20,14 @@
 			: null;
 		$__sneatCss = $__manifest['resources/css/sneat.css']['file'] ?? null;
 		$__sneatJs  = $__manifest['resources/js/sneat.js']['file']  ?? null;
+		if (!$__sneatCss) {
+			$__sneatCssFile = collect(glob(public_path('build/assets/sneat-*.css')) ?: [])->sortDesc()->first();
+			$__sneatCss = $__sneatCssFile ? 'assets/'.basename($__sneatCssFile) : null;
+		}
+		if (!$__sneatJs) {
+			$__sneatJsFile = collect(glob(public_path('build/assets/sneat-*.js')) ?: [])->sortDesc()->first();
+			$__sneatJs = $__sneatJsFile ? 'assets/'.basename($__sneatJsFile) : null;
+		}
 	@endphp
 	@if($__sneatCss)
 		<link rel="stylesheet" href="{{ asset('build/'.$__sneatCss) }}">

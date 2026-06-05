@@ -21,8 +21,7 @@ if (!function_exists('storage_url')) {
     function storage_url(string $path): string
     {
         $path = ltrim($path, '/');
-        // Gunakan asset() agar URL selalu sesuai dengan request saat ini
-        // (benar di lokal maupun hosting, HTTP maupun HTTPS)
+
         return asset('storage/' . $path);
     }
 }

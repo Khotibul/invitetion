@@ -438,15 +438,38 @@ class TemplateController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Template $template)
+    public function destroy(Template $template): JsonResponse
     {
-        //
+        if (!empty($template->file) && !Str::startsWith($template->file, 'template/')) {
+            foreach ([$template->file, 'md/'.$template->file, 'sm/'.$template->file, 'xs/'.$template->file] as $path) {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+        }
+
+        $template->delete();
+
+        return response()->json([
+            'toast'    => ['icon' => 'success', 'title' => ucfirst('dihapus'), 'html' => 'Template telah dibuang'],
+            'redirect' => ['type' => 'dataTables']
+        ]);
     }
 
 	public function component_destroy(Request $request, string $slug = 'avatar'): JsonResponse
     {
-        $ids = explode(',', $request->id);
+        $ids = collect(explode(',', (string) $request->input('id', '')))
+            ->filter(fn ($value) => filled($value))
+            ->values()
+            ->all();
 		$ids_count = count($ids);
+        if ($ids_count === 0) {
+            return response()->json([
+                'toast'    => ['icon' => 'error', 'title' => ucfirst('galat'), 'html' => 'Tidak ada komponen yang dipilih.'],
+                'redirect' => ['type' => 'nothing']
+            ], 422);
+        }
+
 		foreach (TemplateAssets::whereIn('id', $ids)->get() as $item) :
 			if (in_array($item->type, ['avatar', 'avatar male', 'avatar female'])) :
 				if (Storage::disk('public')->exists('avatar/'.$item->content)) :

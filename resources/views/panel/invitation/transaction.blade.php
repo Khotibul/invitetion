@@ -7,7 +7,7 @@
 			<form action="{{ $data['delete']['action'] }}" method="post" class="form-delete my-3 mb-0" data-message="{{ $data['delete']['message'] }}">
 				@method('DELETE')
 				<input type="hidden" name="id_delete" value/>
-				<a href="{{ $data['create']['action'] }}" class="btn btn-success">
+				<a href="{{ $data['create']['action'] }}" class="btn btn-success d-none">
 					<i class="bx bx-plus"></i>
 					<span>{{ Str::title('daftar baru') }}</span>
 				</a>

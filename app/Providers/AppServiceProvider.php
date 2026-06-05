@@ -2,61 +2,39 @@
 
 namespace App\Providers;
 
-use App\Models\Contact;
-use App\Models\Setting;
-use App\Models\LinkExternal;
 use App\Models\AccountInvoice;
+use App\Models\Contact;
+use App\Models\LinkExternal;
+use App\Models\Setting;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        // Register custom Neon PostgreSQL connector hanya jika koneksi pgsql
         if (config('database.default') === 'pgsql') {
             $this->app->bind('db.connector.pgsql', \App\Database\NeonPostgresConnector::class);
         }
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Force HTTPS di production (penting untuk shared hosting / reverse proxy)
         if (config('app.env') === 'production') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-        }
-
-        // Pastikan storage symlink ada — buat otomatis jika belum ada
-        // Ini mengatasi masalah "gambar hilang di hosting" karena symlink tidak dibuat
-        $storageLinkPath = public_path('storage');
-        $storageTargetPath = storage_path('app/public');
-        if (!file_exists($storageLinkPath) && is_dir($storageTargetPath)) {
-            try {
-                \Illuminate\Support\Facades\Artisan::call('storage:link');
-            } catch (\Throwable $e) {
-                // Gagal buat symlink — tidak fatal, lanjutkan
-            }
+            URL::forceScheme('https');
         }
 
         Paginator::useBootstrap();
 
-        // ── Guard: jika tabel belum ada (fresh install / migration belum jalan)
         if (!Schema::hasTable('settings')) {
             View::share('global', $this->emptyGlobal());
             return;
         }
 
-        // ── Share global data ke semua view
-        // Cache 5 menit untuk data statis (setting, contact, social)
         $global = Cache::remember('global_view_data', 300, function () {
             if (!Schema::hasTable('contacts') || !Schema::hasTable('link_externals')) {
                 return $this->emptyGlobal();
@@ -66,9 +44,9 @@ class AppServiceProvider extends ServiceProvider
                 'setting' => Setting::select('title', 'content')->get(),
                 'contact' => [
                     Contact::select('title', 'content')->whereType('address')->whereActived('1')
-                        ->firstOr(fn() => (object)['title' => null, 'content' => null]),
+                        ->firstOr(fn () => (object) ['title' => null, 'content' => null]),
                     Contact::select('title', 'content')->whereType('map')->whereActived('1')
-                        ->firstOr(fn() => (object)['title' => null, 'content' => 'no-map']),
+                        ->firstOr(fn () => (object) ['title' => null, 'content' => 'no-map']),
                     Contact::select('title', 'content')->whereType('email')->whereActived('1')->get(),
                     Contact::select('title', 'content')->whereType('phone')->whereActived('1')->get(),
                     Contact::select('title', 'content')->whereType('whatsapp')->whereActived('1')->get(),
@@ -78,7 +56,6 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
-        // payment_waiting selalu fresh (admin badge)
         $paymentWaiting = Schema::hasTable('account_invoices')
             ? AccountInvoice::whereStatus('PENDING')->count()
             : 0;
@@ -93,12 +70,14 @@ class AppServiceProvider extends ServiceProvider
         return [
             'setting' => collect([]),
             'contact' => [
-                (object)['title' => null, 'content' => null],
-                (object)['title' => null, 'content' => 'no-map'],
-                collect([]), collect([]), collect([]),
+                (object) ['title' => null, 'content' => null],
+                (object) ['title' => null, 'content' => 'no-map'],
+                collect([]),
+                collect([]),
+                collect([]),
             ],
             'social' => collect([]),
-            'admin'  => ['payment_waiting' => 0],
+            'admin' => ['payment_waiting' => 0],
         ];
     }
 }

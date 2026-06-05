@@ -145,7 +145,6 @@ Route::post('control-panel/logout', [PanelAuth::class, 'logout'])->name('admin.l
 
 Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::get('/', [SettingController::class, 'dashboard'])->name('home.dashboard');
-	Route::get('storage/{type?}', [SettingController::class, 'storage'])->name('home.storage');
 	Route::get('storage/{id}/edit', [SettingController::class, 'storage_edit'])->name('home.storage-edit');
 	Route::patch('storage/{id}/update', [SettingController::class, 'storage_update'])->name('home.storage-update');
 	Route::delete('storage/{id}/delete/', [SettingController::class, 'storage_delete'])->name('home.storage-delete');
@@ -154,6 +153,7 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::post('storage/modal/{mode}', [SettingController::class, 'storage_modal'])->name('home.storage-modal');
 	Route::post('storage/modal/select/{mode}', [SettingController::class, 'put_storage_modal'])->name('home.put-storage-modal');
 	Route::post('storage/youtube/select', [SettingController::class, 'from_youtube'])->name('home.from-youtube');
+	Route::get('storage/{type?}', [SettingController::class, 'storage'])->name('home.storage');
 	// Setting
 	Route::get('account/{tab}', [SettingController::class, 'account'])->name('setting.account');
 	Route::patch('account/profile/update', [SettingController::class, 'profile_update'])->name('setting.profile.update');
@@ -209,11 +209,6 @@ Route::prefix('control-panel')->middleware('is_owner')->group(function () {
 	Route::put('users/{id}/update', [UserController::class, 'update'])->name('user-management.update');
 	Route::delete('users/{id}/destroy', [UserController::class, 'destroy'])->name('user-management.destroy');
 	Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('user-management.toggle-active');
-	// Artisan
-	Route::get('public-link', function (){
-		\Illuminate\Support\Facades\Artisan::call('storage:link');
-		echo 'linked';
-	});
 });
 
 //** End of Panel */

@@ -11,6 +11,11 @@
 					<i class="bx bx-plus"></i>
 					<span>{{ Str::title('tambah baru') }}</span>
 				</a>
+				<button type="submit" class="btn btn-danger" disabled>
+					<i class="bx bx-trash"></i>
+					<span>{{ Str::title('hapus') }}</span>
+					<b></b>
+				</button>
 			</form>
 			<div class="card border-0 my-3">
 				<div class="card-body p-0">

@@ -69,6 +69,8 @@ class UserController extends Controller
             $editUrl   = route('user-management.edit', $item->id);
             $deleteUrl = route('user-management.destroy', $item->id);
             $toggleUrl = route('user-management.toggle-active', $item->id);
+            $safeName  = e($item->name);
+            $safeEmail = e($item->email);
 
             // Badge status aktif (hanya untuk member yang punya akun)
             $activeBadge = '';
@@ -90,13 +92,13 @@ class UserController extends Controller
                 $toggleBtn = "<button type='button' class='btn btn-sm "
                     . ($isActive ? "btn-outline-warning" : "btn-outline-success")
                     . " btn-toggle-active me-1' "
-                    . "data-url='{$toggleUrl}' data-name='{$item->name}' data-active='" . ($isActive ? 1 : 0) . "' "
+                    . "data-url='{$toggleUrl}' data-name='{$safeName}' data-active='" . ($isActive ? 1 : 0) . "' "
                     . "title='" . ($isActive ? 'Non-aktifkan' : 'Aktifkan') . "'>"
                     . "<i class='bx " . ($isActive ? "bx-user-minus" : "bx-user-check") . "'></i></button>";
             }
 
-            $data_val[$key]['name']   = anchor(text: $item->name, href: $editUrl)
-                . "<small class='d-block text-muted'>{$item->email}</small>";
+            $data_val[$key]['name']   = anchor(text: $safeName, href: $editUrl)
+                . "<small class='d-block text-muted'>{$safeEmail}</small>";
             $data_val[$key]['role']   = "<span class='badge {$roleColor}'>" . strtoupper($item->role) . "</span>"
                 . $activeBadge;
             $data_val[$key]['date']   = date_info($item->created_at);
@@ -104,7 +106,7 @@ class UserController extends Controller
                 "<a href='{$editUrl}' class='btn btn-sm btn-outline-primary me-1' title='Edit'><i class='bx bx-edit'></i></a>"
                 . $toggleBtn
                 . "<button type='button' class='btn btn-sm btn-outline-danger btn-delete-user' "
-                . "data-url='{$deleteUrl}' data-name='{$item->name}' title='Hapus'><i class='bx bx-trash'></i></button>";
+                . "data-url='{$deleteUrl}' data-name='{$safeName}' title='Hapus'><i class='bx bx-trash'></i></button>";
         }
 
         return response()->json([

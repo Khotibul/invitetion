@@ -60,8 +60,8 @@ class PackageController extends Controller
 			foreach ($datatable as $key => $item) :
 				$invoice = AccountInvoice::where('package_id', $item->id)->count();
 				$publish = ['title' => Str::title($item->publish), 'publish' => 'bg-primary', 'draft' => 'bg-warning'];
-				$data_val[$key]['id'] = anchor(text:$item->title, href:route('package.edit', $item->id));
-				$data_val[$key]['title'] = "<div class=\"d-flex\"><span class=\"badge bg-secondary me-1\">{$invoice} transaksi</span></div>";
+				$data_val[$key]['id'] = input_check(name:"check[]", value:$item->id, class:['form-check-input', 'check-row'], mode:'multiple');
+				$data_val[$key]['title'] = anchor(text:$item->title, href:route('package.edit', $item->id))."<div class=\"d-flex mt-1\"><span class=\"badge bg-secondary me-1\">{$invoice} transaksi</span></div>";
 				$data_val[$key]['info'] = "<div class=\"d-flex\"><span class=\"badge {$publish[$item->publish]}\">{$publish['title']}</span></div>";
 				$data_val[$key]['log'] = date_info($item->created_at);
 			endforeach;
@@ -112,9 +112,9 @@ class PackageController extends Controller
 					$content[$key] = false;
 				endif;
             elseif (in_array($key, ['gallery-video', 'gallery-photo', 'guest', 'event-count', 'story-count'])) :
-                if ($request->input('content_'.$key.'_unlimited')=='on') :
+                if ($request->input('content_'.$key.'_unlimited')=='unlimited') :
                     $content[$key] = 'unlimited';
-                elseif ($request->input('content_'.$key.'_unlimited')!='on') :
+                elseif ($request->input('content_'.$key.'_unlimited')!='unlimited') :
                     $content[$key] = $request->input('content')[$key];
                 endif;
             elseif (in_array($key, ['template'])) :
@@ -135,7 +135,7 @@ class PackageController extends Controller
 		];
         if ($request->file_type == 'upload-file') :
 			$this->validate($request, ['upload_file' => 'required|mimes:jpg,jpeg,png'], ['mimes' => 'hanya file <b>jpg, jpeg</b> atau <b>png</b> saja.']);
-			if (!empty($request->file)) :
+			if ($request->hasFile('upload_file')) :
 				$image_name = $request->file('upload_file')->hashName();
 				Storage::disk('public')->put($image_name, file_get_contents($request->file('upload_file')));
 				image_reducer(file_get_contents($request->file('upload_file')), $image_name);
@@ -223,7 +223,7 @@ class PackageController extends Controller
 		];
 		if ($request->file_type == 'upload-file') :
 			$this->validate($request, ['upload_file' => 'required|mimes:jpg,jpeg,png'], ['mimes' => 'hanya file <b>jpg, jpeg</b> atau <b>png</b> saja.']);
-			if (!empty($request->file)) :
+			if ($request->hasFile('upload_file')) :
 				$image_name = $request->file('upload_file')->hashName();
 				Storage::disk('public')->put($image_name, file_get_contents($request->file('upload_file')));
 				image_reducer(file_get_contents($request->file('upload_file')), $image_name);
@@ -246,8 +246,33 @@ class PackageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Package $package)
+    public function destroy(Request $request, Package $package): JsonResponse
     {
-        //
+		$ids = collect(explode(',', (string) $request->input('id', $package->id)))
+			->filter(fn ($value) => filled($value))
+			->values()
+			->all();
+		$ids_count = count($ids);
+
+		if ($ids_count === 0) {
+			return response()->json([
+				'toast'		=> ['icon' => 'error', 'title' => ucfirst('galat'), 'html' => 'Tidak ada paket yang dipilih.'],
+				'redirect'	=> ['type' => 'nothing']
+			], 422);
+		}
+
+		foreach (Package::whereIn('id', $ids)->get() as $item) {
+			foreach ([$item->file, 'md/'.$item->file, 'sm/'.$item->file, 'xs/'.$item->file] as $path) {
+				if (!empty($item->file) && Storage::disk('public')->exists($path)) {
+					Storage::disk('public')->delete($path);
+				}
+			}
+			$item->delete();
+		}
+
+		return response()->json([
+			'toast'		=> ['icon' => 'success', 'title' => ucfirst('dihapus'), 'html' => "<b>{$ids_count}</b> data telah dibuang"],
+			'redirect'	=> ['type' => 'dataTables']
+		]);
     }
 }

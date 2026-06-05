@@ -131,6 +131,8 @@ class SettingController extends Controller
 
     public function storage(string $type = 'image'): Response
 	{
+		abort_unless(in_array($type, ['image', 'video'], true), 404);
+
 		$data = [
 			'title'	=> 'penyimpanan',
 			'list'	=> route('home.storage-list', $type),
@@ -149,6 +151,8 @@ class SettingController extends Controller
 
 	public function storage_list(string $type = 'image', Request $request): JsonResponse
 	{
+		abort_unless(in_array($type, ['image', 'video'], true), 404);
+
 		$totalFilteredRecord = $totalDataRecord = $draw_val = "";
 		$column = [0 => 'id', 1 => 'title', 2 => 'info', 3 => 'log'];
 		$totalDataRecord = Strbox::where('file_type', $type)->count();
@@ -159,8 +163,12 @@ class SettingController extends Controller
 			$datatable = Strbox::where('file_type', $type)->offset($start_val)->latest()->limit($limit_val)->get();
 		else :
 			$search_text = $request->input('search.value');
-			$datatable =  Strbox::where('file_type', $type)->where('id', 'LIKE', "%{$search_text}%")->orWhere('title', 'LIKE', "%{$search_text}%")->offset($start_val)->limit($limit_val)->get();
-			$totalFilteredRecord = Strbox::where('file_type', $type)->where('id', 'LIKE', "%{$search_text}%")->orWhere('title', 'LIKE', "%{$search_text}%")->count();
+			$query = Strbox::where('file_type', $type)->where(function ($q) use ($search_text) {
+				$q->where('id', 'LIKE', "%{$search_text}%")
+					->orWhere('title', 'LIKE', "%{$search_text}%");
+			});
+			$totalFilteredRecord = (clone $query)->count();
+			$datatable = $query->offset($start_val)->latest()->limit($limit_val)->get();
 		endif;
 		$data_val = [];
 		if (!empty($datatable)) :
@@ -179,6 +187,8 @@ class SettingController extends Controller
 
 	public function storage_store(string $type = 'image', Request $request): JsonResponse
 	{
+		abort_unless(in_array($type, ['image', 'video'], true), 404);
+
 		$this->validate($request, [
 			'title'	=> 'required|max:110'
 		],
@@ -213,8 +223,18 @@ class SettingController extends Controller
 
 	public function storage_delete(Request $request, $id): JsonResponse
 	{
-		$ids = explode(',', $request->id);
+		$ids = collect(explode(',', (string) $request->input('id', $id)))
+			->filter(fn ($value) => filled($value))
+			->values()
+			->all();
 		$ids_count = count($ids);
+		if ($ids_count === 0) {
+			return response()->json([
+				'toast'		=> ['icon' => 'error', 'title' => ucfirst('galat'), 'html' => 'Tidak ada data yang dipilih.'],
+				'redirect'	=> ['type' => 'nothing']
+			], 422);
+		}
+
 		foreach (Strbox::whereIn('id', $ids)->get() as $item) :
 			foreach ([$item->file, 'md/'.$item->file, 'sm/'.$item->file, 'xs/'.$item->file] as $path) :
 				if (Storage::disk('public')->exists($path)) :
@@ -267,6 +287,8 @@ class SettingController extends Controller
 
 	public function storage_modal(Request $request, string $mode = 'single'): JsonResponse
 	{
+		abort_unless(in_array($mode, ['single', 'multiple'], true), 404);
+
 		$type = 'image';
 		$totalFilteredRecord = $totalDataRecord = $draw_val = "";
 		$column = [0 => 'id', 1 => 'title', 2 => 'info', 3 => 'log'];
@@ -278,8 +300,12 @@ class SettingController extends Controller
 			$datatable = Strbox::where('file_type', $type)->offset($start_val)->latest()->limit($limit_val)->get();
 		else :
 			$search_text = $request->input('search.value');
-			$datatable =  Strbox::where('file_type', $type)->where('id', 'LIKE', "%{$search_text}%")->orWhere('title', 'LIKE', "%{$search_text}%")->offset($start_val)->latest()->limit($limit_val)->get();
-			$totalFilteredRecord = Strbox::where('file_type', $type)->where('id', 'LIKE', "%{$search_text}%")->orWhere('title', 'LIKE', "%{$search_text}%")->count();
+			$query = Strbox::where('file_type', $type)->where(function ($q) use ($search_text) {
+				$q->where('id', 'LIKE', "%{$search_text}%")
+					->orWhere('title', 'LIKE', "%{$search_text}%");
+			});
+			$totalFilteredRecord = (clone $query)->count();
+			$datatable = $query->offset($start_val)->latest()->limit($limit_val)->get();
 		endif;
 		$data_val = [];
 		if (!empty($datatable)) :
@@ -298,6 +324,8 @@ class SettingController extends Controller
 
 	public function put_storage_modal(Request $request, string $mode = 'single'): JsonResponse
 	{
+		abort_unless(in_array($mode, ['single', 'multiple'], true), 404);
+
 		$id = explode(',', $request->id);
 		$data = [];
 		if ($mode == 'single') :
@@ -382,7 +410,7 @@ class SettingController extends Controller
 				'redirect'	=> ['type' => 'nothing']
 			]);
 		}
-		User::whereId(Auth::user()->id)->update(['password' => Hash::make($request->password_new)]);
+		User::whereId(Auth::user()->id)->update(['password' => Hash::make($request->password)]);
 
 		return response()->json([
 			'toast'		=> ['icon' => 'success', 'title' => ucfirst('disimpan'), 'html' => "<b>Kata sandi</b> baru telah disimpan"],
